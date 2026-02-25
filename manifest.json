@@ -26,10 +26,13 @@
   "side_panel": {
     "default_path": "sidepanel.html"
   },
+  "options_page": "options.html",
   "web_accessible_resources": [
     {
       "resources": [
-        "skills/*/*.md"
+        "skills/*/*.md",
+        "config.json",
+        "skills-manifest.json"
       ],
       "matches": ["<all_urls>"]
     }
