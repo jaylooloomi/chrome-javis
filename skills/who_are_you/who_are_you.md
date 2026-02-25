@@ -1,4 +1,4 @@
-name: who_you_are
+name: who_are_you
 
 description: Introduce yourself and provide information about the OmniAssistant. Use this skill when the user asks about your identity, capabilities, or what you can do.
 
