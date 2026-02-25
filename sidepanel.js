@@ -317,9 +317,11 @@ document.getElementById('runBtn').addEventListener('click', async () => {
             //await showSuccessToast('✅ AI 助手', '指令已執行');
             
         } else {
-            // 顯示通知 - 執行失敗
+            // 顯示通知 - 執行失敗 (檢查通知設置)
             console.log("[SidePanel] 執行失敗，顯示錯誤通知");
-            await showErrorToast(i18n.t('notification.title'), res.error || i18n.t('notification.skill.error'));
+            if (await shouldShowNotification()) {
+                await showErrorToast(i18n.t('notification.title'), res.error || i18n.t('notification.skill.error'));
+            }
         }
     } catch (error) {
         console.error("[SidePanel] 錯誤:", error);
@@ -327,28 +329,47 @@ document.getElementById('runBtn').addEventListener('click', async () => {
     }
 });
 
+// ======== 檢查通知是否啟用 ========
+async function shouldShowNotification() {
+    return new Promise((resolve) => {
+        chrome.storage.sync.get(['notificationsEnabled'], (result) => {
+            // 默認為 true (如果未設置)
+            const notificationsEnabled = result.notificationsEnabled !== false;
+            resolve(notificationsEnabled);
+        });
+    });
+}
+
 // ======== 通知消息監聽 (接收來自 Service Worker 的通知) ========
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'SHOW_NOTIFICATION') {
         console.log("[SidePanel] 收到通知訊息:", message);
         
-        // 翻譯標題和消息
-        const title = i18n.t(message.messageKey ? 'notification.title' : 'notification.title');
-        let messageText = i18n.t(message.messageKey || 'notification.skill.error');
-        
-        // 如果有自定義錯誤消息，追加到後面
-        if (message.errorMessage) {
-            messageText += `: ${message.errorMessage}`;
-        }
-        
-        // 根據類型顯示相應的通知
-        if (message.type === 'success') {
-            showSuccessToast(title, messageText);
-        } else if (message.type === 'error') {
-            showErrorToast(title, messageText);
-        } else {
-            showInfoToast(title, messageText);
-        }
+        // 檢查通知是否啟用
+        (async () => {
+            if (!await shouldShowNotification()) {
+                console.log("[SidePanel] 通知已禁用，不顯示 toast");
+                return;
+            }
+            
+            // 翻譯標題和消息
+            const title = i18n.t(message.messageKey ? 'notification.title' : 'notification.title');
+            let messageText = i18n.t(message.messageKey || 'notification.skill.error');
+            
+            // 如果有自定義錯誤消息，追加到後面
+            if (message.errorMessage) {
+                messageText += `: ${message.errorMessage}`;
+            }
+            
+            // 根據類型顯示相應的通知
+            if (message.type === 'success') {
+                showSuccessToast(title, messageText);
+            } else if (message.type === 'error') {
+                showErrorToast(title, messageText);
+            } else {
+                showInfoToast(title, messageText);
+            }
+        })();
     }
 });
 
@@ -376,14 +397,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 const result = await skillFunc(message.args);
                 
                 console.log(`[SidePanel] 技能執行成功:`, result);
-                // 顯示成功通知
-                await showSuccessToast(message.skill, i18n.t('notification.skill.success'));
+                // 顯示成功通知 (檢查通知設置)
+                if (await shouldShowNotification()) {
+                    await showSuccessToast(message.skill, i18n.t('notification.skill.success'));
+                }
                 sendResponse({ status: "success", result: result });
                 
             } catch (error) {
                 console.error(`[SidePanel] 技能執行失敗:`, error);
-                // 顯示錯誤通知
-                await showErrorToast(message.skill, i18n.t('notification.skill.error'));
+                // 顯示錯誤通知 (檢查通知設置)
+                if (await shouldShowNotification()) {
+                    await showErrorToast(message.skill, i18n.t('notification.skill.error'));
+                }
                 sendResponse({ status: "error", error: error.message });
             }
         })();
