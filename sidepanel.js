@@ -2,9 +2,42 @@
 import { showSuccessToast, showErrorToast, showInfoToast } from './toast-notification.js';
 import i18n from './i18n/i18n.js';
 
+// ======== i18n 翻譯應用函數 ========
+function applyTranslations() {
+    // 應用所有 data-i18n 屬性
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        element.textContent = i18n.t(key);
+    });
+
+    // 應用所有 data-i18n-placeholder 屬性
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+        const key = element.getAttribute('data-i18n-placeholder');
+        element.placeholder = i18n.t(key);
+    });
+
+    // 應用所有 data-i18n-title 屬性
+    document.querySelectorAll('[data-i18n-title]').forEach(element => {
+        const key = element.getAttribute('data-i18n-title');
+        element.title = i18n.t(key);
+    });
+
+    console.log('[SidePanel] i18n 翻譯已應用');
+}
+
 // ======== 初始化 i18n ========
-await i18n.load();
-console.log('[SidePanel] i18n 初始化完成');
+(async () => {
+    await i18n.load();
+    console.log('[SidePanel] i18n 初始化完成');
+    applyTranslations();
+    
+    // 監聽 i18n 語言變更
+    i18n.onLanguageChange(() => {
+        applyTranslations();
+        updateMicSwitchUI();
+        updateConfigStatus();
+    });
+})();
 
 // ======== 語音識別初始化 (直接使用 Web Speech API) ========
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -342,36 +375,6 @@ document.querySelector('.close-btn').addEventListener('click', () => {
     console.log('[SidePanel] 系統訊息對話框已關閉');
 });
 
-// ======== i18n 翻譯應用函數 ========
-function applyTranslations() {
-    // 應用所有 data-i18n 屬性
-    document.querySelectorAll('[data-i18n]').forEach(element => {
-        const key = element.getAttribute('data-i18n');
-        element.textContent = i18n.t(key);
-    });
-
-    // 應用所有 data-i18n-placeholder 屬性
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
-        const key = element.getAttribute('data-i18n-placeholder');
-        element.placeholder = i18n.t(key);
-    });
-
-    // 應用所有 data-i18n-title 屬性
-    document.querySelectorAll('[data-i18n-title]').forEach(element => {
-        const key = element.getAttribute('data-i18n-title');
-        element.title = i18n.t(key);
-    });
-
-    console.log('[SidePanel] i18n 翻譯已應用');
-}
-
-// ======== 監聽 i18n 語言變更 ========
-i18n.onLanguageChange(() => {
-    applyTranslations();
-    updateMicSwitchUI();
-    updateConfigStatus();
-});
-
 // ======== 更新配置狀態文字 ========
 function updateConfigStatus() {
     const configStatus = document.querySelector('.config-status');
@@ -384,16 +387,8 @@ function updateConfigStatus() {
     }
 }
 
-// ======== 頁面加載完成後應用翻譯 ========
-document.addEventListener('DOMContentLoaded', async () => {
-    // 等待 i18n 加載完成
-    if (!i18n.isLoaded) {
-        await i18n.load();
-    }
-    
-    // 應用翻譯
-    applyTranslations();
-    
+// ======== 頁面加載完成後自動啟動常駐麥克風 ========
+document.addEventListener('DOMContentLoaded', () => {
     // 更新開關 UI 初始狀態
     updateMicSwitchUI();
     
