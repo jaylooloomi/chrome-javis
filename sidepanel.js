@@ -2,6 +2,9 @@
 import { showSuccessToast, showErrorToast, showInfoToast } from './toast-notification.js';
 import i18n from './i18n/i18n.js';
 
+// ======== 創建 i18n 初始化 Promise ========
+let i18nReady = Promise.resolve();
+
 // ======== i18n 翻譯應用函數 ========
 function applyTranslations() {
     // 應用所有 data-i18n 屬性
@@ -26,7 +29,7 @@ function applyTranslations() {
 }
 
 // ======== 初始化 i18n ========
-(async () => {
+i18nReady = (async () => {
     await i18n.load();
     console.log('[SidePanel] i18n 初始化完成');
     applyTranslations();
@@ -406,19 +409,20 @@ function updateConfigStatus() {
 }
 
 // ======== 頁面加載完成後自動啟動常駐麥克風 ========
-document.addEventListener('DOMContentLoaded', () => {
-    // 等待 i18n 加載完成後再更新 UI
+document.addEventListener('DOMContentLoaded', async () => {
+    // 等待 i18n 初始化完成
+    try {
+        await i18nReady;
+        console.log('[SidePanel] i18nReady Promise 已完成');
+    } catch (error) {
+        console.error('[SidePanel] i18n 初始化失敗:', error);
+    }
+    
+    // 更新開關 UI 初始狀態
     if (i18n.isLoaded) {
         updateMicSwitchUI();
     } else {
         console.warn('[SidePanel] DOMContentLoaded 時 i18n 還未加載');
-        // 延遲執行，等待 i18n 初始化
-        const checkInterval = setInterval(() => {
-            if (i18n.isLoaded) {
-                updateMicSwitchUI();
-                clearInterval(checkInterval);
-            }
-        }, 50);
     }
     
     if (recognition && isMicEnabled) {
