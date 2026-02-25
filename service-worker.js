@@ -15,36 +15,26 @@ let loadingPromise = null;
 const SKILL_MAPPINGS = {};
 
 // ======== Service Worker 技能執行函數映射 ========
-// 所有 Service Worker 技能在此定義
-const SERVICE_WORKER_SKILLS = {};
+// 所有 Service Worker 技能在此定義（掛載到 self 全域上下文）
+self.SERVICE_WORKER_SKILLS = {};
 
 // --- 按需加載技能 ---
 async function loadAndRunSkillInServiceWorker(skillName, skillFolder, args) {
     try {
         // 檢查是否已經加載過
-        if (!SERVICE_WORKER_SKILLS[skillName]) {
+        if (!self.SERVICE_WORKER_SKILLS[skillName]) {
             console.log(`[Gateway] 正在加載技能: ${skillName}`);
             
-            const skillPath = `skills/${skillFolder}/${skillName}.js`;
-            const fullUrl = chrome.runtime.getURL(skillPath);
-            
-            // 動態加載技能文件
-            const response = await fetch(fullUrl);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: 無法加載技能文件`);
-            }
-            
-            const scriptContent = await response.text();
-            
-            // 在全局上下文中執行腳本（IIFE 會自動註冊技能）
-            const fn = new Function(scriptContent);
-            fn.call(globalThis);
+            // 使用原生 import()，避免 CSP eval 問題
+            // IIFE 在模組加載時會自動向 self.SERVICE_WORKER_SKILLS 註冊
+            const skillPath = `./skills/${skillFolder}/${skillName}.js`;
+            await import(skillPath);
             
             console.log(`[Gateway] ✅ 技能 ${skillName} 已加載`);
         }
         
         // 執行技能
-        const skillFunc = SERVICE_WORKER_SKILLS[skillName];
+        const skillFunc = self.SERVICE_WORKER_SKILLS[skillName];
         if (typeof skillFunc === 'function') {
             return await skillFunc(args);
         } else {
