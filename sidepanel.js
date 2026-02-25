@@ -157,13 +157,24 @@ document.getElementById('runBtn').addEventListener('click', async () => {
         const configResponse = await fetch(chrome.runtime.getURL('config.json'));
         const config = await configResponse.json();
         
-        const res = await chrome.runtime.sendMessage({ 
+        console.log("[SidePanel] 準備發送訊息");
+        console.log("[SidePanel] 用戶輸入:", text);
+        console.log("[SidePanel] activeModel:", config.activeModel);
+        console.log("[SidePanel] 完整 config:", JSON.stringify(config, null, 2));
+        
+        const message = { 
             action: "ask_ai", 
             prompt: text,
             config: config
-        });
+        };
+        
+        console.log("[SidePanel] 發送的訊息:", JSON.stringify(message, null, 2));
+        
+        const res = await chrome.runtime.sendMessage(message);
+        console.log("[SidePanel] 收到回應:", res);
         output.textContent = res.text || res.error;
     } catch (error) {
+        console.error("[SidePanel] 錯誤:", error);
         output.textContent = `❌ 錯誤: ${error.message}`;
     }
 });

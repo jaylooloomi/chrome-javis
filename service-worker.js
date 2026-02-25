@@ -145,10 +145,11 @@ chrome.runtime.onInstalled.addListener(loadSkillsDynamically);
 
 // --- 訊息監聽 ---
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log("[Gateway] 收到訊息:", request.action);
-    
-    try {
+    console.log("[Gateway] ✉️  收到訊息:", request.action);
+    console.log("[Gateway] 完整訊息內容:", JSON.stringify(request, null, 2));
+    console.log("[Gateway] 訊息中的 config:", request.config ? '存在' : '❌ 不存在');\n    try {
         if (request.action === "ask_ai") {
+            console.log("[Gateway] 轉發給 handleRequest，config 類型:", typeof request.config);
             handleRequest(request.prompt, sendResponse, request.config);
             return true; 
         }
@@ -196,21 +197,34 @@ async function handleChromeApiCall(request, sendResponse) {
 // --- 階段 B & C：接收指令、思考與調度 ---
 async function handleRequest(userPrompt, sendResponse, configData = null) {
     try {
+        console.log("[Gateway] ╔════════════════════════════════════════╗");
+        console.log("[Gateway] ║  新請求開始處理                        ║");
+        console.log("[Gateway] ╚════════════════════════════════════════╝");
+        console.log("[Gateway] 用戶提示詞:", userPrompt);
+        console.log("[Gateway] 配置對象是否存在:", !!configData);
+        
         if (!configData) {
+            console.error("[Gateway] ❌ configData 為 null/undefined");
             sendResponse({ status: "error", text: "❌ 未提供配置文件，無法執行 AI 功能" });
             return;
         }
 
         await ensureSkillsLoaded();
         
-        console.log("[Gateway] 階段 B：呼叫 AI 模型...");
+        console.log("[Gateway] ═══ 階段 B：呼叫 AI 模型 ═══");
+        console.log("[Gateway] 接收到的 config:", JSON.stringify(configData, null, 2));
+        console.log("[Gateway] activeModel 值:", configData.activeModel);
+        console.log("[Gateway] activeModel 類型:", typeof configData.activeModel);
         console.log("[Gateway] 可用技能:", Object.keys(SKILL_REGISTRY));
-        console.log("[Gateway] 使用模型:", configData.activeModel);
         
         let aiResponse;
         if (configData.activeModel === 'ollama') {
+            console.log("[Gateway] ✅ 選擇使用 Ollama 模型");
+            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollama, null, 2));
             aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollama);
         } else {
+            console.log("[Gateway] ✅ 選擇使用 Gemini Flash 模型");
+            console.log("[Gateway] Gemini 配置:", JSON.stringify({...configData.gemini, apiKey: '***'}));
             aiResponse = await callGeminiFlash(userPrompt, dynamicSystemPrompt, configData.gemini);
         }
         
