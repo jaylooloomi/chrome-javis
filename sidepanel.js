@@ -10,12 +10,20 @@ let interim_transcript = '';
 let isAutoRunning = false;  // 標記是否在自動執行流程中
 let isMicEnabled = true;    // 常駐麥克風狀態 (預設開啟)
 let speechStartCount = 0;   // 累計 onstart 的次數
+let currentMicLanguage = 'zh-TW';  // 當前麥克風語言
 
 if (SpeechRecognition) {
     recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = true;  // 顯示實時轉錄文本
-    recognition.lang = 'zh-TW';
+    
+    // 從 storage 加載語言設定
+    chrome.storage.sync.get('micLanguage', (result) => {
+        const language = result.micLanguage || 'zh-TW';
+        currentMicLanguage = language;
+        recognition.lang = language;
+        console.log('[SidePanel] 麥克風語言已加載:', language);
+    });
 
     recognition.onstart = () => {
         console.log("[Speech] 語音識別已啟動");
@@ -136,6 +144,18 @@ if (SpeechRecognition) {
     document.getElementById('micSwitch').disabled = true;
     document.getElementById('micSwitch').title = '您的浏览器不支持语音识别';
 }
+
+// ======== 監聽語言設定變更 ========
+chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'sync' && changes.micLanguage) {
+        const newLanguage = changes.micLanguage.newValue;
+        currentMicLanguage = newLanguage;
+        if (recognition) {
+            recognition.lang = newLanguage;
+            console.log('[SidePanel] 麥克風語言已更新:', newLanguage);
+        }
+    }
+});
 
 // ======== 更新麥克風開關 UI ========
 function updateMicSwitchUI() {
@@ -307,36 +327,7 @@ document.getElementById('askGeminiBtn').addEventListener('click', async () => {
     console.log("[SidePanel] Ask Gemini 按鈕被點擊");
     
     try {
-        // 1. 獲取當前活動標籤頁
-        const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        console.log("[SidePanel] 當前活動標籤頁:", activeTab.id, activeTab.title, activeTab.url);
-        
-        // 2. 獲取 userInput 作為 prompt
-        const prompt = document.getElementById('userInput').value;
-        console.log("[SidePanel] prompt:", prompt);
-        
-        document.getElementById('output').textContent = `⏳ 正在開啟 Gemini，準備貼上頁面內容...`;
-        
-        // 3. 直接在 SidePanel 中加載並執行 summary_this_page 技能（不經過 Service Worker）
-        try {
-            console.log("[SidePanel] 正在加載 summary_this_page 技能模組");
-            const module = await import('./skills/summary_this_page/summary_this_page.js');
-            
-            const skillFunc = module.summary_this_page;
-            if (typeof skillFunc !== 'function') {
-                throw new Error('summary_this_page 技能函數未找到');
-            }
-            
-            console.log("[SidePanel] 執行 summary_this_page 技能，傳遞 tabId:", activeTab.id);
-            const result = await skillFunc({ tabId: activeTab.id, url: activeTab.url, prompt: prompt }, prompt);
-            
-            console.log("[SidePanel] summary_this_page 執行成功:", result);
-            document.getElementById('output').textContent = result;
-            
-        } catch (error) {
-            console.error("[SidePanel] summary_this_page 執行失敗:", error);
-            throw error;
-        }
+        // 都透過skills執行, 不走這裡了, 但先不刪除
         
     } catch (error) {
         console.error("[SidePanel] Summary Page 失敗:", error);

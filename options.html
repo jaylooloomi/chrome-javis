@@ -136,6 +136,20 @@
             font-size: 14px;
             color: #666;
         }
+        select {
+            background: white;
+            color: #333;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        select:hover {
+            border-color: #28a745 !important;
+        }
+        select:focus {
+            outline: none;
+            border-color: #28a745 !important;
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -144,6 +158,28 @@
         
         <div class="warning">
             <strong>⚠️ 重要：</strong> 必須先在此頁面授予麥克風權限，Side Panel 中的語音功能才能正常工作！
+        </div>
+
+        <div class="section">
+            <h2>🌍 麥克風語言設定</h2>
+            <p>選擇語音識別的語言：</p>
+            <div class="switch-container" style="align-items: flex-start; flex-direction: column;">
+                <select id="micLanguage" style="padding: 10px; font-size: 14px; border-radius: 4px; border: 1px solid #ddd; width: 100%; max-width: 300px;">
+                    <option value="zh-TW">繁體中文 (台灣)</option>
+                    <option value="zh-CN">简体中文 (中国)</option>
+                    <option value="en-US">English (US)</option>
+                    <option value="en-GB">English (UK)</option>
+                    <option value="ja-JP">日本語</option>
+                    <option value="ko-KR">한국어</option>
+                    <option value="fr-FR">Français</option>
+                    <option value="de-DE">Deutsch</option>
+                    <option value="es-ES">Español</option>
+                    <option value="it-IT">Italiano</option>
+                    <option value="pt-BR">Português (Brasil)</option>
+                    <option value="ru-RU">Русский</option>
+                </select>
+                <p style="font-size: 12px; color: #666; margin-top: 8px;">✅ 設定會自動保存</p>
+            </div>
         </div>
 
         <div class="section">

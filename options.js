@@ -77,3 +77,35 @@ function updateNotificationUI(isEnabled) {
         notificationLabel.textContent = '通知已關閉';
     }
 }
+
+// ======== 麥克風語言設定 ========
+const micLanguageSelect = document.getElementById('micLanguage');
+
+// 頁面加載時讀取麥克風語言設定
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const settings = await chrome.storage.sync.get('notificationsEnabled');
+        const isEnabled = settings.notificationsEnabled !== false;  // 默認啟用
+        
+        updateNotificationUI(isEnabled);
+        
+        // 讀取麥克風語言設定
+        const langSettings = await chrome.storage.sync.get('micLanguage');
+        const selectedLanguage = langSettings.micLanguage || 'zh-TW';  // 默認繁體中文
+        micLanguageSelect.value = selectedLanguage;
+        console.log('[Options] 麥克風語言已加載:', selectedLanguage);
+    } catch (error) {
+        console.error('[Options] 讀取設定失敗:', error);
+    }
+});
+
+// 語言下拉菜單變更事件
+micLanguageSelect.addEventListener('change', async (e) => {
+    const selectedLanguage = e.target.value;
+    try {
+        await chrome.storage.sync.set({ micLanguage: selectedLanguage });
+        console.log('[Options] 麥克風語言已更新:', selectedLanguage);
+    } catch (error) {
+        console.error('[Options] 保存麥克風語言失敗:', error);
+    }
+});
