@@ -29,7 +29,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "skills/*/*.md"
+        "skills/*/*.md",
+        "config.json"
       ],
       "matches": ["<all_urls>"]
     }
