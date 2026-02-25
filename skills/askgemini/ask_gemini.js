@@ -146,33 +146,42 @@ function pasteAndSubmit(text) {
 
         // 對於 contenteditable 元素，設置文本內容
         if (inputElement.contentEditable === 'true') {
-            // 使用 textContent 而不是 innerHTML 避免 TrustedHTML 限制
+            // 方法1: 直接設置 textContent
             inputElement.textContent = text;
+            
+            // 方法2: 也設置 innerText
+            inputElement.innerText = text;
+            
             result.logs.push("✅ 文字已設置到 contenteditable");
         } else if (inputElement.tagName === 'TEXTAREA') {
             inputElement.value = text;
             result.logs.push("✅ 文字已設置到 textarea");
         } else {
             inputElement.textContent = text;
+            inputElement.innerText = text;
             result.logs.push("✅ 文字已設置到 textbox");
         }
 
-        // 3. 多次觸發事件以確保 Angular 檢測到變化
+        // 3. 觸發所有可能的事件，讓 Angular 和 Quill 檢測到變化
         const events = [
             new Event('input', { bubbles: true, cancelable: true }),
             new Event('change', { bubbles: true, cancelable: true }),
             new Event('blur', { bubbles: true, cancelable: true }),
-            new KeyboardEvent('keyup', { bubbles: true, cancelable: true })
+            new KeyboardEvent('keyup', { bubbles: true, cancelable: true }),
+            new KeyboardEvent('keydown', { bubbles: true, cancelable: true }),
+            new KeyboardEvent('keypress', { bubbles: true, cancelable: true })
         ];
         
-        events.forEach(evt => {
-            inputElement.dispatchEvent(evt);
-        });
+        for (let i = 0; i < 2; i++) {
+            events.forEach(evt => {
+                inputElement.dispatchEvent(evt);
+            });
+        }
         
-        // 添加更多 Angular 友好的事件
+        // 添加 Angular 友好的事件
         inputElement.dispatchEvent(new Event('ngModelChange', { bubbles: true }));
         
-        result.logs.push("✅ 已觸發 input/change/blur/keyup/ngModelChange 事件");
+        result.logs.push("✅ 已觸發多個事件確保 Angular 檢測到變化");
         
         // 檢查輸入框是否真的有內容
         const contentLength = inputElement.textContent ? inputElement.textContent.trim().length : 0;
@@ -188,15 +197,23 @@ function pasteAndSubmit(text) {
         const waitStartTime = Date.now();
         let sendButton = null;
         let buttonReady = false;
+        let waitAttempts = 0;
         
         while (Date.now() - waitStartTime < maxWaitTime) {
             sendButton = document.querySelector('button.send-button');
             if (sendButton) {
                 const ariaDisabled = sendButton.getAttribute('aria-disabled');
+                waitAttempts++;
+                
                 if (ariaDisabled === 'false' || ariaDisabled === null) {
                     buttonReady = true;
-                    result.logs.push("✅ 按鈕已準備好 (aria-disabled=" + ariaDisabled + ")");
+                    result.logs.push("✅ 按鈕已準備好 (aria-disabled=" + ariaDisabled + ", 第 " + waitAttempts + " 次嘗試)");
                     break;
+                }
+                
+                // 每 500ms 記錄一次
+                if (waitAttempts % 10 === 0) {
+                    result.logs.push("⏳ 等待中... aria-disabled=" + ariaDisabled + " (已等待 " + (Date.now() - waitStartTime) + "ms)");
                 }
             }
             // 等待 50ms 後重新檢查
@@ -205,7 +222,7 @@ function pasteAndSubmit(text) {
         }
         
         if (!buttonReady) {
-            result.logs.push("⚠️  按鈕超時未變為可用，但仍嘗試點擊");
+            result.logs.push("⚠️  超時 (" + (Date.now() - waitStartTime) + "ms): 按鈕未變為可用，但仍嘗試點擊");
         }
 
         // 4. 立即尋找並點擊發送按鈕
