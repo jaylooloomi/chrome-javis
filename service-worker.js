@@ -261,14 +261,21 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
             console.warn("[Gateway] ⚠️  檢測到空或無效的 AI 回應，嘗試進行故障排除...");
             console.warn("[Gateway] 原始 AI 回應內容:", aiResponse);
             
-            // 嘗試從用戶提示詞中提取 URL (最後的手段)
-            console.warn("[Gateway] 嘗試從用戶提示詞提取關鍵字...");
+            // 嘗試從用戶提示詞中提取明確的開啟網站意圖
+            console.warn("[Gateway] 檢查是否有明確的開啟網站意圖...");
+            
+            // 開啟意圖關鍵詞
+            const openKeywords = ['打開', '開啟', 'open', '訪問', 'visit', '去', '開'];
             const websiteKeywords = ['google', 'youtube', 'github', 'twitter', 'linkedin', 'facebook', 'instagram'];
+            
             const userPromptLower = userPrompt.toLowerCase();
+            
+            // 檢查是否同時包含"開啟"意圖和網站名稱
+            const hasOpenIntent = openKeywords.some(keyword => userPromptLower.includes(keyword.toLowerCase()));
             const matchedWebsite = websiteKeywords.find(keyword => userPromptLower.includes(keyword));
             
-            if (matchedWebsite) {
-                console.warn(`[Gateway] 🔧 偵測到網站關鍵字: ${matchedWebsite}，使用緊急回退...`);
+            if (hasOpenIntent && matchedWebsite) {
+                console.warn(`[Gateway] 🔧 偵測到開啟意圖和網站: ${matchedWebsite}，使用緊急回退...`);
                 command = {
                     skill: "open_tab",
                     url: `https://${matchedWebsite}.com`,
@@ -276,8 +283,13 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
                 };
                 console.warn("[Gateway] ✅ 緊急回退成功，使用命令:", command);
             } else {
-                console.error("[Gateway] ❌ 無法從提示詞中提取網站資訊");
-                sendResponse({ status: "error", text: `AI 未生成有效的命令。回應: ${aiResponse}` });
+                if (!hasOpenIntent) {
+                    console.warn("[Gateway] ❌ 未偵測到開啟意圖 (缺少: 打開/開啟/open/訪問 等)");
+                }
+                if (!matchedWebsite) {
+                    console.warn("[Gateway] ❌ 未偵測到網站名稱");
+                }
+                sendResponse({ status: "error", text: `AI 無法識別該指令或找不到相應的技能。回應: ${aiResponse}` });
                 return;
             }
         }
