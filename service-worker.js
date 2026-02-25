@@ -430,7 +430,7 @@ async function callGeminiFlash(prompt, systemPrompt, geminiConfig) {
 // --- Ollama API 調用 ---
 async function callOllama(prompt, systemPrompt, ollamaConfig) {
     try {
-        console.log("[Ollama] 發送請求到 Ollama gemma2:2b...");
+        console.log(`[Ollama] 發送請求到 Ollama ${ollamaConfig.model}...`);
 
         const url = `${ollamaConfig.baseUrl}/api/generate`;
         
