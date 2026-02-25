@@ -101,6 +101,41 @@
             font-family: monospace;
             color: #d63384;
         }
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 28px;
+            background-color: #ccc;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .toggle-switch.active {
+            background-color: #4CAF50;
+        }
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 24px;
+            height: 24px;
+            background-color: white;
+            border-radius: 50%;
+            transition: left 0.3s;
+        }
+        .toggle-switch.active .toggle-slider {
+            left: 24px;
+        }
+        .notification-status {
+            font-size: 14px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -109,6 +144,20 @@
         
         <div class="warning">
             <strong>⚠️ 重要：</strong> 必須先在此頁面授予麥克風權限，Side Panel 中的語音功能才能正常工作！
+        </div>
+
+        <div class="section">
+            <h2>🔔 通知設定</h2>
+            <p>控制技能執行完成時是否顯示通知提醒。</p>
+            <div class="switch-container">
+                <div id="notificationToggle" class="toggle-switch active">
+                    <div class="toggle-slider"></div>
+                </div>
+                <label style="cursor: pointer; margin: 0;">
+                    <strong id="notificationLabel">通知已啟用</strong><br/>
+                    <span class="notification-status">技能執行時將顯示右下角通知</span>
+                </label>
+            </div>
         </div>
 
         <div class="section">

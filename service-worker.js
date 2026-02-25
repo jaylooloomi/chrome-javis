@@ -1,6 +1,10 @@
 // service-worker.js - 核心网关 (Gateway-Client 模式)
 // 唯一的邏輯中樞 - 所有操作在此執行
 
+// ======== 導入通知工具 ========
+// 注：service-worker 中不能直接 import，需要通過消息傳遞調用 SidePanel 中的通知
+// 我們將通過 chrome.runtime.sendMessage 間接調用通知功能
+
 console.log("[Gateway] 🚀 Service Worker 已加載");
 
 // ======== 技能註冊表和快取 ========
@@ -342,10 +346,36 @@ async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse)
         const result = await executeSidePanelSkill(skillName, skillInfo.folder, args);
         
         console.log(`[Gateway] 技能 ${skillName} 執行結果:`, result);
+        
+        // 發送成功通知（通過消息傳遞）
+        try {
+            await chrome.runtime.sendMessage({
+                action: 'SHOW_NOTIFICATION',
+                type: 'success',
+                skillName: skillName,
+                message: '技能已成功執行'
+            });
+        } catch (error) {
+            console.warn('[Gateway] 發送通知失敗:', error);
+        }
+        
         sendResponse({ status: "success", text: result });
         
     } catch (error) {
         console.error(`[Gateway] 技能執行失敗:`, error);
+        
+        // 發送失敗通知（通過消息傳遞）
+        try {
+            await chrome.runtime.sendMessage({
+                action: 'SHOW_NOTIFICATION',
+                type: 'error',
+                skillName: skillName,
+                message: error.message
+            });
+        } catch (notifyError) {
+            console.warn('[Gateway] 發送失敗通知失敗:', notifyError);
+        }
+        
         sendResponse({ status: "error", text: `技能執行失敗: ${error.message}` });
     }
 }

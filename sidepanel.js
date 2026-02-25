@@ -1,3 +1,6 @@
+// ======== 導入通知工具 ========
+import { showSuccessNotification, showErrorNotification } from './notification-utils.js';
+
 // ======== 語音識別初始化 (直接使用 Web Speech API) ========
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
@@ -204,12 +207,17 @@ document.getElementById('runBtn').addEventListener('click', async () => {
         console.log("[SidePanel] 收到回應:", res);
         output.textContent = res.text || res.error;
         
-        // 如果執行成功，清空輸入框
+        // 顯示通知 - 執行成功
         if (res.status === "success") {
-            console.log("[SidePanel] 執行成功，清空輸入框");
+            console.log("[SidePanel] 執行成功，顯示成功通知");
             document.getElementById('userInput').value = '';
             final_transcript = '';
             interim_transcript = '';
+            await showSuccessNotification('AI 助手', '指令已執行');
+        } else {
+            // 顯示通知 - 執行失敗
+            console.log("[SidePanel] 執行失敗，顯示錯誤通知");
+            await showErrorNotification('AI 助手', res.error || '執行失敗');
         }
     } catch (error) {
         console.error("[SidePanel] 錯誤:", error);
@@ -241,10 +249,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 const result = await skillFunc(message.args);
                 
                 console.log(`[SidePanel] 技能執行成功:`, result);
+                // 顯示成功通知
+                await showSuccessNotification(message.skill, '技能已成功執行');
                 sendResponse({ status: "success", result: result });
                 
             } catch (error) {
                 console.error(`[SidePanel] 技能執行失敗:`, error);
+                // 顯示錯誤通知
+                await showErrorNotification(message.skill, error.message);
                 sendResponse({ status: "error", error: error.message });
             }
         })();

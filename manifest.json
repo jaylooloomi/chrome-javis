@@ -12,7 +12,8 @@
     "contextMenus",
     "clipboardRead",
     "clipboardWrite",
-    "tabs"
+    "tabs",
+    "notifications"
   ],
   "host_permissions": [
     "http://localhost:11434/*",

@@ -35,3 +35,45 @@ document.getElementById('requestMicBtn').addEventListener('click', async () => {
         statusDiv.className = 'status error';
     }
 });
+
+// ======== 通知設定 ========
+const notificationToggle = document.getElementById('notificationToggle');
+const notificationLabel = document.getElementById('notificationLabel');
+
+// 頁面加載時讀取通知設定
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const settings = await chrome.storage.sync.get('notificationsEnabled');
+        const isEnabled = settings.notificationsEnabled !== false;  // 默認啟用
+        
+        updateNotificationUI(isEnabled);
+    } catch (error) {
+        console.error('[Options] 讀取通知設定失敗:', error);
+    }
+});
+
+// 通知開關點擊事件
+notificationToggle.addEventListener('click', async () => {
+    try {
+        const isCurrentlyActive = notificationToggle.classList.contains('active');
+        const newState = !isCurrentlyActive;
+        
+        // 保存到 chrome.storage.sync
+        await chrome.storage.sync.set({ notificationsEnabled: newState });
+        
+        updateNotificationUI(newState);
+        console.log('[Options] 通知設定已更新:', newState);
+    } catch (error) {
+        console.error('[Options] 保存通知設定失敗:', error);
+    }
+});
+
+function updateNotificationUI(isEnabled) {
+    if (isEnabled) {
+        notificationToggle.classList.add('active');
+        notificationLabel.textContent = '通知已啟用';
+    } else {
+        notificationToggle.classList.remove('active');
+        notificationLabel.textContent = '通知已關閉';
+    }
+}
