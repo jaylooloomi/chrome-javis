@@ -140,6 +140,12 @@ function pasteAndSubmit(text) {
 
         result.logs.push("✅ 找到輸入框: " + inputElement.tagName + " class=" + inputElement.className);
 
+        // 1.5. 等待輸入框完全初始化 (Gemini 可能需要時間初始化 UI)
+        result.logs.push("⏳ 等待輸入框完全初始化 (2 秒)...");
+        const initDelay = Date.now();
+        while (Date.now() - initDelay < 2000) {}
+        result.logs.push("✅ 輸入框初始化完成");
+
         // 2. 聚焦並貼上文字
         inputElement.focus();
         result.logs.push("✅ 已 focus 到輸入框");
@@ -186,44 +192,11 @@ function pasteAndSubmit(text) {
         // 檢查輸入框是否真的有內容
         const contentLength = inputElement.textContent ? inputElement.textContent.trim().length : 0;
         result.logs.push("📍 輸入框內容長度: " + contentLength);
-        
-        if (contentLength === 0) {
-            result.logs.push("⚠️  警告：輸入框仍為空，文本可能未成功設置");
-        }
-        
-        // 3.5. 等待按鈕狀態變為可用（aria-disabled=false）
-        result.logs.push("⏱️ 等待按鈕狀態更新 (等待 aria-disabled 變為 false)...");
-        const maxWaitTime = 5000; // 最多等待 5 秒
-        const waitStartTime = Date.now();
-        let sendButton = null;
-        let buttonReady = false;
-        let waitAttempts = 0;
-        
-        while (Date.now() - waitStartTime < maxWaitTime) {
-            sendButton = document.querySelector('button.send-button');
-            if (sendButton) {
-                const ariaDisabled = sendButton.getAttribute('aria-disabled');
-                waitAttempts++;
-                
-                if (ariaDisabled === 'false' || ariaDisabled === null) {
-                    buttonReady = true;
-                    result.logs.push("✅ 按鈕已準備好 (aria-disabled=" + ariaDisabled + ", 第 " + waitAttempts + " 次嘗試)");
-                    break;
-                }
-                
-                // 每 500ms 記錄一次
-                if (waitAttempts % 10 === 0) {
-                    result.logs.push("⏳ 等待中... aria-disabled=" + ariaDisabled + " (已等待 " + (Date.now() - waitStartTime) + "ms)");
-                }
-            }
-            // 等待 50ms 後重新檢查
-            const checkDelay = Date.now();
-            while (Date.now() - checkDelay < 50) {}
-        }
-        
-        if (!buttonReady) {
-            result.logs.push("⚠️  超時 (" + (Date.now() - waitStartTime) + "ms): 按鈕未變為可用，但仍嘗試點擊");
-        }
+        // 3.5. 等待頁面完全載入和 UI 更新
+        result.logs.push("⏱️ 等待頁面 UI 更新 (3 秒)...");
+        const uiDelay = Date.now();
+        while (Date.now() - uiDelay < 3000) {}
+        result.logs.push("✅ 頁面 UI 已更新");
 
         // 4. 立即尋找並點擊發送按鈕
         result.logs.push("正在尋找發送按鈕...");
