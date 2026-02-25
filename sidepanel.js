@@ -247,34 +247,26 @@ document.getElementById('askGeminiBtn').addEventListener('click', async () => {
         
         document.getElementById('output').textContent = `⏳ 正在開啟 Gemini，準備貼上：${selectedText.substring(0, 50)}...`;
         
-        // 3. 直接調用 ask_gemini 技能
-        const result = await new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-                reject(new Error("Ask Gemini 執行超時"));
-            }, 5000);
+        // 3. 直接在 SidePanel 中加載並執行 ask_gemini 技能（不經過 Service Worker）
+        try {
+            console.log("[SidePanel] 正在加載 ask_gemini 技能模組");
+            const module = await import('./skills/askgemini/ask_gemini.js');
             
-            chrome.runtime.sendMessage(
-                {
-                    target: 'SIDE_PANEL',
-                    type: 'EXECUTE_SKILL',
-                    skill: 'ask_gemini',
-                    skillFolder: 'askgemini',
-                    args: { text: selectedText }
-                },
-                (response) => {
-                    clearTimeout(timeout);
-                    if (chrome.runtime.lastError) {
-                        reject(new Error(`無法連接：${chrome.runtime.lastError.message}`));
-                    } else if (response && response.status === 'success') {
-                        resolve(response.result);
-                    } else {
-                        reject(new Error(response?.error || '未知錯誤'));
-                    }
-                }
-            );
-        });
-        
-        document.getElementById('output').textContent = result;
+            const skillFunc = module.ask_gemini;
+            if (typeof skillFunc !== 'function') {
+                throw new Error('ask_gemini 技能函數未找到');
+            }
+            
+            console.log("[SidePanel] 執行 ask_gemini 技能");
+            const result = await skillFunc({ text: selectedText });
+            
+            console.log("[SidePanel] ask_gemini 執行成功:", result);
+            document.getElementById('output').textContent = result;
+            
+        } catch (error) {
+            console.error("[SidePanel] ask_gemini 執行失敗:", error);
+            throw error;
+        }
         
     } catch (error) {
         console.error("[SidePanel] Ask Gemini 失敗:", error);
