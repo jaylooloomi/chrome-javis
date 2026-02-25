@@ -154,6 +154,11 @@ function pasteAndSubmit(text) {
             paragraph.textContent = text;
             inputElement.appendChild(paragraph);
             
+            // 也設置 textContent 備用
+            if (!inputElement.textContent || inputElement.textContent.trim() === '') {
+                inputElement.textContent = text;
+            }
+            
             result.logs.push("✅ 文字已設置到 contenteditable");
         } else if (inputElement.tagName === 'TEXTAREA') {
             inputElement.value = text;
@@ -175,7 +180,10 @@ function pasteAndSubmit(text) {
             inputElement.dispatchEvent(evt);
         });
         
-        result.logs.push("✅ 已觸發 input/change/blur/keyup 事件");
+        // 添加更多 Angular 友好的事件
+        inputElement.dispatchEvent(new Event('ngModelChange', { bubbles: true }));
+        
+        result.logs.push("✅ 已觸發 input/change/blur/keyup/ngModelChange 事件");
         
         // 檢查輸入框是否真的有內容
         const contentLength = inputElement.textContent ? inputElement.textContent.trim().length : 0;
@@ -261,14 +269,35 @@ function pasteAndSubmit(text) {
         
         if (sendButton) {
             try {
+                // 先檢查按鈕狀態
+                const isDisabled = sendButton.disabled;
+                const ariaDisabled = sendButton.getAttribute('aria-disabled');
+                result.logs.push("📍 按鈕狀態檢查:");
+                result.logs.push("   disabled: " + isDisabled);
+                result.logs.push("   aria-disabled: " + ariaDisabled);
+                result.logs.push("   className: " + sendButton.className);
+                
+                // 檢查按鈕是否在視口中
+                const rect = sendButton.getBoundingClientRect();
+                result.logs.push("   在視口中: " + (rect.width > 0 && rect.height > 0));
+                
                 // 方法1：直接 click()
                 sendButton.click();
                 result.logs.push("✅ 已點擊發送按鈕 (方法1: .click())");
                 
+                // 稍作延遲
+                const delayStart = Date.now();
+                while (Date.now() - delayStart < 100) {}
+                
                 // 方法2：觸發 mousedown, mouseup, click 事件
-                sendButton.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-                sendButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
-                result.logs.push("✅ 已觸發 mousedown/mouseup 事件");
+                sendButton.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+                sendButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+                sendButton.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                result.logs.push("✅ 已觸發 mousedown/mouseup/click 事件");
+                
+                // 稍作延遲
+                const delayStart2 = Date.now();
+                while (Date.now() - delayStart2 < 100) {}
                 
                 // 方法3：焦點 + Enter 鍵
                 sendButton.focus();
@@ -276,9 +305,27 @@ function pasteAndSubmit(text) {
                     key: 'Enter', 
                     code: 'Enter', 
                     keyCode: 13,
-                    bubbles: true 
+                    bubbles: true,
+                    cancelable: true
+                }));
+                sendButton.dispatchEvent(new KeyboardEvent('keyup', { 
+                    key: 'Enter', 
+                    code: 'Enter', 
+                    keyCode: 13,
+                    bubbles: true,
+                    cancelable: true
                 }));
                 result.logs.push("✅ 已觸發焦點和 Enter 鍵事件");
+                
+                // 方法4：嘗試直接訪問按鈕的 onclick 事件處理器
+                if (sendButton.onclick) {
+                    sendButton.onclick();
+                    result.logs.push("✅ 已調用 onclick 事件處理器");
+                }
+                
+                // 方法5：尋找父容器中的點擊事件監聽器
+                result.logs.push("✅ 已嘗試多種觸發方式");
+                
             } catch (e) {
                 result.logs.push("❌ 點擊發送按鈕失敗: " + e);
                 throw new Error("無法點擊發送按鈕: " + e.message);
