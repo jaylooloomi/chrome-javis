@@ -5,6 +5,7 @@ let isListening = false;
 let final_transcript = '';
 let interim_transcript = '';
 let isAutoRunning = false;  // 標記是否在自動執行流程中
+let isMicEnabled = true;    // 常駐麥克風狀態 (預設開啟)
 
 if (SpeechRecognition) {
     recognition = new SpeechRecognition();
@@ -15,8 +16,6 @@ if (SpeechRecognition) {
     recognition.onstart = () => {
         console.log("[Speech] 語音識別已啟動");
         isListening = true;
-        document.getElementById('micBtn').classList.add('listening');
-        document.getElementById('micBtn').textContent = '⏹️';
         document.getElementById('output').textContent = '🎤 正在聆聽...';
         final_transcript = '';
         interim_transcript = '';
@@ -25,8 +24,12 @@ if (SpeechRecognition) {
     recognition.onend = () => {
         console.log("[Speech] 語音識別已停止");
         isListening = false;
-        document.getElementById('micBtn').classList.remove('listening');
-        document.getElementById('micBtn').textContent = '🎤';
+        
+        // 如果常駐麥克風已關閉，則不自動重啟
+        if (!isMicEnabled) {
+            console.log("[Speech] 常駐麥克風已關閉");
+            return;
+        }
         
         // 識別結束後等待 0.5s，檢查是否有內容需要執行
         const text = final_transcript.trim();
@@ -37,12 +40,14 @@ if (SpeechRecognition) {
                 document.getElementById('runBtn').click();
                 // 执行后重新启动常驻麦克风
                 setTimeout(() => {
-                    console.log("[Speech] 重新启动常驻麦克风");
-                    recognition.start();
+                    if (isMicEnabled) {
+                        console.log("[Speech] 重新启动常驻麦克风");
+                        recognition.start();
+                    }
                     isAutoRunning = false;
                 }, 500);
             }, 500); // 停顿 0.5s
-        } else if (!text) {
+        } else if (!text && isMicEnabled) {
             // 没有识别到内容，继续监听
             console.log("[Speech] 未识别到内容，继续监听");
             setTimeout(() => {
@@ -109,35 +114,60 @@ if (SpeechRecognition) {
         }
         
         isListening = false;
-        document.getElementById('micBtn').classList.remove('listening');
-        document.getElementById('micBtn').textContent = '🎤';
+        updateMicSwitchUI();
     };
 } else {
     console.warn("[Speech] 您的浏览器不支持 Web Speech API");
-    document.getElementById('micBtn').disabled = true;
-    document.getElementById('micBtn').title = '您的浏览器不支持语音识别';
+    document.getElementById('micSwitch').disabled = true;
+    document.getElementById('micSwitch').title = '您的浏览器不支持语音识别';
 }
 
-// ======== 麥克風按鈕事件 ========
-document.getElementById('micBtn').addEventListener('click', () => {
+// ======== 更新麥克風開關 UI ========
+function updateMicSwitchUI() {
+    const switchBtn = document.getElementById('micSwitch');
+    const statusLabel = document.getElementById('micStatus');
+    
+    if (isMicEnabled) {
+        switchBtn.classList.add('on');
+        statusLabel.textContent = '開啟';
+    } else {
+        switchBtn.classList.remove('on');
+        statusLabel.textContent = '關閉';
+    }
+}
+
+// ======== 麥克風開關事件 ========
+document.getElementById('micSwitch').addEventListener('click', () => {
     if (!recognition) {
         alert('您的浏览器不支持语音识别');
         return;
     }
 
-    if (isListening) {
-        // 停止識別
-        recognition.stop();
-    } else {
-        // 開始識別
-        document.getElementById('userInput').focus();
+    // 切換常駐麥克風狀態
+    isMicEnabled = !isMicEnabled;
+    console.log("[Speech] 常駐麥克風狀態:", isMicEnabled ? "開啟" : "關閉");
+    
+    if (isMicEnabled) {
+        // 開啟常駐麥克風
+        updateMicSwitchUI();
+        document.getElementById('output').textContent = '🎤 語音已開啟';
+        console.log("[Speech] 開始常駐監聽");
         recognition.start();
+    } else {
+        // 關閉常駐麥克風
+        updateMicSwitchUI();
+        document.getElementById('output').textContent = '🔇 語音已關閉';
+        console.log("[Speech] 停止常駐監聽");
+        recognition.stop();
     }
 });
 
 // ======== 頁面加載時自動啟動常駐麥克風 ========
 document.addEventListener('DOMContentLoaded', () => {
-    if (recognition) {
+    // 更新開關 UI 初始狀態
+    updateMicSwitchUI();
+    
+    if (recognition && isMicEnabled) {
         console.log("[Speech] 頁面載入，自動啟動常駐麥克風");
         recognition.start();
     }
@@ -173,8 +203,95 @@ document.getElementById('runBtn').addEventListener('click', async () => {
         const res = await chrome.runtime.sendMessage(message);
         console.log("[SidePanel] 收到回應:", res);
         output.textContent = res.text || res.error;
+        
+        // 如果執行成功，清空輸入框
+        if (res.status === "success") {
+            console.log("[SidePanel] 執行成功，清空輸入框");
+            document.getElementById('userInput').value = '';
+            final_transcript = '';
+            interim_transcript = '';
+        }
     } catch (error) {
         console.error("[SidePanel] 錯誤:", error);
         output.textContent = `❌ 錯誤: ${error.message}`;
+    }
+});
+
+// ======== 技能執行監聽 (SidePanel 作為技能執行中心) ========
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.target === 'SIDE_PANEL' && message.type === 'EXECUTE_SKILL') {
+        console.log("[SidePanel] 收到技能執行請求:", message.skill, message.args);
+        
+        // 異步處理技能執行
+        (async () => {
+            try {
+                // 動態 import 技能模組
+                const skillPath = `./skills/${message.skillFolder}/${message.skill}.js`;
+                console.log(`[SidePanel] 正在加載技能模組: ${skillPath}`);
+                
+                const module = await import(skillPath);
+                
+                // 執行技能函數
+                const skillFunc = module[message.skill];
+                if (typeof skillFunc !== 'function') {
+                    throw new Error(`技能模組中未找到函數: ${message.skill}`);
+                }
+                
+                console.log(`[SidePanel] 執行技能: ${message.skill}`);
+                const result = await skillFunc(message.args);
+                
+                console.log(`[SidePanel] 技能執行成功:`, result);
+                sendResponse({ status: "success", result: result });
+                
+            } catch (error) {
+                console.error(`[SidePanel] 技能執行失敗:`, error);
+                sendResponse({ status: "error", error: error.message });
+            }
+        })();
+        
+        // 必須返回 true 以保持消息通道開啟，直到異步 sendResponse 被調用
+        return true;
+    }
+});
+
+// ======== Ask Gemini 按鈕事件 ========
+document.getElementById('askGeminiBtn').addEventListener('click', async () => {
+    console.log("[SidePanel] Ask Gemini 按鈕被點擊");
+    
+    try {
+        // 1. 獲取當前活動標籤頁
+        const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        console.log("[SidePanel] 當前活動標籤頁:", activeTab.id, activeTab.title, activeTab.url);
+        
+        // 2. 獲取 userInput 作為 prompt
+        const prompt = document.getElementById('userInput').value;
+        console.log("[SidePanel] prompt:", prompt);
+        
+        document.getElementById('output').textContent = `⏳ 正在開啟 Gemini，準備貼上頁面內容...`;
+        
+        // 3. 直接在 SidePanel 中加載並執行 summary_this_page 技能（不經過 Service Worker）
+        try {
+            console.log("[SidePanel] 正在加載 summary_this_page 技能模組");
+            const module = await import('./skills/summary_this_page/summary_this_page.js');
+            
+            const skillFunc = module.summary_this_page;
+            if (typeof skillFunc !== 'function') {
+                throw new Error('summary_this_page 技能函數未找到');
+            }
+            
+            console.log("[SidePanel] 執行 summary_this_page 技能，傳遞 tabId:", activeTab.id);
+            const result = await skillFunc({ tabId: activeTab.id, url: activeTab.url, prompt: prompt }, prompt);
+            
+            console.log("[SidePanel] summary_this_page 執行成功:", result);
+            document.getElementById('output').textContent = result;
+            
+        } catch (error) {
+            console.error("[SidePanel] summary_this_page 執行失敗:", error);
+            throw error;
+        }
+        
+    } catch (error) {
+        console.error("[SidePanel] Summary Page 失敗:", error);
+        document.getElementById('output').textContent = `❌ Summary Page 失敗：${error.message}`;
     }
 });

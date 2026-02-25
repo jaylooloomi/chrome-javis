@@ -1,7 +1,7 @@
-// open_tab.js - 在 Service Worker 中執行的技能
-// 遵循 README 規範：export async function run(args)
+// open_tab.js - 在 SidePanel 中執行的技能
+// 標準 ES Module 導出，支援動態 import
 
-export async function run(args) {
+export async function open_tab(args) {
     console.log("[Open Tab Skill] 啟動，接收到參數:", args);
 
     try {

@@ -14,9 +14,57 @@ let loadingPromise = null;
 // 此表將通過 loadSkillsDynamically() 動態填充
 const SKILL_MAPPINGS = {};
 
-// ======== Service Worker 技能執行函數映射 ========
-// 所有 Service Worker 技能在此定義
-const SERVICE_WORKER_SKILLS = {};
+// --- 執行 SidePanel 技能 ---
+// 將技能執行請求轉發給 SidePanel，由 SidePanel 進行動態加載和執行
+async function executeSidePanelSkill(skillName, skillFolder, args) {
+    try {
+        console.log(`[Gateway] 正在轉發技能到 SidePanel: ${skillName}`);
+        
+        // 發送消息給 SidePanel 執行技能
+        return new Promise((resolve, reject) => {
+            let responded = false;
+            
+            // 設置超時保護
+            const timeoutId = setTimeout(() => {
+                if (!responded) {
+                    responded = true;
+                    console.error(`[Gateway] SidePanel 技能執行超時 (5秒)`);
+                    reject(new Error(`SidePanel 技能執行超時：無法連接或 SidePanel 未開啟`));
+                }
+            }, 5000);
+            
+            chrome.runtime.sendMessage(
+                {
+                    target: 'SIDE_PANEL',
+                    type: 'EXECUTE_SKILL',
+                    skill: skillName,
+                    skillFolder: skillFolder,
+                    args: args
+                },
+                (response) => {
+                    if (responded) return;
+                    responded = true;
+                    clearTimeout(timeoutId);
+                    
+                    if (chrome.runtime.lastError) {
+                        console.error(`[Gateway] SidePanel 通訊錯誤:`, chrome.runtime.lastError);
+                        reject(new Error(`無法連接到 SidePanel: ${chrome.runtime.lastError.message}。請確保 SidePanel 已開啟。`));
+                    } else if (response && response.status === 'success') {
+                        console.log(`[Gateway] 技能執行成功:`, response.result);
+                        resolve(response.result);
+                    } else {
+                        const error = response?.error || '未知錯誤';
+                        console.error(`[Gateway] 技能執行失敗:`, error);
+                        reject(new Error(error));
+                    }
+                }
+            );
+        });
+    } catch (error) {
+        console.error(`[Gateway] 執行技能失敗 [${skillName}]:`, error);
+        throw error;
+    }
+}
 
 // --- 階段 A：啟動與技能裝載（動態掃描） ---
 async function ensureSkillsLoaded() {
@@ -43,18 +91,12 @@ async function loadSkillsDynamically() {
         }
         const manifestData = await manifestResponse.json();
         
-        // 2. 動態構建技能映射表並預加載 Service Worker 技能
+        // 2. 動態構建技能映射表（不再預加載 Service Worker 技能，改為按需加載）
         for (const skill of manifestData.skills) {
             SKILL_MAPPINGS[skill.name] = {
                 folder: skill.folder,
                 runInPageContext: skill.runInPageContext !== false
             };
-            
-            // 如果是 Service Worker 技能，預先加載其執行函數
-            if (!skill.runInPageContext) {
-                console.log(`[Gateway] 預加載 Service Worker 技能: ${skill.name}`);
-                await preloadServiceWorkerSkill(skill.name, skill.folder);
-            }
         }
         
         console.log(`[Gateway] 發現技能: ${Object.keys(SKILL_MAPPINGS).join(', ')}`);
@@ -102,49 +144,6 @@ async function loadSkillsDynamically() {
         + "5. 始終檢查用戶輸入是否匹配任何技能\n";
     dynamicSystemPrompt = promptBuilder;
     console.log("[Gateway] 技能庫已構建完成。已載入技能:", Object.keys(SKILL_REGISTRY));
-}
-
-// 預加載 Service Worker 技能的執行函數
-async function preloadServiceWorkerSkill(skillName, skillFolder) {
-    try {
-        // 根據技能名稱動態定義執行函數
-        // 對於 open_tab 技能
-        if (skillName === 'open_tab') {
-            SERVICE_WORKER_SKILLS[skillName] = async (command) => {
-                console.log("[Open Tab Skill] 啟動，接收到命令:", command);
-                try {
-                    // URL 可能在 command.url 或 command.args.url
-                    let url = command.url || (command.args && command.args.url);
-                    
-                    console.log("[Open Tab Skill] 提取的 URL:", url);
-                    console.log("[Open Tab Skill] 命令結構:", JSON.stringify(command));
-                    
-                    // 驗證和修復：如果 URL 缺失，進行診斷
-                    if (!url) {
-                        console.error("[Open Tab Skill] ⚠️  未找到 URL");
-                        console.error("[Open Tab Skill] 完整命令:", JSON.stringify(command));
-                        throw new Error("未提供 URL");
-                    }
-                    
-                    // 確保 URL 有有效的協議前綴
-                    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                        url = 'https://' + url;
-                        console.log("[Open Tab Skill] 修復 URL:", url);
-                    }
-                    
-                    const tab = await chrome.tabs.create({ url: url });
-                    console.log("[Open Tab Skill] 成功開啟分頁，ID:", tab.id);
-                    return `成功開啟分頁 (ID: ${tab.id})：${url}`;
-                } catch (error) {
-                    console.error("[Open Tab Skill] 錯誤:", error);
-                    throw new Error(`開啟分頁失敗：${error.message}`);
-                }
-            };
-            console.log(`[Gateway] ✅ 預加載完成: ${skillName}`);
-        }
-    } catch (e) {
-        console.error(`[Gateway] 預加載失敗 [${skillName}]:`, e);
-    }
 }
 
 chrome.runtime.onInstalled.addListener(loadSkillsDynamically);
@@ -227,14 +226,22 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
         console.log("[Gateway] 可用技能:", Object.keys(SKILL_REGISTRY));
         
         let aiResponse;
-        if (configData.activeModel === 'ollama') {
-            console.log("[Gateway] ✅ 選擇使用 Ollama 模型");
-            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollama, null, 2));
-            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollama);
+        if (configData.activeModel === 'ollamaGemma2B') {
+            console.log("[Gateway] ✅ 選擇使用 Ollama Gemma 2B 模型 (小模型)");
+            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemma2B, null, 2));
+            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaGemma2B);
+        } else if (configData.activeModel === 'ollamaGemmaLarge') {
+            console.log("[Gateway] ✅ 選擇使用 Ollama Gemma Large 模型 (大模型)");
+            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemmaLarge, null, 2));
+            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaGemmaLarge);
+        } else if (configData.activeModel === 'ollamaMinimaxM2') {
+            console.log("[Gateway] ✅ 選擇使用 Ollama Minimax M2 模型");
+            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaMinimaxM2, null, 2));
+            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaMinimaxM2);
         } else {
-            console.log("[Gateway] ✅ 選擇使用 Gemini Flash 模型");
-            console.log("[Gateway] Gemini 配置:", JSON.stringify({...configData.gemini, apiKey: '***'}));
-            aiResponse = await callGeminiFlash(userPrompt, dynamicSystemPrompt, configData.gemini);
+            console.log("[Gateway] ✅ 選擇使用 Gemini 2.5 Flash 模型");
+            console.log("[Gateway] Gemini 配置:", JSON.stringify({...configData.geminiFlash, apiKey: '***'}));
+            aiResponse = await callGeminiFlash(userPrompt, dynamicSystemPrompt, configData.geminiFlash);
         }
         
         console.log("[Gateway] AI 原始回應 (長度:", aiResponse.length, "):", aiResponse);
@@ -258,28 +265,14 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
 
         // 驗證和修復：檢查是否為空對象或缺少必要字段
         if (!command.skill || Object.keys(command).length === 0) {
-            console.warn("[Gateway] ⚠️  檢測到空或無效的 AI 回應，嘗試進行故障排除...");
+            console.warn("[Gateway] ⚠️  檢測到空或無效的 AI 回應");
             console.warn("[Gateway] 原始 AI 回應內容:", aiResponse);
-            
-            // 嘗試從用戶提示詞中提取 URL (最後的手段)
-            console.warn("[Gateway] 嘗試從用戶提示詞提取關鍵字...");
-            const websiteKeywords = ['google', 'youtube', 'github', 'twitter', 'linkedin', 'facebook', 'instagram'];
-            const userPromptLower = userPrompt.toLowerCase();
-            const matchedWebsite = websiteKeywords.find(keyword => userPromptLower.includes(keyword));
-            
-            if (matchedWebsite) {
-                console.warn(`[Gateway] 🔧 偵測到網站關鍵字: ${matchedWebsite}，使用緊急回退...`);
-                command = {
-                    skill: "open_tab",
-                    url: `https://${matchedWebsite}.com`,
-                    args: {}
-                };
-                console.warn("[Gateway] ✅ 緊急回退成功，使用命令:", command);
-            } else {
-                console.error("[Gateway] ❌ 無法從提示詞中提取網站資訊");
-                sendResponse({ status: "error", text: `AI 未生成有效的命令。回應: ${aiResponse}` });
-                return;
-            }
+            console.warn("[Gateway] ❌ 找不到可以匹配的 skill");
+            const availableSkills = Object.keys(SKILL_REGISTRY).length > 0 
+                ? Object.keys(SKILL_REGISTRY).join('、') 
+                : '目前沒有可用的技能';
+            sendResponse({ status: "error", text: `找不到可以匹配的 skill。可用技能: ${availableSkills}` });
+            return;
         }
 
         console.log("[Gateway] 階段 C：調度技能...");
@@ -293,7 +286,12 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
         // 查找技能（從 Key-Value Pair 中查詢）
         const skillInfo = SKILL_REGISTRY[command.skill];
         if (!skillInfo) {
-            sendResponse({ status: "error", text: `未知技能: ${command.skill}。可用技能: ${Object.keys(SKILL_REGISTRY).join(', ')}` });
+            console.error("[Gateway] ❌ 找不到可以匹配的 skill:", command.skill);
+            console.error("[Gateway] 可用的技能:", Object.keys(SKILL_REGISTRY));
+            const availableSkills = Object.keys(SKILL_REGISTRY).length > 0 
+                ? Object.keys(SKILL_REGISTRY).join('、') 
+                : '目前沒有可用的技能';
+            sendResponse({ status: "error", text: `找不到可以匹配的 skill。用戶要求的 skill: ${command.skill}。可用技能: ${availableSkills}` });
             return;
         }
 
@@ -303,10 +301,10 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
         // 根據技能的執行環境選擇執行方式
         if (skillInfo.runInPageContext) {
             // 在網頁前端執行
-            await runSkillInTabContext(command.skill, skillInfo, command, sendResponse);
+            await runSkillInTabContext(command.skill, skillInfo, command.args, sendResponse);
         } else {
             // 在 Service Worker 中直接執行
-            await runSkillInServiceWorker(command.skill, skillInfo, command, sendResponse);
+            await runSkillInServiceWorker(command.skill, skillInfo, command.args, sendResponse);
         }
         
     } catch (error) {
@@ -315,18 +313,33 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
     }
 }
 
-// --- 在 Service Worker 中直接執行技能 ---
+// --- 在 SidePanel 中執行技能 ---
 async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse) {
     try {
-        console.log(`[Gateway] 在 Service Worker 中執行技能: ${skillName}`);
+        console.log(`[Gateway] 將技能轉發給 SidePanel 執行: ${skillName}`);
+        console.log(`[Gateway] 傳遞的參數:`, args);
         
-        // 從預加載的技能映射中獲取執行函數
-        if (!SERVICE_WORKER_SKILLS[skillName]) {
-            throw new Error(`技能 ${skillName} 的執行函數未加載`);
+        // 替換佔位符：將 ACTIVE_TAB 和 ACTIVE_TAB_URL 替換為實際的 tabId 和 url
+        if (args.tabId === "ACTIVE_TAB" || args.url === "ACTIVE_TAB_URL") {
+            console.log(`[Gateway] 檢測到佔位符，正在獲取當前活動分頁...`);
+            const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            
+            if (!activeTab) {
+                throw new Error("無法獲取當前活動分頁");
+            }
+            
+            if (args.tabId === "ACTIVE_TAB") {
+                args.tabId = activeTab.id;
+                console.log(`[Gateway] 替換 tabId: ${activeTab.id}`);
+            }
+            if (args.url === "ACTIVE_TAB_URL") {
+                args.url = activeTab.url;
+                console.log(`[Gateway] 替換 url: ${activeTab.url}`);
+            }
         }
         
-        const skillFunction = SERVICE_WORKER_SKILLS[skillName];
-        const result = await skillFunction(args);
+        // 改為調用 SidePanel 執行技能
+        const result = await executeSidePanelSkill(skillName, skillInfo.folder, args);
         
         console.log(`[Gateway] 技能 ${skillName} 執行結果:`, result);
         sendResponse({ status: "success", text: result });
@@ -435,7 +448,7 @@ async function callGeminiFlash(prompt, systemPrompt, geminiConfig) {
 // --- Ollama API 調用 ---
 async function callOllama(prompt, systemPrompt, ollamaConfig) {
     try {
-        console.log("[Ollama] 發送請求到 Ollama gemma2:2b...");
+        console.log(`[Ollama] 發送請求到 Ollama ${ollamaConfig.model}...`);
 
         const url = `${ollamaConfig.baseUrl}/api/generate`;
         
