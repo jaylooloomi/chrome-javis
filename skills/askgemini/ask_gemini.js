@@ -23,14 +23,14 @@ export async function ask_gemini(args) {
         // 3. 在 Gemini 分頁中注入腳本，自動貼上文字並發送
         console.log("[Ask Gemini Skill] 正在注入自動貼上腳本");
         try {
-            await chrome.scripting.executeScript({
+            const scriptResults = await chrome.scripting.executeScript({
                 target: { tabId: tab.id },
                 function: pasteAndSubmit,
                 args: [text]
             });
-            console.log("[Ask Gemini Skill] 自動貼上腳本已執行");
+            console.log("[Ask Gemini Skill] 自動貼上腳本已執行，結果:", scriptResults);
         } catch (error) {
-            console.warn("[Ask Gemini Skill] 自動貼上失敗（可能頁面尚未完全加載）:", error);
+            console.warn("[Ask Gemini Skill] 自動貼上失敗（可能頁面尚未完全加載或 CSP 限制）:", error);
             // 這不是致命錯誤，用戶可以手動貼上
         }
 
@@ -83,69 +83,128 @@ async function waitForPageLoad(tabId, maxAttempts = 16, delayMs = 500) {
  * 這個函數會在 Gemini 頁面的 DOM 上下文中執行
  */
 function pasteAndSubmit(text) {
-    console.log("[Gemini Content] 開始貼上文字:", text.substring(0, 50));
-
+    console.log("[Gemini Content] === 開始執行 pasteAndSubmit ===");
+    console.log("[Gemini Content] 文字內容:", text.substring(0, 100));
+    
     try {
         // 1. 嘗試尋找不同的聊天輸入框選擇器
+        console.log("[Gemini Content] 正在尋找輸入框...");
         let inputElement = 
-            document.querySelector('[contenteditable="true"]') ||  // Gemini 使用的
-            document.querySelector('[role="textbox"]') ||           // 備選
-            document.querySelector('textarea');                     // 備選
+            document.querySelector('[contenteditable="true"]') ||  
+            document.querySelector('[role="textbox"]') ||           
+            document.querySelector('textarea') ||
+            document.querySelector('[data-testid*="input"]') ||
+            document.querySelector('[data-testid*="chat"]');
 
         if (!inputElement) {
-            console.error("[Gemini Content] 找不到聊天輸入框");
-            console.log("[Gemini Content] 頁面 DOM:", document.body.innerHTML.substring(0, 500));
-            alert("⚠️ 找不到 Gemini 聊天框。請手動貼上文字。");
-            return;
+            console.error("[Gemini Content] ❌ 找不到聊天輸入框");
+            // 嘗試列出所有可疑的元素
+            const allEditable = document.querySelectorAll('[contenteditable]');
+            console.log("[Gemini Content] 找到 contenteditable 元素數量:", allEditable.length);
+            allEditable.forEach((el, idx) => {
+                console.log(`[Gemini Content] 元素 ${idx}:`, el.tagName, el.className, el.contentEditable);
+            });
+            return { success: false, error: "找不到輸入框" };
         }
 
-        console.log("[Gemini Content] 找到輸入框:", inputElement.tagName, inputElement.className);
+        console.log("[Gemini Content] ✅ 找到輸入框");
+        console.log("[Gemini Content] 輸入框標籤:", inputElement.tagName);
+        console.log("[Gemini Content] 輸入框類別:", inputElement.className);
+        console.log("[Gemini Content] contentEditable:", inputElement.contentEditable);
 
         // 2. 設置文字內容
+        console.log("[Gemini Content] 正在設置文字內容...");
         if (inputElement.tagName === 'TEXTAREA') {
-            console.log("[Gemini Content] 設置 TEXTAREA 值");
+            console.log("[Gemini Content] 使用 TEXTAREA 模式");
             inputElement.value = text;
-        } else if (inputElement.contentEditable) {
-            console.log("[Gemini Content] 設置 contentEditable 文字");
+            inputElement.textContent = text;
+        } else if (inputElement.contentEditable === 'true' || inputElement.getAttribute('contenteditable') === 'true') {
+            console.log("[Gemini Content] 使用 contentEditable 模式");
             inputElement.textContent = text;
             inputElement.innerText = text;
+            
+            // 也嘗試設置 innerHTML
+            const div = document.createElement('div');
+            div.textContent = text;
+            inputElement.innerHTML = div.innerHTML;
         } else {
-            console.log("[Gemini Content] 設置 textbox 文字");
+            console.log("[Gemini Content] 使用通用模式");
             inputElement.textContent = text;
             inputElement.value = text;
+            if (inputElement.innerText !== undefined) {
+                inputElement.innerText = text;
+            }
         }
 
-        // 3. 觸發 input 事件（讓 Gemini 偵測到用戶輸入）
-        console.log("[Gemini Content] 觸發 input 事件");
+        console.log("[Gemini Content] ✅ 文字已設置");
+
+        // 3. 觸發各種事件讓 Gemini 偵測到
+        console.log("[Gemini Content] 正在觸發事件...");
         inputElement.dispatchEvent(new Event('input', { bubbles: true }));
         inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+        inputElement.dispatchEvent(new Event('blur', { bubbles: true }));
+        inputElement.dispatchEvent(new Event('focus', { bubbles: true }));
 
-        // 稍微等待一下，讓 Gemini 反應
+        // 4. 延遲後尋找發送按鈕
+        console.log("[Gemini Content] 延遲 500ms 後尋找發送按鈕...");
         setTimeout(() => {
-            console.log("[Gemini Content] 尋找並點擊發送按鈕");
+            console.log("[Gemini Content] 開始尋找發送按鈕");
+            
+            // 多個發送按鈕選擇器
+            const buttonSelectors = [
+                '[aria-label*="Send"]',
+                '[aria-label*="send"]',
+                '[aria-label*="發送"]',
+                '[aria-label*="提交"]',
+                'button[aria-label*="Send"]',
+                'button[aria-label*="send"]',
+                '.send-button',
+                '[data-testid*="send"]',
+                '[data-testid*="submit"]'
+            ];
 
-            // 4. 尋找並點擊發送按鈕
-            const sendButton = 
-                document.querySelector('[aria-label*="Send"]') ||           // 英文
-                document.querySelector('[aria-label*="send"]') ||           // 小寫
-                document.querySelector('[aria-label*="發送"]') ||           // 中文
-                document.querySelector('[aria-label*="提交"]') ||           // 中文備選
-                document.querySelector('button[aria-label*="Send"]') ||
-                Array.from(document.querySelectorAll('button')).find(btn => {
-                    const label = btn.getAttribute('aria-label') || '';
-                    const text = btn.textContent || '';
-                    return label.toLowerCase().includes('send') || text.toLowerCase().includes('send');
-                });
+            let sendButton = null;
+            for (const selector of buttonSelectors) {
+                const btn = document.querySelector(selector);
+                if (btn) {
+                    console.log("[Gemini Content] 通過選擇器找到按鈕:", selector);
+                    sendButton = btn;
+                    break;
+                }
+            }
+
+            // 如果還是沒找到，試著搜索所有按鈕
+            if (!sendButton) {
+                console.log("[Gemini Content] 嘗試搜索所有按鈕...");
+                const allButtons = document.querySelectorAll('button');
+                console.log("[Gemini Content] 找到按鈕數量:", allButtons.length);
+                
+                for (let btn of allButtons) {
+                    const label = (btn.getAttribute('aria-label') || '').toLowerCase();
+                    const text = (btn.textContent || '').toLowerCase();
+                    console.log("[Gemini Content] 按鈕:", label, text);
+                    
+                    if (label.includes('send') || text.includes('send') || 
+                        label.includes('submit') || text.includes('submit')) {
+                        console.log("[Gemini Content] ✅ 找到可能的發送按鈕!");
+                        sendButton = btn;
+                        break;
+                    }
+                }
+            }
 
             if (sendButton) {
-                console.log("[Gemini Content] 找到發送按鈕，正在點擊");
+                console.log("[Gemini Content] 🔘 找到發送按鈕，正在點擊");
                 sendButton.click();
                 console.log("[Gemini Content] ✅ 發送按鈕已點擊");
             } else {
-                console.log("[Gemini Content] 未找到發送按鈕，嘗試按 Enter");
+                console.log("[Gemini Content] ❌ 找不到發送按鈕，嘗試按 Enter");
                 
-                // 備選方案 1：按 Enter 鍵
-                const enterKeyDown = new KeyboardEvent('keydown', {
+                // 焦點到輸入框
+                inputElement.focus();
+                
+                // 按 Enter
+                const enterEvent = new KeyboardEvent('keydown', {
                     key: 'Enter',
                     code: 'Enter',
                     keyCode: 13,
@@ -154,35 +213,31 @@ function pasteAndSubmit(text) {
                     cancelable: true,
                     shiftKey: false
                 });
-                inputElement.dispatchEvent(enterKeyDown);
+                inputElement.dispatchEvent(enterEvent);
                 console.log("[Gemini Content] 已觸發 keydown Enter");
 
-                // 稍微等待後觸發 keyup
                 setTimeout(() => {
-                    const enterKeyUp = new KeyboardEvent('keyup', {
+                    const enterUpEvent = new KeyboardEvent('keyup', {
                         key: 'Enter',
                         code: 'Enter',
                         keyCode: 13,
                         which: 13,
                         bubbles: true,
-                        cancelable: true,
-                        shiftKey: false
+                        cancelable: true
                     });
-                    inputElement.dispatchEvent(enterKeyUp);
+                    inputElement.dispatchEvent(enterUpEvent);
                     console.log("[Gemini Content] 已觸發 keyup Enter");
                 }, 50);
-
-                // 備選方案 2：直接執行 form submit
-                const form = inputElement.closest('form');
-                if (form) {
-                    console.log("[Gemini Content] 找到 form，執行 submit");
-                    form.submit();
-                }
             }
-        }, 300);
+
+        }, 500);
+
+        console.log("[Gemini Content] === pasteAndSubmit 執行完成 ===");
+        return { success: true };
 
     } catch (error) {
-        console.error("[Gemini Content] 貼上失敗:", error);
-        alert(`❌ 自動貼上失敗：${error.message}。請手動貼上。`);
+        console.error("[Gemini Content] ❌ 異常:", error);
+        console.error("[Gemini Content] 錯誤堆棧:", error.stack);
+        return { success: false, error: error.message };
     }
 }
