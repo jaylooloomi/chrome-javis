@@ -266,7 +266,26 @@ function pasteAndSubmit(text) {
             try {
                 result.logs.push("[+" + (Date.now() - startTime) + "ms] 📍 按鈕狀態: disabled=" + sendButton.disabled + ", aria-disabled=" + sendButton.getAttribute('aria-disabled'));
                 
-                // 唯一有效的方法：簡單的 click()
+                // 等待 aria-disabled 變成 false（最多 3 秒）
+                result.logs.push("[+" + (Date.now() - startTime) + "ms] ⏳ 等待按鈕變成可用 (aria-disabled=false)...");
+                const buttonCheckStart = Date.now();
+                let isButtonReady = sendButton.getAttribute('aria-disabled') !== 'true';
+                
+                while (!isButtonReady && Date.now() - buttonCheckStart < 3000) {
+                    // 小 sleep 50ms 避免忙輪詢
+                    const sleepStart = Date.now();
+                    while (Date.now() - sleepStart < 50) {}
+                    
+                    isButtonReady = sendButton.getAttribute('aria-disabled') !== 'true';
+                }
+                
+                if (isButtonReady) {
+                    result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 按鈕已準備好，aria-disabled=" + sendButton.getAttribute('aria-disabled'));
+                } else {
+                    result.logs.push("[+" + (Date.now() - startTime) + "ms] ⚠️  按鈕仍然禁用中 (aria-disabled=" + sendButton.getAttribute('aria-disabled') + ")，但繼續點擊");
+                }
+                
+                // 點擊按鈕
                 sendButton.click();
                 result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 已點擊發送按鈕");
                 
