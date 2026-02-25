@@ -104,46 +104,24 @@ async function loadSkillsDynamically() {
     console.log("[Gateway] 技能庫已構建完成。已載入技能:", Object.keys(SKILL_REGISTRY));
 }
 
-// 預加載 Service Worker 技能的執行函數
+// 驗證 Service Worker 技能是否已加載
+// 注意：技能腳本由 manifest.json 中的 scripts 預加載
 async function preloadServiceWorkerSkill(skillName, skillFolder) {
     try {
-        // 根據技能名稱動態定義執行函數
-        // 對於 open_tab 技能
-        if (skillName === 'open_tab') {
-            SERVICE_WORKER_SKILLS[skillName] = async (command) => {
-                console.log("[Open Tab Skill] 啟動，接收到命令:", command);
-                try {
-                    // URL 可能在 command.url 或 command.args.url
-                    let url = command.url || (command.args && command.args.url);
-                    
-                    console.log("[Open Tab Skill] 提取的 URL:", url);
-                    console.log("[Open Tab Skill] 命令結構:", JSON.stringify(command));
-                    
-                    // 驗證和修復：如果 URL 缺失，進行診斷
-                    if (!url) {
-                        console.error("[Open Tab Skill] ⚠️  未找到 URL");
-                        console.error("[Open Tab Skill] 完整命令:", JSON.stringify(command));
-                        throw new Error("未提供 URL");
-                    }
-                    
-                    // 確保 URL 有有效的協議前綴
-                    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                        url = 'https://' + url;
-                        console.log("[Open Tab Skill] 修復 URL:", url);
-                    }
-                    
-                    const tab = await chrome.tabs.create({ url: url });
-                    console.log("[Open Tab Skill] 成功開啟分頁，ID:", tab.id);
-                    return `成功開啟分頁 (ID: ${tab.id})：${url}`;
-                } catch (error) {
-                    console.error("[Open Tab Skill] 錯誤:", error);
-                    throw new Error(`開啟分頁失敗：${error.message}`);
-                }
-            };
-            console.log(`[Gateway] ✅ 預加載完成: ${skillName}`);
+        console.log(`[Gateway] 驗證技能: ${skillName}`);
+        
+        // 檢查技能是否已由 manifest 預加載
+        if (SERVICE_WORKER_SKILLS[skillName]) {
+            console.log(`[Gateway] ✅ 技能 ${skillName} 已預加載`);
+            return true;
+        } else {
+            console.warn(`[Gateway] ⚠️  技能 ${skillName} 未預加載`);
+            console.warn(`[Gateway] 已加載的技能:`, Object.keys(SERVICE_WORKER_SKILLS));
+            return false;
         }
     } catch (e) {
-        console.error(`[Gateway] 預加載失敗 [${skillName}]:`, e);
+        console.error(`[Gateway] 驗證失敗 [${skillName}]:`, e);
+        return false;
     }
 }
 

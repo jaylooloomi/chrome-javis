@@ -18,7 +18,10 @@
   ],
   "background": {
     "service_worker": "service-worker.js",
-    "type": "module"
+    "type": "module",
+    "scripts": [
+      "skills/opentab/open_tab.js"
+    ]
   },
   "action": {
     "default_title": "開啟 OmniAssistant"
