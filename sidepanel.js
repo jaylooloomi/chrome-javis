@@ -283,6 +283,13 @@ document.getElementById('runBtn').addEventListener('click', async () => {
         const configResponse = await fetch(chrome.runtime.getURL('config.json'));
         const config = await configResponse.json();
         
+        // 從 chrome.storage.sync 讀取用戶選擇的模型
+        const storageSettings = await chrome.storage.sync.get('activeModel');
+        if (storageSettings.activeModel) {
+            config.activeModel = storageSettings.activeModel;
+            console.log("[SidePanel] 從 storage 加載的 activeModel:", storageSettings.activeModel);
+        }
+        
         console.log("[SidePanel] 準備發送訊息");
         console.log("[SidePanel] 用戶輸入:", text);
         console.log("[SidePanel] activeModel:", config.activeModel);

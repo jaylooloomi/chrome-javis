@@ -183,6 +183,26 @@
         </div>
 
         <div class="section">
+            <h2>🤖 AI 模型選擇</h2>
+            <p>選擇要使用的 AI 模型：</p>
+            <div class="switch-container" style="align-items: flex-start; flex-direction: column;">
+                <select id="activeModel" style="padding: 10px; font-size: 14px; border-radius: 4px; border: 1px solid #ddd; width: 100%; max-width: 300px;">
+                    <option value="geminiFlash">🌐 Gemini 2.5 Flash (Cloud)</option>
+                    <option value="ollamaGemma2B">🖥️ Ollama Gemma 2B (Local)</option>
+                    <option value="ollamaGemmaLarge">🖥️ Ollama Gemma Large (Local)</option>
+                    <option value="ollamaMinimaxM2">🖥️ Ollama Minimax M2 (Local)</option>
+                </select>
+                <div class="warning" style="margin-top: 10px; border-left: 4px solid #ffc107;">
+                    <strong>⚠️ 重要提醒：</strong> 變更模型後必須 <strong>重新啟動此擴展程式</strong> 才能生效。<br/>
+                    <small style="display: block; margin-top: 5px;">
+                        右鍵點擊擴展程式圖標 → 管理擴展程式 → 關閉再開啟，或訪問 <code>chrome://extensions</code> 重新加載。
+                    </small>
+                </div>
+                <p style="font-size: 12px; color: #666; margin-top: 8px;">✅ 設定會自動保存</p>
+            </div>
+        </div>
+
+        <div class="section">
             <h2>🔔 通知設定</h2>
             <p>控制技能執行完成時是否顯示通知提醒。</p>
             <div class="switch-container">

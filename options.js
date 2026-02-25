@@ -80,8 +80,9 @@ function updateNotificationUI(isEnabled) {
 
 // ======== 麥克風語言設定 ========
 const micLanguageSelect = document.getElementById('micLanguage');
+const activeModelSelect = document.getElementById('activeModel');
 
-// 頁面加載時讀取麥克風語言設定
+// 頁面加載時讀取麥克風語言設定和模型選擇
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const settings = await chrome.storage.sync.get('notificationsEnabled');
@@ -94,6 +95,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const selectedLanguage = langSettings.micLanguage || 'zh-TW';  // 默認繁體中文
         micLanguageSelect.value = selectedLanguage;
         console.log('[Options] 麥克風語言已加載:', selectedLanguage);
+        
+        // 讀取模型選擇
+        const modelSettings = await chrome.storage.sync.get('activeModel');
+        const selectedModel = modelSettings.activeModel || 'ollamaMinimaxM2';  // 默認 Minimax M2
+        activeModelSelect.value = selectedModel;
+        console.log('[Options] AI 模型已加載:', selectedModel);
     } catch (error) {
         console.error('[Options] 讀取設定失敗:', error);
     }
@@ -109,3 +116,37 @@ micLanguageSelect.addEventListener('change', async (e) => {
         console.error('[Options] 保存麥克風語言失敗:', error);
     }
 });
+
+// AI 模型下拉菜單變更事件
+activeModelSelect.addEventListener('change', async (e) => {
+    const selectedModel = e.target.value;
+    try {
+        await chrome.storage.sync.set({ activeModel: selectedModel });
+        console.log('[Options] AI 模型已更新:', selectedModel);
+        
+        // 顯示重啟提醒
+        showRestartReminder();
+    } catch (error) {
+        console.error('[Options] 保存 AI 模型選擇失敗:', error);
+    }
+});
+
+// 顯示重啟提醒
+function showRestartReminder() {
+    // 創建臨時提醒
+    const reminder = document.createElement('div');
+    reminder.className = 'status success';
+    reminder.style.position = 'fixed';
+    reminder.style.top = '20px';
+    reminder.style.right = '20px';
+    reminder.style.zIndex = '9999';
+    reminder.style.maxWidth = '300px';
+    reminder.textContent = '✅ 模型選擇已保存。請重新啟動擴展程式以應用更改。';
+    
+    document.body.appendChild(reminder);
+    
+    // 3 秒後移除提醒
+    setTimeout(() => {
+        reminder.remove();
+    }, 3000);
+}
