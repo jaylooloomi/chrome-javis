@@ -107,10 +107,11 @@ async function waitForPageLoad(tabId, maxAttempts = 20, delayMs = 500) {
  */
 function pasteAndSubmit(text) {
     const result = { success: false, logs: [], error: null };
+    const startTime = Date.now();
     
     try {
-        result.logs.push("=== 開始執行 pasteAndSubmit ===");
-        result.logs.push("文字長度: " + text.length);
+        result.logs.push("[+0ms] === 開始執行 pasteAndSubmit ===");
+        result.logs.push("[+0ms] 文字長度: " + text.length);
         
         // 0.5. 首先檢查頁面整體狀態
         result.logs.push("📍 檢查頁面狀態...");
@@ -141,10 +142,10 @@ function pasteAndSubmit(text) {
         result.logs.push("✅ 找到輸入框: " + inputElement.tagName + " class=" + inputElement.className);
 
         // 1.5. 等待輸入框完全初始化 (Gemini 可能需要時間初始化 UI)
-        result.logs.push("⏳ 等待輸入框完全初始化 (2 秒)...");
+        result.logs.push("[+0ms] ⏳ 等待輸入框完全初始化 (2 秒)...");
         const initDelay = Date.now();
         while (Date.now() - initDelay < 2000) {}
-        result.logs.push("✅ 輸入框初始化完成");
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 輸入框初始化完成");
 
         // 2. 聚焦並貼上文字
         inputElement.focus();
@@ -193,10 +194,10 @@ function pasteAndSubmit(text) {
         const contentLength = inputElement.textContent ? inputElement.textContent.trim().length : 0;
         result.logs.push("📍 輸入框內容長度: " + contentLength);
         // 3.5. 等待頁面完全載入和 UI 更新
-        result.logs.push("⏱️ 等待頁面 UI 更新 (3 秒)...");
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] ⏱️ 等待頁面 UI 更新 (3 秒)...");
         const uiDelay = Date.now();
         while (Date.now() - uiDelay < 3000) {}
-        result.logs.push("✅ 頁面 UI 已更新");
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 頁面 UI 已更新");
 
         // 4. 立即尋找並點擊發送按鈕
         result.logs.push("正在尋找發送按鈕...");
