@@ -318,6 +318,25 @@ async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse)
     try {
         console.log(`[Gateway] 將技能轉發給 SidePanel 執行: ${skillName}`);
         
+        // 替換佔位符：將 ACTIVE_TAB 和 ACTIVE_TAB_URL 替換為實際的 tabId 和 url
+        if (args.tabId === "ACTIVE_TAB" || args.url === "ACTIVE_TAB_URL") {
+            console.log(`[Gateway] 檢測到佔位符，正在獲取當前活動分頁...`);
+            const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            
+            if (!activeTab) {
+                throw new Error("無法獲取當前活動分頁");
+            }
+            
+            if (args.tabId === "ACTIVE_TAB") {
+                args.tabId = activeTab.id;
+                console.log(`[Gateway] 替換 tabId: ${activeTab.id}`);
+            }
+            if (args.url === "ACTIVE_TAB_URL") {
+                args.url = activeTab.url;
+                console.log(`[Gateway] 替換 url: ${activeTab.url}`);
+            }
+        }
+        
         // 改為調用 SidePanel 執行技能
         const result = await executeSidePanelSkill(skillName, skillInfo.folder, args);
         
