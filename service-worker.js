@@ -23,20 +23,28 @@ async function ensureSkillsLoaded() {
 async function loadSkillsDynamically() {
     console.log("[Gateway] 啟動動態技能加載器...");
     
-    // 已知的技能列表（可以改為動態掃描）
-    const skillNames = ['open_tab'];
+    // 已知的技能列表：{displayName: folderName}
+    const skillMappings = {
+        'open_tab': 'opentab'  // displayName: folderName
+    };
     
     let promptBuilder = "你是一個 AI 代理人。你擁有以下技能，根據用戶需求回傳 JSON 格式的指令。\n\n";
 
-    for (const skillName of skillNames) {
+    for (const [skillName, folderName] of Object.entries(skillMappings)) {
         try {
             // 1. 動態讀取 .md 文件
-            const mdUrl = chrome.runtime.getURL(`skills/${skillName}/${skillName}.md`);
+            const mdUrl = chrome.runtime.getURL(`skills/${folderName}/${skillName}.md`);
+            console.log(`[Gateway] 讀取 MD: ${mdUrl}`);
             const mdResponse = await fetch(mdUrl);
+            if (!mdResponse.ok) {
+                throw new Error(`MD 文件加載失敗: ${mdResponse.status}`);
+            }
             const mdContent = await mdResponse.text();
             
             // 2. 動態導入 .js 文件
-            const jsModule = await import(`./skills/${skillName}/${skillName}.js`);
+            const jsPath = `./skills/${folderName}/${skillName}.js`;
+            console.log(`[Gateway] 導入 JS: ${jsPath}`);
+            const jsModule = await import(jsPath);
             
             // 3. 構建 Key-Value Pair
             SKILL_REGISTRY[skillName] = {
@@ -50,6 +58,7 @@ async function loadSkillsDynamically() {
             
         } catch (e) {
             console.error(`[Gateway] ❌ 技能 [${skillName}] 載入失敗:`, e);
+            console.error(`[Gateway] 詳細錯誤堆棧:`, e.stack);
         }
     }
 
