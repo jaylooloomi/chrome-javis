@@ -228,9 +228,13 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
         
         let aiResponse;
         if (configData.activeModel === 'ollama') {
-            console.log("[Gateway] ✅ 選擇使用 Ollama 模型");
+            console.log("[Gateway] ✅ 選擇使用 Ollama 模型 (gemma2:2b)");
             console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollama, null, 2));
             aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollama);
+        } else if (configData.activeModel === 'ollamaGemma') {
+            console.log("[Gateway] ✅ 選擇使用 Ollama Gemma 模型");
+            console.log("[Gateway] Ollama Gemma 配置:", JSON.stringify(configData.ollamaGemma, null, 2));
+            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaGemma);
         } else {
             console.log("[Gateway] ✅ 選擇使用 Gemini Flash 模型");
             console.log("[Gateway] Gemini 配置:", JSON.stringify({...configData.gemini, apiKey: '***'}));
