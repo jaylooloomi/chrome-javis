@@ -189,143 +189,47 @@ function pasteAndSubmit(text) {
         inputElement.dispatchEvent(new Event('ngModelChange', { bubbles: true }));
         
         result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 已觸發多個事件確保 Angular 檢測到變化");
-        result.logs.push("[+" + (Date.now() - startTime) + "ms] 🛑 現在完全停止所有操作，讓 Gemini 檢測...");
-        // 3.5. 完全停止操作，等待 Gemini 的檢測邏輯運行
-        // Gemini 會實時監控 DOM 操作，只有當操作停止後才會判斷是否啟用按鈕
-        result.logs.push("[+" + (Date.now() - startTime) + "ms] ⏳ 等待 Gemini 反機器人檢測 (20 秒)...");
-        const waitStart = Date.now();
-        while (Date.now() - waitStart < 20000) {}
-        result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ Gemini 檢測完成");
-
-        // 4. 立即尋找並點擊發送按鈕
-        result.logs.push("[+" + (Date.now() - startTime) + "ms] 正在尋找發送按鈕...");
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] 🛑 現在使用 setTimeout 延遲點擊，讓腳本立即返回...");
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] ℹ️ 按鈕只會在此腳本完全執行完畢後才啟用");
         
-        // 方法1：直接用 class 名稱查找（最可靠）
-        sendButton = document.querySelector('button.send-button');
-        if (sendButton) {
-            result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 用 'button.send-button' 找到發送按鈕");
-        }
-        
-        // 方法2：如果方法1失敗，尋找所有按鈕並檢查特徵
-        if (!sendButton) {
-            const allButtons = document.querySelectorAll('button');
-            result.logs.push("[+" + (Date.now() - startTime) + "ms] 📍 開始搜尋，頁面有 " + allButtons.length + " 個 button");
+        // 使用 setTimeout 在腳本完成後 2 秒時點擊，這樣 Gemini 不會看到長時間的 DOM 監控
+        setTimeout(() => {
+            const clickStartTime = Date.now();
+            console.log("[Ask Gemini Skill] [延遲點擊] 開始尋找按鈕 (+0ms from setTimeout)...");
             
-            for (let btn of allButtons) {
-                const ariaLabel = btn.getAttribute('aria-label') || '';
-                const dataTestId = btn.getAttribute('data-testid') || '';
-                const className = btn.className || '';
-                const innerHTML = btn.innerHTML || '';
-                
-                // 檢查 className 是否包含 send-button
-                if (className.includes('send-button')) {
-                    sendButton = btn;
-                    result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 用 className 找到發送按鈕");
-                    result.logs.push("[+" + (Date.now() - startTime) + "ms]    className: " + className);
-                    break;
-                }
-                
-                // 檢查是否包含 send-button-icon 圖標
-                if (innerHTML.includes('send-button-icon')) {
-                    sendButton = btn;
-                    result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 用 send-button-icon 找到發送按鈕");
-                    result.logs.push("[+" + (Date.now() - startTime) + "ms]    className: " + className);
-                    break;
-                }
-                
-                // 檢查 aria-label 或 data-testid
-                if (ariaLabel.toLowerCase().includes('send') ||
-                    dataTestId.toLowerCase().includes('send')) {
-                    sendButton = btn;
-                    result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 用 aria-label/data-testid 找到發送按鈕");
-                    result.logs.push("[+" + (Date.now() - startTime) + "ms]    aria-label: " + ariaLabel);
-                    result.logs.push("[+" + (Date.now() - startTime) + "ms]    data-testid: " + dataTestId);
-                    break;
-                }
-            }
-        }
-        
-        // 如果還是沒找到，列出所有 buttons 以供調試
-        if (!sendButton) {
-            result.logs.push("[+" + (Date.now() - startTime) + "ms] ❌ 未找到發送按鈕，列出所有 buttons 的詳細資訊:");
-            const allButtons = document.querySelectorAll('button');
-            allButtons.forEach((btn, idx) => {
-                const label = btn.getAttribute('aria-label') || '(無)';
-                const testId = btn.getAttribute('data-testid') || '(無)';
-                const classes = btn.className || '(無)';
-                const isDisabled = btn.disabled ? '🔴 DISABLED' : '🟢 ENABLED';
-                result.logs.push("[+" + (Date.now() - startTime) + "ms]   [" + idx + "] " + isDisabled);
-                result.logs.push("[+" + (Date.now() - startTime) + "ms]         classes=" + classes);
-                result.logs.push("[+" + (Date.now() - startTime) + "ms]         aria-label=" + label + " | data-testid=" + testId);
-            });
-        }
-        
-        if (sendButton) {
-            try {
-                result.logs.push("[+" + (Date.now() - startTime) + "ms] 📍 按鈕狀態: disabled=" + sendButton.disabled + ", aria-disabled=" + sendButton.getAttribute('aria-disabled'));
-                
-                // 等待按鈕完全可用：disabled=false AND aria-disabled=false（最多 8 秒）
-                result.logs.push("[+" + (Date.now() - startTime) + "ms] ⏳ 等待按鈕完全可用 (disabled=false AND aria-disabled=false)，最多 8 秒...");
-                const buttonCheckStart = Date.now();
-                let isButtonReady = !sendButton.disabled && sendButton.getAttribute('aria-disabled') !== 'true';
-                
-                while (!isButtonReady && Date.now() - buttonCheckStart < 8000) {
-                    // 小 sleep 50ms 避免忙輪詢
-                    const sleepStart = Date.now();
-                    while (Date.now() - sleepStart < 50) {}
+            // 尋找發送按鈕
+            let sendButton = document.querySelector('button.send-button');
+            
+            if (!sendButton) {
+                const allButtons = document.querySelectorAll('button');
+                for (let btn of allButtons) {
+                    const className = btn.className || '';
+                    const innerHTML = btn.innerHTML || '';
+                    const ariaLabel = btn.getAttribute('aria-label') || '';
+                    const dataTestId = btn.getAttribute('data-testid') || '';
                     
-                    // 同時檢查兩個條件
-                    isButtonReady = !sendButton.disabled && sendButton.getAttribute('aria-disabled') !== 'true';
-                    
-                    // 每 500ms 日誌一次狀態
-                    if ((Date.now() - buttonCheckStart) % 500 < 50) {
-                        result.logs.push("[+" + (Date.now() - startTime) + "ms]   🔍 按鈕狀態檢查: disabled=" + sendButton.disabled + ", aria-disabled=" + sendButton.getAttribute('aria-disabled'));
+                    if (className.includes('send-button') || 
+                        innerHTML.includes('send-button-icon') ||
+                        ariaLabel.toLowerCase().includes('send') ||
+                        dataTestId.toLowerCase().includes('send')) {
+                        sendButton = btn;
+                        break;
                     }
                 }
-                
-                if (isButtonReady) {
-                    result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 按鈕已完全準備好！disabled=false, aria-disabled=false");
-                    // 點擊按鈕
-                    sendButton.click();
-                    result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 已點擊發送按鈕");
-                } else {
-                    result.logs.push("[+" + (Date.now() - startTime) + "ms] ❌ 按鈕在 8 秒後仍然無法使用 (disabled=" + sendButton.disabled + ", aria-disabled=" + sendButton.getAttribute('aria-disabled') + ")");
-                    result.logs.push("[+" + (Date.now() - startTime) + "ms] 📋 放棄點擊 - Gemini 可能已禁用此機器人");
-                    throw new Error("按鈕無法使用 - Gemini 反機器人防護仍然活躍");
-                }
-                
-            } catch (e) {
-                result.logs.push("[+" + (Date.now() - startTime) + "ms] ❌ 點擊發送按鈕失敗: " + e);
-                throw new Error("無法點擊發送按鈕: " + e.message);
-            }
-        } else {
-            // 詳細的調試信息
-            result.logs.push("[+" + (Date.now() - startTime) + "ms] ❌ 找不到發送按鈕");
-            
-            // 列出頁面所有 button
-            const allButtons = document.querySelectorAll('button');
-            result.logs.push("[+" + (Date.now() - startTime) + "ms] 📋 頁面中共有 " + allButtons.length + " 個 button：");
-            allButtons.forEach((btn, idx) => {
-                const label = btn.getAttribute('aria-label') || btn.textContent?.substring(0, 30) || '(無標籤)';
-                result.logs.push("[+" + (Date.now() - startTime) + "ms]   [" + idx + "] " + btn.className + " - " + label);
-            });
-            
-            // 列出所有 mat-icon
-            const allIcons = document.querySelectorAll('mat-icon');
-            result.logs.push("[+" + (Date.now() - startTime) + "ms] 📋 頁面中共有 " + allIcons.length + " 個 mat-icon");
-            if (allIcons.length > 0) {
-                allIcons.forEach((icon, idx) => {
-                    const name = icon.getAttribute('data-mat-icon-name') || icon.textContent?.substring(0, 30) || '(無名稱)';
-                    result.logs.push("[+" + (Date.now() - startTime) + "ms]   [" + idx + "] data-mat-icon-name=" + name);
-                });
             }
             
-            throw new Error("無法找到 Gemini 發送按鈕，詳見上方日誌。頁面可能未完全載入或 UI 結構已改變");
-        }
-
-        result.success = true;
-        result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 流程已完成");
-        return result;
+            if (sendButton) {
+                console.log("[Ask Gemini Skill] [延遲點擊] 找到按鈕，狀態: disabled=" + sendButton.disabled + ", aria-disabled=" + sendButton.getAttribute('aria-disabled'));
+                console.log("[Ask Gemini Skill] [延遲點擊] 直接點擊按鈕...");
+                sendButton.click();
+                console.log("[Ask Gemini Skill] [延遲點擊] ✅ 已點擊發送按鈕");
+            } else {
+                console.warn("[Ask Gemini Skill] [延遲點擊] ❌ 找不到發送按鈕");
+            }
+        }, 2000);  // 2 秒後點擊
+        
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 已安排 setTimeout 延遲點擊 (2000ms 後)");
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 流程已完成（腳本立即返回，讓 Gemini 解除按鈕禁用）");
 
     } catch (error) {
         result.error = error.toString();
