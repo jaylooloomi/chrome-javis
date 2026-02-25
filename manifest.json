@@ -12,7 +12,8 @@
     "contextMenus",
     "clipboardRead",
     "clipboardWrite",
-    "tabs"
+    "tabs",
+    "notifications"
   ],
   "host_permissions": [
     "http://localhost:11434/*",
@@ -39,7 +40,9 @@
       "resources": [
         "skills/*/*.md",
         "config.json",
-        "skills-manifest.json"
+        "skills-manifest.json",
+        "images/*.png",
+        "i18n/locales.json"
       ],
       "matches": ["<all_urls>"]
     }

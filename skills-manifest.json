@@ -2,7 +2,7 @@
   "skills": [
     {
       "name": "open_tab",
-      "folder": "opentab",
+      "folder": "open_tab",
       "description": "打开新标签页的技能",
       "runInPageContext": false
     },
@@ -10,6 +10,12 @@
       "name": "summary_this_page",
       "folder": "summary_this_page",
       "description": "快速将文字发送到 Google Gemini 进行查询",
+      "runInPageContext": false
+    },
+    {
+      "name": "who_are_you",
+      "folder": "who_are_you",
+      "description": "介绍 OmniAssistant 的功能和能力",
       "runInPageContext": false
     }
   ]

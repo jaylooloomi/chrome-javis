@@ -3,47 +3,536 @@
   <head>
     <meta charset="UTF-8">
     <style>
-      body { font-family: 'Microsoft JhengHei', sans-serif; padding: 10px; display: flex; flex-direction: column; height: 95vh; }
-      #output { flex: 1; overflow-y: auto; white-space: pre-wrap; margin-bottom: 10px; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
-      .input-container { display: flex; gap: 8px; margin-bottom: 5px; }
-      textarea { flex: 1; height: 60px; }
-      #micBtn { width: 60px; height: 60px; padding: 0; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px; font-size: 24px; display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
-      #micBtn:hover { background: #218838; }
-      #micBtn.listening { background: #ff6b6b; animation: pulse 1s infinite; }
-      
-      /* Switch button style */
-      .switch-container { display: flex; align-items: center; gap: 8px; }
-      .switch { position: relative; width: 50px; height: 28px; background: #ccc; border: none; border-radius: 14px; cursor: pointer; transition: background 0.3s; }
-      .switch.on { background: #28a745; }
-      .switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; background: white; border-radius: 50%; transition: left 0.3s; }
-      .switch.on::after { left: 24px; }
-      .switch-label { font-size: 12px; font-weight: bold; color: #333; min-width: 50px; }
-      
-      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-      button { width: 100%; padding: 8px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
-      button:hover { background: #0056b3; }
-      .config-status { font-size: 12px; color: #666; margin-bottom: 10px; padding: 8px; background: #f0f0f0; border-radius: 4px; }
+      :root {
+        --bg-color: #0f172a;
+        --card-bg: rgba(30, 41, 59, 0.7);
+        --accent-blue: #38bdf8;
+        --accent-purple: #818cf8;
+        --accent-cyan: #06b6d4;
+        --text-main: #f1f5f9;
+        --text-sub: #94a3b8;
+        --border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        font-family: 'Inter', 'Microsoft JhengHei', -apple-system, sans-serif;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        gap: 0;
+        margin: 0;
+      }
+
+      .panel-container {
+        display: flex;
+        flex-direction: column;
+        flex: 0;
+        gap: 12px;
+        background: transparent;
+      }
+
+      .top-panel-container {
+        flex: 0;
+        background: transparent;
+      }
+
+      .middle-panel-container {
+        flex: 1;
+        width: 328px;
+        height: 15px;
+        background: transparent;
+      }
+
+      /* ======== 輸出區域 ======== */
+      #output {
+        width: 328px;
+        height: 92px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        background: var(--card-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px;
+        color: var(--text-main);
+        font-size: 13px;
+        line-height: 1.6;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        transition: border-color 0.3s ease;
+        scrollbar-width: thin;
+        scrollbar-color: var(--accent-blue) transparent;
+        flex-shrink: 0;
+      }
+
+      #output::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      #output::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      #output::-webkit-scrollbar-thumb {
+        background: var(--accent-blue);
+        border-radius: 3px;
+      }
+
+      /* ======== 配置狀態 ======== */
+      .config-status {
+        width: 328px;
+        height: 46px;
+        background: var(--card-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 11px;
+        color: var(--text-sub);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+
+      .config-status::before {
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background: var(--accent-cyan);
+        border-radius: 50%;
+        animation: pulse-glow 1.5s infinite;
+      }
+
+      /* ======== 語音監聽區塊 - 毛玻璃效果 ======== */
+      .voice-container {
+        width: 328px;
+        height: 46px;
+        background: var(--card-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 14px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+      }
+
+      .voice-container:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+      }
+
+      .listening-text {
+        color: var(--accent-blue);
+        font-weight: 500;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .listening-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background: var(--accent-blue);
+        border-radius: 50%;
+        animation: pulse-glow 1.5s infinite;
+      }
+
+      @keyframes pulse-glow {
+        0%, 100% {
+          opacity: 1;
+          box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7);
+        }
+        50% {
+          opacity: 0.8;
+          box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.2);
+        }
+      }
+
+      /* ======== 輸入框優化 ======== */
+      textarea {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px 14px;
+        color: var(--text-main);
+        font-family: inherit;
+        font-size: 12px;
+        resize: none;
+        transition: all 0.3s ease;
+        height: 70px;
+      }
+
+      textarea::placeholder {
+        color: var(--text-sub);
+      }
+
+      textarea:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.2), inset 0 0 10px rgba(56, 189, 248, 0.05);
+        background: rgba(0, 0, 0, 0.4);
+      }
+
+      /* ======== 容器布局 ======== */
+      .input-container {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 0;
+      }
+
+      .input-container:last-child {
+        margin-bottom: 0;
+      }
+
+      /* ======== Switch 按鈕 - 毛玻璃風格 ======== */
+      .switch-container {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--card-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 8px 12px;
+        flex-shrink: 0;
+      }
+
+      .switch {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .switch::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 20px;
+        height: 20px;
+        background: var(--text-main);
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .switch.on {
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+        border-color: var(--accent-blue);
+      }
+
+      .switch.on::after {
+        left: 22px;
+        box-shadow: 0 2px 8px rgba(56, 189, 248, 0.4);
+      }
+
+      .switch-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-sub);
+        min-width: 30px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      /* ======== 執行按鈕 - 漸變科技感 ======== */
+      .btn-primary {
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        font-size: 12px;
+        padding: 10px 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        flex: 1;
+        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.15);
+        box-shadow: 0 6px 16px rgba(56, 189, 248, 0.3);
+      }
+
+      .btn-primary:active {
+        transform: translateY(0);
+      }
+
+      /* ======== Ask Gemini 按鈕 - 品牌專屬色 ======== */
+      .btn-gemini {
+        background: linear-gradient(135deg, #5e5ce6, #818cf8);
+        border: 1px solid rgba(129, 140, 248, 0.3);
+        box-shadow: 0 4px 12px rgba(94, 92, 230, 0.2);
+        flex: 1;
+      }
+
+      .btn-gemini:hover {
+        filter: brightness(1.15);
+        box-shadow: 0 6px 16px rgba(94, 92, 230, 0.3);
+      }
+
+      /* ======== 舊的按鈕樣式兼容性 ======== */
+      button {
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+      }
+
+      #runBtn {
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)) !important;
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 12px;
+        padding: 10px 16px;
+        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      #runBtn:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.15);
+        box-shadow: 0 6px 16px rgba(56, 189, 248, 0.3);
+      }
+
+      #settingBtn {
+        background: linear-gradient(135deg, #5e5ce6, #818cf8) !important;
+        border: 1px solid rgba(129, 140, 248, 0.3);
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 12px;
+        padding: 10px 16px;
+        box-shadow: 0 4px 12px rgba(94, 92, 230, 0.2);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        flex: 1;
+        width: 100%;
+      }
+
+      #settingBtn:hover {
+        filter: brightness(1.15);
+        box-shadow: 0 6px 16px rgba(94, 92, 230, 0.3);
+      }
+
+      /* ======== 滾動條樣式 ======== */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--accent-blue);
+        border-radius: 3px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-cyan);
+      }
+
+      /* ======== 上方 Panel 內部容器 ======== */
+      .top-inner-panel-container {
+        flex: 1;
+        margin: 0;
+        background: transparent;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* ======== 系統訊息對話框 ======== */
+      .system-message-dialog {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        padding: 32px 24px;
+        background: var(--card-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        text-align: center;
+      }
+
+      .system-message-dialog .close-btn {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: transparent;
+        border: none;
+        color: var(--text-sub);
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.3s ease;
+      }
+
+      .system-message-dialog .close-btn:hover {
+        color: var(--text-main);
+      }
+
+      .system-message-dialog .icon-container {
+        width: 80px;
+        height: 80px;
+        background: rgba(56, 189, 248, 0.1);
+        border: 2px solid rgba(56, 189, 248, 0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+        font-size: 40px;
+      }
+
+      .system-message-dialog .title {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 16px;
+        letter-spacing: 0.5px;
+      }
+
+      .system-message-dialog .description {
+        font-size: 12px;
+        color: var(--text-sub);
+        line-height: 1.6;
+        margin-bottom: 24px;
+        max-width: 280px;
+      }
+
+      .system-message-dialog .question {
+        font-size: 12px;
+        color: var(--accent-blue);
+        font-weight: 500;
+        margin-bottom: 16px;
+      }
+
+      .system-message-dialog .action-btn {
+        background: linear-gradient(135deg, #ff9500, #ff6b00);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 16px;
+        letter-spacing: 0.5px;
+      }
+
+      .system-message-dialog .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+      }
+
+      .system-message-dialog .skip-link {
+        font-size: 11px;
+        color: var(--text-sub);
+        text-decoration: none;
+        cursor: pointer;
+        transition: color 0.3s ease;
+      }
+
+      .system-message-dialog .skip-link:hover {
+        color: var(--accent-blue);
+      }
     </style>
   </head>
   <body>
-    <div id="output">準備就緒...</div>
-    
-    <!-- 配置狀態顯示 -->
-    <div class="config-status">
-      ℹ️ 麥克風已常駐 • 停頓 0.5s 自動執行 • Gemini API Key 已載入
-    </div>
-    
-    <textarea id="userInput" placeholder="輸入指令 (如：幫我開啟 Google)..."></textarea>
-    <div class="input-container">
-      <div class="switch-container">
-        <button class="switch on" id="micSwitch" title="開啟/關閉語音"></button>
-        <span class="switch-label" id="micStatus">開啟</span>
+    <!-- 上方 Panel -->
+    <div class="top-panel-container">
+      <div class="top-inner-panel-container">
+        <div class="system-message-dialog">
+          <button class="close-btn">✕</button>
+          <div class="icon-container">💖</div>
+          <div class="title" data-i18n="dialog.title">系統訊息</div>
+          <div class="description" data-i18n="dialog.description">
+            一路上有你的陪伴，是我能持續做的最大動力，這份單純的感謝與喜歡來自我真摯的心，希望這項目能幫助到你，如果你認同我的創作價值，或是喜歡在我的內容中獲得一點啟發，我，一點點發發呆決決定。
+          </div>
+          <div class="question" data-i18n="dialog.question">喜歡這個工具嗎?</div>
+          <button class="action-btn" id="sponsorBtn" data-i18n="dialog.sponsor">👉 贊助一杯咖啡 ☕</button>
+          <a class="skip-link" data-i18n="dialog.share">分享給其他朋友 →</a>
+        </div>
       </div>
-      <button id="runBtn" style="flex: 1;">執行</button>
     </div>
-    <div class="input-container" style="margin-top: 5px;">
-      <button id="askGeminiBtn" style="flex: 1; background: #6c5ce7;" title="複製選取文字並開啟 Gemini">💡 Ask Gemini</button>
+
+    <!-- 中間 Panel -->
+    <div class="middle-panel-container"></div>
+
+    <div class="panel-container">
+      <!-- 輸出區域 -->
+      <div id="output" data-i18n="output.ready">準備就緒...</div>
+      
+      <!-- 配置狀態顯示 -->
+      <div class="config-status" data-i18n="config.status">
+        麥克風已常駐 • 停頓 0.5s 自動執行 • AI 模型 已載入
+      </div>
+      
+      <!-- 語音監聽區塊 -->
+      <div class="voice-container">
+        <div class="listening-text">
+          <span class="listening-indicator"></span>
+          <span id="listeningStatus" data-i18n="status.listening">待命中...</span>
+        </div>
+      </div>
+
+      <!-- 輸入框 -->
+      <textarea id="userInput" placeholder="輸入指令 (如：幫我開啟 Google)..." data-i18n-placeholder="placeholder.input"></textarea>
+      
+      <!-- 按鈕容器 1 -->
+      <div class="input-container">
+        <div class="switch-container">
+          <button class="switch on" id="micSwitch" title="開啟/關閉語音" data-i18n-title="title.micToggle"></button>
+          <span class="switch-label" id="micStatus" data-i18n="button.mic">開啟</span>
+        </div>
+        <button id="runBtn" class="btn-primary" data-i18n="button.run">執行</button>
+      </div>
+      
+      <!-- 按鈕容器 2 -->
+      <div class="input-container">
+        <button id="settingBtn" class="btn-setting" data-i18n="button.setting">⚙️ Setting</button>
+      </div>
     </div>
-    <script src="sidepanel.js"></script>
+    <script type="module" src="sidepanel.js"></script>
   </body>
 </html>

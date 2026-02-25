@@ -9,7 +9,7 @@ when_to_use:
      Chinese: "打開", "開啟", "訪問", "查看", "前往", "進入"
   
   2. **WEBSITE NAME** (必須有網站名稱):
-     Supported: Google, YouTube, GitHub, Twitter, LinkedIn, Facebook, Instagram, Yahoo
+     Supported: Google, YouTube, YouTube Music, GitHub, Twitter, LinkedIn, Facebook, Instagram, Yahoo
   
   ** DECISION RULE: Check for BOTH verb + website name **
   - If sentence has ACTION VERB + website name → CALL open_tab
@@ -20,6 +20,7 @@ when_to_use:
 examples_CORRECT_verb_plus_website:
   - "open Google" ✓ (verb: open, site: Google)
   - "visit YouTube" ✓ (verb: visit, site: YouTube)
+  - "open YouTube Music" ✓ (verb: open, site: YouTube Music)
   - "打開 GitHub" ✓ (verb: 打開, site: GitHub)
   - "go to Twitter" ✓ (verb: go to, site: Twitter)
   - "check LinkedIn" ✓ (verb: check, site: LinkedIn)
@@ -51,6 +52,7 @@ intent_examples:
   CORRECT - call this skill (HAS verb + website):
     - "open Google" → Call open_tab with Google
     - "visit YouTube" → Call open_tab with YouTube
+    - "open YouTube Music" → Call open_tab with YouTube Music
     - "打開 GitHub" → Call open_tab with GitHub
     - "go to Twitter" → Call open_tab with Twitter
     - "visit Yahoo" → Call open_tab with Yahoo
@@ -83,19 +85,21 @@ IMPORTANT - args structure and URL conversion:
 URL conversion rules:
 1. If user says "google" → "https://google.com"
 2. If user says "youtube" → "https://youtube.com"
-3. If user says "github" → "https://github.com"
-4. If user says "twitter" → "https://twitter.com"
-5. If user says "linkedin" → "https://linkedin.com"
-6. If user says "facebook" → "https://facebook.com"
-7. If user says "instagram" → "https://instagram.com"
-8. If user says "yahoo" → "https://yahoo.com"
-9. If user provides full URL, keep it as-is
-10. Always add https:// prefix if missing
-11. Never return empty URL
+3. If user says "youtube music" → "https://music.youtube.com"
+4. If user says "github" → "https://github.com"
+5. If user says "twitter" → "https://twitter.com"
+6. If user says "linkedin" → "https://linkedin.com"
+7. If user says "facebook" → "https://facebook.com"
+8. If user says "instagram" → "https://instagram.com"
+9. If user says "yahoo" → "https://yahoo.com"
+10. If user provides full URL, keep it as-is
+11. Always add https:// prefix if missing
+12. Never return empty URL
 
 Examples of correct output:
 - User says "open Google" → {"skill": "open_tab", "args": {"url": "https://google.com"}}
 - User says "visit YouTube" → {"skill": "open_tab", "args": {"url": "https://youtube.com"}}
+- User says "open YouTube Music" → {"skill": "open_tab", "args": {"url": "https://music.youtube.com"}}
 - User says "go to github.com" → {"skill": "open_tab", "args": {"url": "https://github.com"}}
 - User says "visit Yahoo" → {"skill": "open_tab", "args": {"url": "https://yahoo.com"}}
 
@@ -112,3 +116,4 @@ Examples that FAIL the rule:
   - "你在幹嘧" - Neither verb nor website
 
 Only proceed to call open_tab if you can identify BOTH an action verb AND a website name in the user's input.
+ 
