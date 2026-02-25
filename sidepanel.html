@@ -28,12 +28,21 @@
         display: flex;
         flex-direction: column;
         height: 100vh;
+        gap: 0;
+        margin: 0;
+      }
+
+      .panel-container {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
         gap: 12px;
+        background: transparent;
       }
 
       /* ======== 輸出區域 ======== */
       #output {
-        flex: 0.5;
+        flex: 1;
         overflow-y: auto;
         white-space: pre-wrap;
         background: var(--card-bg);
@@ -79,14 +88,9 @@
       }
 
       .config-status::before {
-        content: '';
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        background: var(--accent-cyan);
-        border-radius: 50%;
-        margin-right: 2px;
-        animation: pulse-glow 1.5s infinite;
+        content: '●';
+        color: var(--accent-cyan);
+        font-size: 8px;
       }
 
       /* ======== 語音監聽區塊 - 毛玻璃效果 ======== */
@@ -332,37 +336,39 @@
     </style>
   </head>
   <body>
-    <!-- 輸出區域 -->
-    <div id="output">準備就緒...</div>
-    
-    <!-- 配置狀態顯示 -->
-    <div class="config-status">
-      麥克風已常駐 • 停頓 0.5s 自動執行 • AI 模型 已載入
-    </div>
-    
-    <!-- 語音監聽區塊 -->
-    <div class="voice-container">
-      <div class="listening-text">
-        <span class="listening-indicator"></span>
-        <span id="listeningStatus">待命中...</span>
+    <div class="panel-container">
+      <!-- 輸出區域 -->
+      <div id="output">準備就緒...</div>
+      
+      <!-- 配置狀態顯示 -->
+      <div class="config-status">
+        麥克風已常駐 • 停頓 0.5s 自動執行 • AI 模型 已載入
       </div>
-    </div>
+      
+      <!-- 語音監聽區塊 -->
+      <div class="voice-container">
+        <div class="listening-text">
+          <span class="listening-indicator"></span>
+          <span id="listeningStatus">待命中...</span>
+        </div>
+      </div>
 
-    <!-- 輸入框 -->
-    <textarea id="userInput" placeholder="輸入指令 (如：幫我開啟 Google)..."></textarea>
-    
-    <!-- 按鈕容器 1 -->
-    <div class="input-container">
-      <div class="switch-container">
-        <button class="switch on" id="micSwitch" title="開啟/關閉語音"></button>
-        <span class="switch-label" id="micStatus">開啟</span>
+      <!-- 輸入框 -->
+      <textarea id="userInput" placeholder="輸入指令 (如：幫我開啟 Google)..."></textarea>
+      
+      <!-- 按鈕容器 1 -->
+      <div class="input-container">
+        <div class="switch-container">
+          <button class="switch on" id="micSwitch" title="開啟/關閉語音"></button>
+          <span class="switch-label" id="micStatus">開啟</span>
+        </div>
+        <button id="runBtn" class="btn-primary">執行</button>
       </div>
-      <button id="runBtn" class="btn-primary">執行</button>
-    </div>
-    
-    <!-- 按鈕容器 2 -->
-    <div class="input-container">
-      <button id="askGeminiBtn" class="btn-gemini">💡 Ask Gemini</button>
+      
+      <!-- 按鈕容器 2 -->
+      <div class="input-container">
+        <button id="askGeminiBtn" class="btn-gemini">💡 Ask Gemini</button>
+      </div>
     </div>
     
     <script type="module" src="sidepanel.js"></script>
