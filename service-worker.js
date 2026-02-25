@@ -289,7 +289,11 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
                 if (!matchedWebsite) {
                     console.warn("[Gateway] ❌ 未偵測到網站名稱");
                 }
-                sendResponse({ status: "error", text: `AI 無法識別該指令或找不到相應的技能。回應: ${aiResponse}` });
+                console.warn("[Gateway] ❌ 找不到可以匹配的 skill");
+                const availableSkills = Object.keys(SKILL_REGISTRY).length > 0 
+                    ? Object.keys(SKILL_REGISTRY).join('、') 
+                    : '目前沒有可用的技能';
+                sendResponse({ status: "error", text: `找不到可以匹配的 skill。可用技能: ${availableSkills}` });
                 return;
             }
         }
@@ -305,7 +309,12 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
         // 查找技能（從 Key-Value Pair 中查詢）
         const skillInfo = SKILL_REGISTRY[command.skill];
         if (!skillInfo) {
-            sendResponse({ status: "error", text: `未知技能: ${command.skill}。可用技能: ${Object.keys(SKILL_REGISTRY).join(', ')}` });
+            console.error("[Gateway] ❌ 找不到可以匹配的 skill:", command.skill);
+            console.error("[Gateway] 可用的技能:", Object.keys(SKILL_REGISTRY));
+            const availableSkills = Object.keys(SKILL_REGISTRY).length > 0 
+                ? Object.keys(SKILL_REGISTRY).join('、') 
+                : '目前沒有可用的技能';
+            sendResponse({ status: "error", text: `找不到可以匹配的 skill。用戶要求的 skill: ${command.skill}。可用技能: ${availableSkills}` });
             return;
         }
 
