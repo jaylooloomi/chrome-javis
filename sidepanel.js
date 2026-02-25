@@ -341,3 +341,10 @@ document.getElementById('sponsorBtn').addEventListener('click', () => {
         url: 'https://buymeacoffee.com/arthurwang'
     });
 });
+
+// ======== 系統訊息對話框關閉按鈕 ========
+document.querySelector('.close-btn').addEventListener('click', () => {
+    const topInnerPanel = document.querySelector('.top-inner-panel-container');
+    topInnerPanel.style.display = 'none';
+    console.log('[SidePanel] 系統訊息對話框已關閉');
+});
