@@ -27,7 +27,8 @@
     "error.summary.page": "❌ Summary Page 失敗",
     "notification": {
       "skill.success": "技能已成功執行",
-      "skill.error": "技能執行失敗"
+      "skill.error": "技能執行失敗",
+      "title": "⚙️ AI 助手"
     }
   },
   "zh-CN": {
@@ -57,7 +58,8 @@
     "error.summary.page": "❌ Summary Page 失败",
     "notification": {
       "skill.success": "技能已成功执行",
-      "skill.error": "技能执行失败"
+      "skill.error": "技能执行失败",
+      "title": "⚙️ AI 助手"
     }
   },
   "en-US": {
@@ -88,7 +90,8 @@
     "error.summary.page": "❌ Summary Page Failed",
     "notification": {
       "skill.success": "Skill executed successfully",
-      "skill.error": "Skill execution failed"
+      "skill.error": "Skill execution failed",
+      "title": "⚙️ AI Assistant"
     }
   },
   "en-GB": {
@@ -150,7 +153,8 @@
     "error.summary.page": "❌ Summary Page 失敗",
     "notification": {
       "skill.success": "スキルが正常に実行されました",
-      "skill.error": "スキルの実行に失敗しました"
+      "skill.error": "スキルの実行に失敗しました",
+      "title": "⚙️ AI アシスタント"
     }
   },
   "ko-KR": {
@@ -181,7 +185,8 @@
     "error.summary.page": "❌ Summary Page 실패",
     "notification": {
       "skill.success": "스킬이 성공적으로 실행되었습니다",
-      "skill.error": "스킬 실행에 실패했습니다"
+      "skill.error": "스킬 실행에 실패했습니다",
+      "title": "⚙️ AI 어시스턴트"
     }
   },
   "fr-FR": {
@@ -212,7 +217,8 @@
     "error.summary.page": "❌ Summary Page Échoué",
     "notification": {
       "skill.success": "Compétence exécutée avec succès",
-      "skill.error": "Échec de l'exécution de la compétence"
+      "skill.error": "Échec de l'exécution de la compétence",
+      "title": "⚙️ Assistant IA"
     }
   },
   "de-DE": {
@@ -243,7 +249,8 @@
     "error.summary.page": "❌ Summary Page Fehler",
     "notification": {
       "skill.success": "Fähigkeit erfolgreich ausgeführt",
-      "skill.error": "Fehler bei der Ausführung der Fähigkeit"
+      "skill.error": "Fehler bei der Ausführung der Fähigkeit",
+      "title": "⚙️ KI-Assistent"
     }
   },
   "es-ES": {
@@ -274,7 +281,8 @@
     "error.summary.page": "❌ Summary Page Fracasado",
     "notification": {
       "skill.success": "Habilidad ejecutada correctamente",
-      "skill.error": "Error al ejecutar la habilidad"
+      "skill.error": "Error al ejecutar la habilidad",
+      "title": "⚙️ Asistente IA"
     }
   },
   "it-IT": {
@@ -305,7 +313,8 @@
     "error.summary.page": "❌ Summary Page Fallito",
     "notification": {
       "skill.success": "Abilità eseguita con successo",
-      "skill.error": "Errore nell'esecuzione dell'abilità"
+      "skill.error": "Errore nell'esecuzione dell'abilità",
+      "title": "⚙️ Assistente IA"
     }
   },
   "pt-BR": {
@@ -336,7 +345,8 @@
     "error.summary.page": "❌ Summary Page Falhou",
     "notification": {
       "skill.success": "Habilidade executada com sucesso",
-      "skill.error": "Falha na execução da habilidade"
+      "skill.error": "Falha na execução da habilidade",
+      "title": "⚙️ Assistente IA"
     }
   },
   "ru-RU": {
@@ -367,7 +377,8 @@
     "error.summary.page": "❌ Summary Page Ошибка",
     "notification": {
       "skill.success": "Навык успешно выполнен",
-      "skill.error": "Ошибка при выполнении навыка"
+      "skill.error": "Ошибка при выполнении навыка",
+      "title": "⚙️ ИИ Помощник"
     }
   }
 }

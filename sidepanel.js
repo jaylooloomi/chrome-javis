@@ -312,7 +312,7 @@ document.getElementById('runBtn').addEventListener('click', async () => {
         } else {
             // 顯示通知 - 執行失敗
             console.log("[SidePanel] 執行失敗，顯示錯誤通知");
-            await showErrorToast('❌ AI 助手', res.error || i18n.t('notification.skill.error'));
+            await showErrorToast(i18n.t('notification.title'), res.error || i18n.t('notification.skill.error'));
         }
     } catch (error) {
         console.error("[SidePanel] 錯誤:", error);
