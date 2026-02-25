@@ -266,28 +266,35 @@ function pasteAndSubmit(text) {
             try {
                 result.logs.push("[+" + (Date.now() - startTime) + "ms] 📍 按鈕狀態: disabled=" + sendButton.disabled + ", aria-disabled=" + sendButton.getAttribute('aria-disabled'));
                 
-                // 等待 aria-disabled 變成 false（最多 5 秒）
-                result.logs.push("[+" + (Date.now() - startTime) + "ms] ⏳ 等待按鈕變成可用 (aria-disabled=false)，最多 5 秒...");
+                // 等待按鈕完全可用：disabled=false AND aria-disabled=false（最多 8 秒）
+                result.logs.push("[+" + (Date.now() - startTime) + "ms] ⏳ 等待按鈕完全可用 (disabled=false AND aria-disabled=false)，最多 8 秒...");
                 const buttonCheckStart = Date.now();
-                let isButtonReady = sendButton.getAttribute('aria-disabled') !== 'true';
+                let isButtonReady = !sendButton.disabled && sendButton.getAttribute('aria-disabled') !== 'true';
                 
-                while (!isButtonReady && Date.now() - buttonCheckStart < 5000) {
+                while (!isButtonReady && Date.now() - buttonCheckStart < 8000) {
                     // 小 sleep 50ms 避免忙輪詢
                     const sleepStart = Date.now();
                     while (Date.now() - sleepStart < 50) {}
                     
-                    isButtonReady = sendButton.getAttribute('aria-disabled') !== 'true';
+                    // 同時檢查兩個條件
+                    isButtonReady = !sendButton.disabled && sendButton.getAttribute('aria-disabled') !== 'true';
+                    
+                    // 每 500ms 日誌一次狀態
+                    if ((Date.now() - buttonCheckStart) % 500 < 50) {
+                        result.logs.push("[+" + (Date.now() - startTime) + "ms]   🔍 按鈕狀態檢查: disabled=" + sendButton.disabled + ", aria-disabled=" + sendButton.getAttribute('aria-disabled'));
+                    }
                 }
                 
                 if (isButtonReady) {
-                    result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 按鈕已準備好，aria-disabled=" + sendButton.getAttribute('aria-disabled'));
+                    result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 按鈕已完全準備好！disabled=false, aria-disabled=false");
+                    // 點擊按鈕
+                    sendButton.click();
+                    result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 已點擊發送按鈕");
                 } else {
-                    result.logs.push("[+" + (Date.now() - startTime) + "ms] ⚠️  按鈕仍然禁用中 (aria-disabled=" + sendButton.getAttribute('aria-disabled') + ")，但繼續點擊");
+                    result.logs.push("[+" + (Date.now() - startTime) + "ms] ❌ 按鈕在 8 秒後仍然無法使用 (disabled=" + sendButton.disabled + ", aria-disabled=" + sendButton.getAttribute('aria-disabled') + ")");
+                    result.logs.push("[+" + (Date.now() - startTime) + "ms] 📋 放棄點擊 - Gemini 可能已禁用此機器人");
+                    throw new Error("按鈕無法使用 - Gemini 反機器人防護仍然活躍");
                 }
-                
-                // 點擊按鈕
-                sendButton.click();
-                result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 已點擊發送按鈕");
                 
             } catch (e) {
                 result.logs.push("[+" + (Date.now() - startTime) + "ms] ❌ 點擊發送按鈕失敗: " + e);
