@@ -237,6 +237,7 @@
   "notification": {
     "skill.success": "Fähigkeit erfolgreich ausgeführt",
     "skill.error": "Fehler bei der Ausführung der Fähigkeit"
+  },
   "es-ES": {
     "dialog.title": "Mensaje del Sistema",
     "dialog.description": "Tu apoyo es mi mayor motivación. Espero que esta herramienta te sea útil. Si te gusta, por favor considerá apoyarme. 💝",
