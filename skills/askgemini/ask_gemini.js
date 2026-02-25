@@ -62,19 +62,27 @@ export async function ask_gemini(args) {
  * 等待 Gemini 頁面加載完成
  * 嘗試多次檢查聊天框是否出現
  */
-async function waitForPageLoad(tabId, maxAttempts = 16, delayMs = 500) {
+async function waitForPageLoad(tabId, maxAttempts = 20, delayMs = 500) {
     for (let i = 0; i < maxAttempts; i++) {
         try {
-            // 嘗試檢查頁面中是否存在聊天輸入框
+            // 嘗試檢查頁面中是否存在聊天輸入框和 input-area 容器
             const results = await chrome.scripting.executeScript({
                 target: { tabId },
                 function: () => {
-                    // 嘗試尋找 Gemini 聊天框（可能的選擇器）
-                    return !!(
+                    // 檢查 input-area 容器是否存在（這是關鍵）
+                    const hasInputArea = !!(
+                        document.querySelector('input-area-v2') ||
+                        document.querySelector('[data-node-type="input-area"]')
+                    );
+                    
+                    // 同時檢查輸入框
+                    const hasInputElement = !!(
                         document.querySelector('[contenteditable="true"]') ||
                         document.querySelector('[role="textbox"]') ||
                         document.querySelector('textarea')
                     );
+                    
+                    return hasInputArea && hasInputElement;
                 }
             });
 
@@ -103,6 +111,19 @@ function pasteAndSubmit(text) {
     try {
         result.logs.push("=== 開始執行 pasteAndSubmit ===");
         result.logs.push("文字長度: " + text.length);
+        
+        // 0.5. 首先檢查頁面整體狀態
+        result.logs.push("📍 檢查頁面狀態...");
+        result.logs.push("  document.readyState: " + document.readyState);
+        result.logs.push("  body 中的元素數: " + document.body.children.length);
+        
+        // 檢查是否找到 input-area 容器
+        const inputAreaContainer = document.querySelector('input-area-v2, [data-node-type="input-area"]');
+        if (inputAreaContainer) {
+            result.logs.push("✅ 找到 input-area 容器");
+        } else {
+            result.logs.push("⚠️  未找到 input-area 容器 - 頁面可能未完全載入");
+        }
         
         // 1. 尋找輸入框 - Gemini 使用 Quill 編輯器
         result.logs.push("正在尋找輸入框...");
