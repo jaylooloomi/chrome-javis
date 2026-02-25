@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "OmniAssistant (Phase 1 Complete)",
+  "version": "1.3",
+  "description": "具備三大核心技能的 Chrome 助理",
+  "minimum_chrome_version": "127",
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "activeTab",
+    "scripting",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "http://localhost:11434/*",
+    "https://generativelanguage.googleapis.com/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "開啟 OmniAssistant"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "skills/*/*.md"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
