@@ -33,7 +33,7 @@ function initToastContainer() {
  * @param {string} message - 通知訊息
  * @param {number} duration - 顯示時長（毫秒），0 表示不自動關閉
  */
-function showToast(type, title, message, duration = 3000) {
+function showToast(type, title, message, duration = 4000) {
     try {
         initToastContainer();
         
@@ -233,21 +233,21 @@ function removeToast(toastId) {
 /**
  * 顯示成功通知
  */
-function showSuccessToast(title, message, duration = 3000) {
+function showSuccessToast(title, message, duration = 4000) {
     return showToast('success', title, message, duration);
 }
 
 /**
  * 顯示失敗通知
  */
-function showErrorToast(title, message, duration = 3000) {
+function showErrorToast(title, message, duration = 4000) {
     return showToast('error', title, message, duration);
 }
 
 /**
  * 顯示信息通知
  */
-function showInfoToast(title, message, duration = 3000) {
+function showInfoToast(title, message, duration = 4000) {
     return showToast('info', title, message, duration);
 }
 
