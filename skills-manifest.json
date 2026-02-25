@@ -5,6 +5,12 @@
       "folder": "opentab",
       "description": "打开新标签页的技能",
       "runInPageContext": false
+    },
+    {
+      "name": "switch_mode",
+      "folder": "switchmode",
+      "description": "切換 AI 模型的技能",
+      "runInPageContext": true
     }
   ]
 }
