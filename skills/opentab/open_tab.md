@@ -3,15 +3,20 @@
 description: Open a website URL in a new browser tab. Only use this skill when the user explicitly asks to open/visit a specific website.
 
 when_to_use:
-  - User explicitly says: "open", "visit", "go to", "打開", "開啟", "訪問"
-  - User mentions a specific website: Google, YouTube, GitHub, Twitter, LinkedIn, Facebook, Instagram
-  - Example: "open Google", "visit YouTube", "打開 GitHub"
+  - **REQUIRED**: User must have an explicit ACTION verb: "open", "visit", "go to", "打開", "開啟", "訪問"
+  - REQUIRED: User is making a REQUEST or COMMAND to open a website, NOT just mentioning it
+  - User specifies a website: Google, YouTube, GitHub, Twitter, LinkedIn, Facebook, Instagram
+  - Example CORRECT: "open Google", "visit YouTube", "打開 GitHub", "go to GitHub"
+  - Counter-example WRONG: "OK, OK Google" ← This is mimicking a voice assistant, NOT a request to open
+  - Counter-example WRONG: "Google is great" ← This is a statement, NOT a request
 
 when_NOT_to_use:
-  - User asks general questions like "你在幹嘛" (What are you doing?)
-  - User makes statements without asking to open anything
-  - User asks about a website but doesn't ask to open it
-  - Example: DO NOT call open_tab for "你在幹嘛", "很強喔", "Google 很強"
+  - **NEVER** call if user is just MENTIONING a website without requesting to open it
+  - **NEVER** call if user is mimicking voice assistant triggers like "OK Google", "OK, OK Google"
+  - **NEVER** call if user is making a STATEMENT that happens to mention a website
+  - User asks general questions like "你在幹嘧" (What are you doing?)
+  - Example: DO NOT call open_tab for "你在幹嘧", "很強喔", "Google 很強", "OK, OK Google"
+  - Counter-example: "OK, OK Google" - This is NOT a command to open, it's mimicking a trigger phrase
 
 intent_examples:
   CORRECT - call this skill:
@@ -23,9 +28,10 @@ intent_examples:
     - "訪問 GitHub"
 
   INCORRECT - do NOT call this skill:
-    - "你在幹嘦" → Should respond with error, no action
+    - "你在幹嘧" → Should respond with error, no action
     - "很強喔" → Should respond with error, no action
     - "Google 很強" → Should respond with error, no action
+    - "OK, OK Google" → This is mimicking Google Assistant trigger, NOT a request to open. Response with error!
 
 input: User must explicitly ask to open a website
 
@@ -48,4 +54,6 @@ URL conversion rules:
 9. Always add https:// prefix if missing
 10. Never return empty URL
 
-CRITICAL RULE: Only call open_tab if user EXPLICITLY asks to open/visit a website. Do NOT guess or assume.
+CRITICAL RULE: Only call open_tab if user has an EXPLICIT ACTION VERB (open/visit/go to/打開/開啟) + a website name. 
+Do NOT call if user is just mentioning or mimicking a voice trigger like "OK, OK Google".
+Respond with {"error": "..."} for any ambiguous input.
