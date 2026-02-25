@@ -173,6 +173,14 @@ document.getElementById('runBtn').addEventListener('click', async () => {
         const res = await chrome.runtime.sendMessage(message);
         console.log("[SidePanel] 收到回應:", res);
         output.textContent = res.text || res.error;
+        
+        // 如果執行成功，清空輸入框
+        if (res.status === "success") {
+            console.log("[SidePanel] 執行成功，清空輸入框");
+            document.getElementById('userInput').value = '';
+            final_transcript = '';
+            interim_transcript = '';
+        }
     } catch (error) {
         console.error("[SidePanel] 錯誤:", error);
         output.textContent = `❌ 錯誤: ${error.message}`;
