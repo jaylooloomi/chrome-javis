@@ -148,8 +148,11 @@ chrome.runtime.onInstalled.addListener(loadSkillsDynamically);
 // --- 訊息監聽 ---
 console.log("[Gateway] 📡 註冊消息監聽器...");
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log("[Gateway] ✉️  收到訊息:", request.action);\n    console.log("[Gateway] 完整訊息內容:", JSON.stringify(request, null, 2));
-    console.log("[Gateway] 訊息中的 config:", request.config ? '存在' : '❌ 不存在');\n    try {
+    console.log("[Gateway] ✉️  收到訊息:", request.action);
+    console.log("[Gateway] 完整訊息內容:", JSON.stringify(request, null, 2));
+    console.log("[Gateway] 訊息中的 config:", request.config ? '存在' : '❌ 不存在');
+    
+    try {
         if (request.action === "ask_ai") {
             console.log("[Gateway] 轉發給 handleRequest，config 類型:", typeof request.config);
             handleRequest(request.prompt, sendResponse, request.config);
