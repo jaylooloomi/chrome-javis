@@ -153,15 +153,14 @@ document.getElementById('runBtn').addEventListener('click', async () => {
     output.textContent = "處理中...";
     
     try {
-        // 從 config.json 讀取 API Key
+        // 從 config.json 讀取完整配置
         const configResponse = await fetch(chrome.runtime.getURL('config.json'));
         const config = await configResponse.json();
-        const geminiApiKey = config.geminiApiKey;
         
         const res = await chrome.runtime.sendMessage({ 
             action: "ask_ai", 
             prompt: text,
-            geminiApiKey: geminiApiKey || null 
+            config: config
         });
         output.textContent = res.text || res.error;
     } catch (error) {

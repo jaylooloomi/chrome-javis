@@ -133,7 +133,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
     try {
         if (request.action === "ask_ai") {
-            handleRequest(request.prompt, sendResponse, request.geminiApiKey);
+            handleRequest(request.prompt, sendResponse, request.config);
             return true; 
         }
         
@@ -178,19 +178,25 @@ async function handleChromeApiCall(request, sendResponse) {
 }
 
 // --- 階段 B & C：接收指令、思考與調度 ---
-async function handleRequest(userPrompt, sendResponse, geminiApiKey = null) {
+async function handleRequest(userPrompt, sendResponse, configData = null) {
     try {
-        if (!geminiApiKey) {
-            sendResponse({ status: "error", text: "❌ 未提供 Gemini API Key，無法執行 AI 功能" });
+        if (!configData) {
+            sendResponse({ status: "error", text: "❌ 未提供配置文件，無法執行 AI 功能" });
             return;
         }
 
         await ensureSkillsLoaded();
         
-        console.log("[Gateway] 階段 B：呼叫 Gemini Flash...");
+        console.log("[Gateway] 階段 B：呼叫 AI 模型...");
         console.log("[Gateway] 可用技能:", Object.keys(SKILL_REGISTRY));
+        console.log("[Gateway] 使用模型:", configData.activeModel);
         
-        const aiResponse = await callGeminiFlash(userPrompt, dynamicSystemPrompt, geminiApiKey);
+        let aiResponse;
+        if (configData.activeModel === 'ollama') {
+            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollama);
+        } else {
+            aiResponse = await callGeminiFlash(userPrompt, dynamicSystemPrompt, configData.gemini);
+        }
         
         console.log("[Gateway] AI 回應:", aiResponse);
         
@@ -310,11 +316,11 @@ async function runSkillInTabContext(skillName, skillInfo, args, sendResponse) {
 }
 
 // --- Gemini Flash API 呼叫 ---
-async function callGeminiFlash(prompt, systemPrompt, geminiApiKey) {
+async function callGeminiFlash(prompt, systemPrompt, geminiConfig) {
     try {
         console.log("[Gemini] 發送請求到 Gemini 2.5 Flash...");
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiConfig.apiKey}`;
         
         const response = await fetch(url, {
             method: "POST",
@@ -326,10 +332,10 @@ async function callGeminiFlash(prompt, systemPrompt, geminiApiKey) {
                     }]
                 }],
                 generationConfig: {
-                    temperature: 0.3,
+                    temperature: geminiConfig.temperature || 0.3,
                     topK: 40,
                     topP: 0.95,
-                    maxOutputTokens: 2048,
+                    maxOutputTokens: geminiConfig.maxOutputTokens || 2048,
                 }
             })
         });
@@ -350,6 +356,44 @@ async function callGeminiFlash(prompt, systemPrompt, geminiApiKey) {
         }
     } catch (e) {
         console.error("[Gemini] 異常:", e);
+        throw e;
+    }
+}
+
+// --- Ollama API 調用 ---
+async function callOllama(prompt, systemPrompt, ollamaConfig) {
+    try {
+        console.log("[Ollama] 發送請求到 Ollama gemma2:2b...");
+
+        const url = `${ollamaConfig.baseUrl}/api/generate`;
+        
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                model: ollamaConfig.model || "gemma2:2b",
+                prompt: `${systemPrompt}\n\n用戶指令: ${prompt}`,
+                temperature: ollamaConfig.temperature || 0.3,
+                num_predict: ollamaConfig.numPredict || 2048,
+                stream: false
+            })
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Ollama API 錯誤 ${response.status}: ${errorText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.response) {
+            console.log("[Ollama] ✅ 成功");
+            return data.response;
+        } else {
+            throw new Error("Ollama API 回應缺少預期的數據");
+        }
+    } catch (e) {
+        console.error("[Ollama] 異常:", e);
         throw e;
     }
 }
