@@ -137,6 +137,14 @@ function pasteAndSubmit(text) {
         inputElement.dispatchEvent(new Event('input', { bubbles: true }));
         inputElement.dispatchEvent(new Event('change', { bubbles: true }));
         result.logs.push("✅ 事件已觸發");
+        
+        // 3.5. 等待頁面完全載入和 UI 更新（500ms）
+        result.logs.push("⏱️ 等待頁面 UI 更新...");
+        const startTime = Date.now();
+        while (Date.now() - startTime < 500) {
+            // 同步等待 500ms
+        }
+        result.logs.push("✅ 頁面 UI 已更新");
 
         // 4. 立即尋找並點擊發送按鈕
         result.logs.push("正在尋找發送按鈕...");
