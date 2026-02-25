@@ -1,6 +1,6 @@
-name: ask_gemini
+name: summary_this_page
 
-description: Send current page content to Google Gemini for analysis. Only use this skill when the user explicitly asks to analyze/summarize/send the current page to Gemini.
+description: Summarize and analyze the current page content using Google Gemini. Only use this skill when the user explicitly asks to analyze/summarize/send the current page to Gemini.
 
 when_to_use:
   MUST HAVE BOTH:
@@ -53,7 +53,7 @@ when_NOT_to_use:
 
 intent_examples:
   CORRECT - call this skill (HAS verb + page):
-    - "ask Gemini" → Call ask_gemini (implicit current page)
+    - "ask Gemini" → Call summary_this_page (implicit current page)
     - "send this page to Gemini" → Call with current page
     - "analyze the current page" → Call with current page
     - "給我分析頁面" → Call with current page
@@ -72,7 +72,7 @@ input: User must explicitly ask to analyze/summarize the current page using Gemi
 
 output:
 Only respond with THIS EXACT JSON format when user explicitly asks to analyze/send current page to Gemini:
-{"skill": "ask_gemini", "args": {}}
+{"skill": "summary_this_page", "args": {"tabId": "ACTIVE_TAB", "url": "ACTIVE_TAB_URL"}}
 
 If user is NOT asking to analyze the page, respond with:
 {"error": "This request is not asking to analyze the page with Gemini"}

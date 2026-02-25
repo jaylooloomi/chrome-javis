@@ -1,8 +1,8 @@
 // ask_gemini.js - 在 SidePanel 中執行的技能
-// 快速將文字發送到 Google Gemini
+// 快速將頁面內容總結並發送到 Google Gemini
 
-export async function ask_gemini(args,inputPrompt) {
-    console.log("[Ask Gemini Skill] 啟動，接收到參數:", args);
+export async function summary_this_page(args, inputPrompt) {
+    console.log("[Summary Page Skill] 啟動，接收到參數:", args);
 
     try {
         const sourceTabId = args.tabId;
@@ -75,8 +75,8 @@ export async function ask_gemini(args,inputPrompt) {
         return `✅ 已開啟 Gemini 分頁\n\n📄 已轉換為 Markdown 並貼上 (${pageMarkdown.length} 字元)\n\n摘要：\n${preview}`;
         
     } catch (error) {
-        console.error("[Ask Gemini Skill] 錯誤:", error);
-        throw new Error(`Ask Gemini 失敗：${error.message}`);
+        console.error("[Summary Page Skill] 錯誤:", error);
+        throw new Error(`Summary Page 失敗：${error.message}`);
     }
 }
 
