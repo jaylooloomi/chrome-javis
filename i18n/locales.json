@@ -268,6 +268,7 @@
   "notification": {
     "skill.success": "Habilidad ejecutada correctamente",
     "skill.error": "Error al ejecutar la habilidad"
+  },
   "it-IT": {
     "dialog.title": "Messaggio di Sistema",
     "dialog.description": "Il tuo sostegno è la mia più grande motivazione. Spero che questo strumento possa aiutarti. Se ti piace, per favore considerami di supportarmi. 💝",
@@ -298,6 +299,7 @@
   "notification": {
     "skill.success": "Abilità eseguita con successo",
     "skill.error": "Errore nell'esecuzione dell'abilità"
+  },
   "pt-BR": {
     "dialog.title": "Mensagem do Sistema",
     "dialog.description": "Seu apoio é minha maior motivação. Espero que esta ferramenta possa ajudá-lo. Se você gostar, por favor considere me apoiar. 💝",
@@ -328,6 +330,7 @@
   "notification": {
     "skill.success": "Habilidade executada com sucesso",
     "skill.error": "Falha na execução da habilidade"
+  },
   "ru-RU": {
     "dialog.title": "Системное сообщение",
     "dialog.description": "Ваша поддержка - мотивация для меня. Надеюсь, этот инструмент вам поможет. Если вам нравится, пожалуйста, поддержите меня. 💝",
