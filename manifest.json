@@ -41,7 +41,8 @@
         "skills/*/*.md",
         "config.json",
         "skills-manifest.json",
-        "images/*.png"
+        "images/*.png",
+        "i18n/locales.json"
       ],
       "matches": ["<all_urls>"]
     }
