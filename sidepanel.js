@@ -16,8 +16,6 @@ if (SpeechRecognition) {
     recognition.onstart = () => {
         console.log("[Speech] 語音識別已啟動");
         isListening = true;
-        document.getElementById('micBtn').classList.add('listening');
-        document.getElementById('micBtn').textContent = '⏹️';
         document.getElementById('output').textContent = '🎤 正在聆聽...';
         final_transcript = '';
         interim_transcript = '';
@@ -26,14 +24,6 @@ if (SpeechRecognition) {
     recognition.onend = () => {
         console.log("[Speech] 語音識別已停止");
         isListening = false;
-        document.getElementById('micBtn').classList.remove('listening');
-        
-        // 更新按鈕顯示
-        if (isMicEnabled) {
-            document.getElementById('micBtn').textContent = '🎤';
-        } else {
-            document.getElementById('micBtn').textContent = '🔇';
-        }
         
         // 如果常駐麥克風已關閉，則不自動重啟
         if (!isMicEnabled) {
