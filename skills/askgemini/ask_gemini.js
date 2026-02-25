@@ -145,9 +145,12 @@ function pasteAndSubmit(text) {
         inputElement.dispatchEvent(new Event('blur', { bubbles: true }));
         inputElement.dispatchEvent(new Event('focus', { bubbles: true }));
 
-        // 4. 等待頁面載入、按鈕出現、然後點擊發送
-        console.log("[Gemini Content] 正在等待發送按鈕出現...");
-        waitForButtonAndClick(inputElement, 0);
+        // 4. 等待 2 秒後再尋找發送按鈕
+        console.log("[Gemini Content] 等待 2 秒鐘讓 Gemini 頁面渲染...");
+        setTimeout(() => {
+            console.log("[Gemini Content] 正在尋找發送按鈕...");
+            waitForButtonAndClick(inputElement, 0);
+        }, 2000);
     } catch (error) {
         console.error("[Gemini Content] ❌ 異常:", error);
         console.error("[Gemini Content] 錯誤堆棧:", error.stack);
