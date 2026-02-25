@@ -13,7 +13,7 @@ function initToastContainer() {
     container.id = 'toast-container';
     container.style.cssText = `
         position: fixed;
-        bottom: 20px;
+        top: 20px;
         right: 20px;
         display: flex;
         flex-direction: column;
@@ -67,43 +67,104 @@ function showToast(type, title, message, duration = 10000) {
         toast.id = toastId;
         toast.style.cssText = `
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             gap: 12px;
-            min-width: 280px;
-            max-width: 400px;
+            min-width: 300px;
+            max-width: 450px;
+            pointer-events: auto;
+            animation: slideInDown 0.3s ease-out;
+            cursor: pointer;
+        `;
+        
+        // 添加內容（氣泡樣式）
+        const bubbleContent = document.createElement('div');
+        bubbleContent.style.cssText = `
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
             padding: 14px 16px;
             background-color: ${bgColor};
             color: white;
-            border-left: 4px solid ${borderColor};
-            border-radius: 6px;
+            border-radius: 16px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif;
             font-size: 14px;
-            pointer-events: auto;
-            animation: slideInRight 0.3s ease-out;
-            cursor: pointer;
             transition: transform 0.3s, opacity 0.3s;
+            position: relative;
         `;
         
-        // 添加內容
-        toast.innerHTML = `
-            <span style="font-size: 18px; min-width: 24px; text-align: center;">${icon}</span>
-            <div style="flex: 1;">
-                <div style="font-weight: bold; margin-bottom: 4px;">${title}</div>
-                <div style="font-size: 13px; opacity: 0.95;">${message}</div>
-            </div>
-            <button id="close-${toastId}" style="
-                background: rgba(255, 255, 255, 0.3);
-                border: none;
-                color: white;
-                cursor: pointer;
-                font-size: 16px;
+        // 添加氣泡尖角（三角形）
+        bubbleContent.innerHTML = `
+            <div style="font-weight: bold;">${title}</div>
+            <div style="font-size: 13px; opacity: 0.95;">${message}</div>
+            <div style="
+                position: absolute;
+                bottom: -8px;
+                right: 16px;
+                width: 0;
+                height: 0;
+                border-left: 8px solid transparent;
+                border-top: 8px solid ${bgColor};
+            "></div>
+        `;
+        
+        toast.appendChild(bubbleContent);
+        
+        // 添加頭像
+        const avatar = document.createElement('img');
+        avatar.src = chrome.runtime.getURL('images/jarvis_pixian_ai.png');
+        avatar.style.cssText = `
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: white;
+            padding: 2px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        `;
+        toast.appendChild(avatar);
+        
+        // 添加關閉按鈕（在氣泡內部）
+        const closeBtn = document.createElement('button');
+        closeBtn.id = `close-${toastId}`;
+        closeBtn.textContent = '✕';
+        closeBtn.style.cssText = `
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            border-radius: 4px;
+            transition: background 0.2s;
+            display: none;
+        `;
+        bubbleContent.style.position = 'relative';
+        bubbleContent.appendChild(closeBtn);
+        
+        // 鼠標懸停時顯示關閉按鈕
+        toast.addEventListener('mouseenter', () => {
+            closeBtn.style.display = 'block';
+            bubbleContent.style.transform = 'scale(1.02)';
+            bubbleContent.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
+        });
+        
+        toast.addEventListener('mouseleave', () => {
+            closeBtn.style.display = 'none';
+            bubbleContent.style.transform = 'scale(1)';
+            bubbleContent.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+        });
                 width: 24px;
                 height: 24px;
                 padding: 0;
                 border-radius: 4px;
                 transition: background 0.2s;
-            ">✕</button>
+            "></button>
         `;
         
         // 添加樣式表（如果尚未添加）
@@ -111,24 +172,24 @@ function showToast(type, title, message, duration = 10000) {
             const style = document.createElement('style');
             style.id = 'toast-styles';
             style.textContent = `
-                @keyframes slideInRight {
+                @keyframes slideInDown {
                     from {
-                        transform: translateX(400px);
+                        transform: translateY(-400px);
                         opacity: 0;
                     }
                     to {
-                        transform: translateX(0);
+                        transform: translateY(0);
                         opacity: 1;
                     }
                 }
                 
-                @keyframes slideOutRight {
+                @keyframes slideOutUp {
                     from {
-                        transform: translateX(0);
+                        transform: translateY(0);
                         opacity: 1;
                     }
                     to {
-                        transform: translateX(400px);
+                        transform: translateY(-400px);
                         opacity: 0;
                     }
                 }
@@ -151,17 +212,6 @@ function showToast(type, title, message, duration = 10000) {
             removeToast(toastId);
         });
         
-        // 鼠標懸停時增加亮度
-        toast.addEventListener('mouseenter', () => {
-            toast.style.transform = 'scale(1.02)';
-            toast.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
-        });
-        
-        toast.addEventListener('mouseleave', () => {
-            toast.style.transform = 'scale(1)';
-            toast.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-        });
-        
         // 自動關閉
         if (duration > 0) {
             setTimeout(() => {
@@ -181,7 +231,7 @@ function removeToast(toastId) {
     const toast = document.getElementById(toastId);
     if (!toast) return;
     
-    toast.style.animation = 'slideOutRight 0.3s ease-out';
+    toast.style.animation = 'slideOutUp 0.3s ease-out';
     setTimeout(() => {
         toast.remove();
         console.log('[Toast] 已移除:', toastId);
