@@ -182,19 +182,34 @@ function pasteAndSubmit(text) {
             result.logs.push("⚠️  警告：輸入框仍為空，文本可能未成功設置");
         }
         
-        // 3.5. 等待頁面完全載入和 UI 更新（2000ms，增加等待時間）
-        result.logs.push("⏱️ 等待頁面 UI 更新...");
-        const startTime = Date.now();
-        while (Date.now() - startTime < 2000) {
-            // 同步等待 2000ms
-
+        // 3.5. 等待按鈕狀態變為可用（aria-disabled=false）
+        result.logs.push("⏱️ 等待按鈕狀態更新 (等待 aria-disabled 變為 false)...");
+        const maxWaitTime = 5000; // 最多等待 5 秒
+        const waitStartTime = Date.now();
+        let sendButton = null;
+        let buttonReady = false;
+        
+        while (Date.now() - waitStartTime < maxWaitTime) {
+            sendButton = document.querySelector('button.send-button');
+            if (sendButton) {
+                const ariaDisabled = sendButton.getAttribute('aria-disabled');
+                if (ariaDisabled === 'false' || ariaDisabled === null) {
+                    buttonReady = true;
+                    result.logs.push("✅ 按鈕已準備好 (aria-disabled=" + ariaDisabled + ")");
+                    break;
+                }
+            }
+            // 等待 50ms 後重新檢查
+            const checkDelay = Date.now();
+            while (Date.now() - checkDelay < 50) {}
         }
-        result.logs.push("✅ 頁面 UI 已更新");
+        
+        if (!buttonReady) {
+            result.logs.push("⚠️  按鈕超時未變為可用，但仍嘗試點擊");
+        }
 
         // 4. 立即尋找並點擊發送按鈕
         result.logs.push("正在尋找發送按鈕...");
-        
-        let sendButton = null;
         
         // 方法1：直接用 class 名稱查找（最可靠）
         sendButton = document.querySelector('button.send-button');
