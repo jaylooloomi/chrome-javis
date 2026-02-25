@@ -40,6 +40,12 @@
         background: transparent;
       }
 
+      .top-panel-container {
+        height: 12px;
+        background: transparent;
+        flex-shrink: 0;
+      }
+
       /* ======== 輸出區域 ======== */
       #output {
         flex: 1;
@@ -370,6 +376,9 @@
         <button id="askGeminiBtn" class="btn-gemini">💡 Ask Gemini</button>
       </div>
     </div>
+
+    <!-- 上方 Panel -->
+    <div class="top-panel-container"></div>
     
     <script type="module" src="sidepanel.js"></script>
   </body>
