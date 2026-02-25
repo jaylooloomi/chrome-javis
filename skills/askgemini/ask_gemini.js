@@ -138,10 +138,50 @@ function pasteAndSubmit(text) {
         inputElement.dispatchEvent(new Event('change', { bubbles: true }));
         result.logs.push("✅ 事件已觸發");
 
-        // 4. 等待 2 秒後按 Enter
-        result.logs.push("⏱️ 等待 2 秒...");
-        setTimeout(() => {
-            result.logs.push("按 Enter 鍵...");
+        // 4. 等待 2 秒後點擊發送按鈕
+        result.logs.push("⏱️ 等待 2 秒後尋找並點擊發送按鈕...");
+        
+        // 使用同步延遲（這樣函數會等待完成才返回）
+        const startTime = Date.now();
+        while (Date.now() - startTime < 2000) {
+            // 忙等待 2 秒
+        }
+        
+        // 2 秒後，嘗試點擊發送按鈕
+        result.logs.push("✅ 2 秒已過，正在尋找發送按鈕...");
+        
+        // 嘗試多個發送按鈕選擇器
+        const sendButtonSelectors = [
+            'button[aria-label*="Send"]',
+            'button[aria-label*="send"]',
+            'button:has(svg[aria-label*="Send"])',
+            '[aria-label="Send message"]',
+            '[aria-label="send message"]',
+            'button.send-button',
+            'button[data-testid*="send"]',
+            'button[type="submit"]',
+            'div[role="button"][data-testid*="send"]'
+        ];
+        
+        let sendButton = null;
+        for (const selector of sendButtonSelectors) {
+            const btn = document.querySelector(selector);
+            if (btn && btn.offsetHeight > 0) {
+                sendButton = btn;
+                result.logs.push("✅ 找到發送按鈕（選擇器: " + selector + "）");
+                break;
+            }
+        }
+        
+        if (sendButton) {
+            try {
+                sendButton.click();
+                result.logs.push("✅ 已點擊發送按鈕");
+            } catch (e) {
+                result.logs.push("❌ 點擊發送按鈕失敗: " + e);
+            }
+        } else {
+            result.logs.push("⚠️ 未找到發送按鈕，嘗試按 Enter 鍵...");
             inputElement.focus();
             
             const enterEvent = new KeyboardEvent('keydown', {
@@ -154,22 +194,20 @@ function pasteAndSubmit(text) {
             });
             inputElement.dispatchEvent(enterEvent);
             
-            setTimeout(() => {
-                const enterUpEvent = new KeyboardEvent('keyup', {
-                    key: 'Enter',
-                    code: 'Enter',
-                    keyCode: 13,
-                    which: 13,
-                    bubbles: true,
-                    cancelable: true
-                });
-                inputElement.dispatchEvent(enterUpEvent);
-                result.logs.push("✅ Enter 鍵已送出");
-            }, 50);
-        }, 2000);
+            const enterUpEvent = new KeyboardEvent('keyup', {
+                key: 'Enter',
+                code: 'Enter',
+                keyCode: 13,
+                which: 13,
+                bubbles: true,
+                cancelable: true
+            });
+            inputElement.dispatchEvent(enterUpEvent);
+            result.logs.push("✅ 已按 Enter 鍵");
+        }
 
         result.success = true;
-        result.logs.push("✅ 流程已啟動");
+        result.logs.push("✅ 流程已完成");
         return result;
 
     } catch (error) {
