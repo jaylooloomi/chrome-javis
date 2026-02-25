@@ -22,6 +22,17 @@ async function executeSidePanelSkill(skillName, skillFolder, args) {
         
         // 發送消息給 SidePanel 執行技能
         return new Promise((resolve, reject) => {
+            let responded = false;
+            
+            // 設置超時保護
+            const timeoutId = setTimeout(() => {
+                if (!responded) {
+                    responded = true;
+                    console.error(`[Gateway] SidePanel 技能執行超時 (5秒)`);
+                    reject(new Error(`SidePanel 技能執行超時：無法連接或 SidePanel 未開啟`));
+                }
+            }, 5000);
+            
             chrome.runtime.sendMessage(
                 {
                     target: 'SIDE_PANEL',
@@ -31,9 +42,13 @@ async function executeSidePanelSkill(skillName, skillFolder, args) {
                     args: args
                 },
                 (response) => {
+                    if (responded) return;
+                    responded = true;
+                    clearTimeout(timeoutId);
+                    
                     if (chrome.runtime.lastError) {
                         console.error(`[Gateway] SidePanel 通訊錯誤:`, chrome.runtime.lastError);
-                        reject(new Error(`無法連接到 SidePanel: ${chrome.runtime.lastError.message}`));
+                        reject(new Error(`無法連接到 SidePanel: ${chrome.runtime.lastError.message}。請確保 SidePanel 已開啟。`));
                     } else if (response && response.status === 'success') {
                         console.log(`[Gateway] 技能執行成功:`, response.result);
                         resolve(response.result);

@@ -188,32 +188,38 @@ document.getElementById('runBtn').addEventListener('click', async () => {
 });
 
 // ======== 技能執行監聽 (SidePanel 作為技能執行中心) ========
-chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.target === 'SIDE_PANEL' && message.type === 'EXECUTE_SKILL') {
         console.log("[SidePanel] 收到技能執行請求:", message.skill, message.args);
         
-        try {
-            // 動態 import 技能模組
-            const skillPath = `./skills/${message.skillFolder}/${message.skill}.js`;
-            console.log(`[SidePanel] 正在加載技能模組: ${skillPath}`);
-            
-            const module = await import(skillPath);
-            
-            // 執行技能函數
-            const skillFunc = module[message.skill];
-            if (typeof skillFunc !== 'function') {
-                throw new Error(`技能模組中未找到函數: ${message.skill}`);
+        // 異步處理技能執行
+        (async () => {
+            try {
+                // 動態 import 技能模組
+                const skillPath = `./skills/${message.skillFolder}/${message.skill}.js`;
+                console.log(`[SidePanel] 正在加載技能模組: ${skillPath}`);
+                
+                const module = await import(skillPath);
+                
+                // 執行技能函數
+                const skillFunc = module[message.skill];
+                if (typeof skillFunc !== 'function') {
+                    throw new Error(`技能模組中未找到函數: ${message.skill}`);
+                }
+                
+                console.log(`[SidePanel] 執行技能: ${message.skill}`);
+                const result = await skillFunc(message.args);
+                
+                console.log(`[SidePanel] 技能執行成功:`, result);
+                sendResponse({ status: "success", result: result });
+                
+            } catch (error) {
+                console.error(`[SidePanel] 技能執行失敗:`, error);
+                sendResponse({ status: "error", error: error.message });
             }
-            
-            console.log(`[SidePanel] 執行技能: ${message.skill}`);
-            const result = await skillFunc(message.args);
-            
-            console.log(`[SidePanel] 技能執行成功:`, result);
-            sendResponse({ status: "success", result: result });
-            
-        } catch (error) {
-            console.error(`[SidePanel] 技能執行失敗:`, error);
-            sendResponse({ status: "error", error: error.message });
-        }
+        })();
+        
+        // 必須返回 true 以保持消息通道開啟，直到異步 sendResponse 被調用
+        return true;
     }
 });
