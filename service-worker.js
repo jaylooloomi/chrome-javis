@@ -258,61 +258,14 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
 
         // 驗證和修復：檢查是否為空對象或缺少必要字段
         if (!command.skill || Object.keys(command).length === 0) {
-            console.warn("[Gateway] ⚠️  檢測到空或無效的 AI 回應，嘗試進行故障排除...");
+            console.warn("[Gateway] ⚠️  檢測到空或無效的 AI 回應");
             console.warn("[Gateway] 原始 AI 回應內容:", aiResponse);
-            
-            // 嘗試從用戶提示詞中提取明確的開啟網站意圖
-            console.warn("[Gateway] 檢查是否有明確的開啟網站意圖...");
-            
-            // 開啟意圖關鍵詞（同時支持中文和英文）
-            const openKeywords = ['打開', '開啟', 'open', '訪問', 'visit', '去', '開'];
-            const websiteKeywords = ['google', 'youtube', 'github', 'twitter', 'linkedin', 'facebook', 'instagram'];
-            
-            const userPromptLower = userPrompt.toLowerCase();
-            const userPromptOriginal = userPrompt; // 保留原始文本用於中文匹配
-            
-            console.warn("[Gateway] 用戶輸入 (小寫):", userPromptLower);
-            console.warn("[Gateway] 檢查開啟意圖關鍵詞:", openKeywords);
-            console.warn("[Gateway] 檢查網站名稱關鍵詞:", websiteKeywords);
-            
-            // 檢查是否同時包含"開啟"意圖和網站名稱
-            // 中文關鍵詞需要用原始文本檢查，英文關鍵詞用小寫文本檢查
-            const hasOpenIntent = openKeywords.some(keyword => {
-                if (keyword.match(/[\u4e00-\u9fa5]/)) {
-                    // 中文關鍵詞
-                    return userPromptOriginal.includes(keyword);
-                } else {
-                    // 英文關鍵詞
-                    return userPromptLower.includes(keyword.toLowerCase());
-                }
-            });
-            const matchedWebsite = websiteKeywords.find(keyword => userPromptLower.includes(keyword));
-            
-            console.warn("[Gateway] 偵測到開啟意圖:", hasOpenIntent);
-            console.warn("[Gateway] 偵測到網站:", matchedWebsite || '無');
-            
-            if (hasOpenIntent && matchedWebsite) {
-                console.warn(`[Gateway] 🔧 偵測到開啟意圖和網站: ${matchedWebsite}，使用緊急回退...`);
-                command = {
-                    skill: "open_tab",
-                    url: `https://${matchedWebsite}.com`,
-                    args: {}
-                };
-                console.warn("[Gateway] ✅ 緊急回退成功，使用命令:", command);
-            } else {
-                if (!hasOpenIntent) {
-                    console.warn("[Gateway] ❌ 未偵測到開啟意圖 (缺少: 打開/開啟/open/訪問 等)");
-                }
-                if (!matchedWebsite) {
-                    console.warn("[Gateway] ❌ 未偵測到網站名稱");
-                }
-                console.warn("[Gateway] ❌ 找不到可以匹配的 skill");
-                const availableSkills = Object.keys(SKILL_REGISTRY).length > 0 
-                    ? Object.keys(SKILL_REGISTRY).join('、') 
-                    : '目前沒有可用的技能';
-                sendResponse({ status: "error", text: `找不到可以匹配的 skill。可用技能: ${availableSkills}` });
-                return;
-            }
+            console.warn("[Gateway] ❌ 找不到可以匹配的 skill");
+            const availableSkills = Object.keys(SKILL_REGISTRY).length > 0 
+                ? Object.keys(SKILL_REGISTRY).join('、') 
+                : '目前沒有可用的技能';
+            sendResponse({ status: "error", text: `找不到可以匹配的 skill。可用技能: ${availableSkills}` });
+            return;
         }
 
         console.log("[Gateway] 階段 C：調度技能...");
