@@ -26,6 +26,7 @@
   "side_panel": {
     "default_path": "sidepanel.html"
   },
+  "options_page": "options.html",
   "web_accessible_resources": [
     {
       "resources": [
