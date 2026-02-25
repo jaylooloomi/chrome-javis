@@ -98,9 +98,13 @@
       }
 
       .config-status::before {
-        content: '●';
-        color: var(--accent-cyan);
-        font-size: 8px;
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background: var(--accent-cyan);
+        border-radius: 50%;
+        animation: pulse-glow 1.5s infinite;
       }
 
       /* ======== 語音監聽區塊 - 毛玻璃效果 ======== */
