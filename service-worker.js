@@ -235,6 +235,10 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
             console.log("[Gateway] ✅ 選擇使用 Ollama Gemma Large 模型 (大模型)");
             console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemmaLarge, null, 2));
             aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaGemmaLarge);
+        } else if (configData.activeModel === 'ollamaMinimaxM2') {
+            console.log("[Gateway] ✅ 選擇使用 Ollama Minimax M2 模型");
+            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaMinimaxM2, null, 2));
+            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaMinimaxM2);
         } else {
             console.log("[Gateway] ✅ 選擇使用 Gemini 2.5 Flash 模型");
             console.log("[Gateway] Gemini 配置:", JSON.stringify({...configData.geminiFlash, apiKey: '***'}));
