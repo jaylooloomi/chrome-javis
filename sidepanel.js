@@ -320,6 +320,31 @@ document.getElementById('runBtn').addEventListener('click', async () => {
     }
 });
 
+// ======== 通知消息監聽 (接收來自 Service Worker 的通知) ========
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === 'SHOW_NOTIFICATION') {
+        console.log("[SidePanel] 收到通知訊息:", message);
+        
+        // 翻譯標題和消息
+        const title = i18n.t(message.messageKey ? 'notification.title' : 'notification.title');
+        let messageText = i18n.t(message.messageKey || 'notification.skill.error');
+        
+        // 如果有自定義錯誤消息，追加到後面
+        if (message.errorMessage) {
+            messageText += `: ${message.errorMessage}`;
+        }
+        
+        // 根據類型顯示相應的通知
+        if (message.type === 'success') {
+            showSuccessToast(title, messageText);
+        } else if (message.type === 'error') {
+            showErrorToast(title, messageText);
+        } else {
+            showInfoToast(title, messageText);
+        }
+    }
+});
+
 // ======== 技能執行監聽 (SidePanel 作為技能執行中心) ========
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.target === 'SIDE_PANEL' && message.type === 'EXECUTE_SKILL') {
