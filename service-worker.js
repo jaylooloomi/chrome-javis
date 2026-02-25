@@ -1,6 +1,5 @@
 // service-worker.js - 核心网关 (Gateway-Client 模式)
-// 方案 B：使用 chrome.scripting.executeScript 在網頁前端執行技能
-// Service Worker 技能通過 sidepanel.js 中的 skills-helper.js 動態加載執行
+// 唯一的邏輯中樞 - 所有操作在此執行
 
 // ======== 技能註冊表和快取 ========
 const SKILL_REGISTRY = {};
@@ -13,7 +12,11 @@ let loadingPromise = null;
 // 此表將通過 loadSkillsDynamically() 動態填充
 const SKILL_MAPPINGS = {};
 
-// --- 階段 A：啟動與技能裝載（僅讀取 .md 文件） ---
+// ======== Service Worker 技能執行函數映射 ========
+// 所有 Service Worker 技能在此定義
+const SERVICE_WORKER_SKILLS = {};
+
+// --- 階段 A：啟動與技能裝載（動態掃描） ---
 async function ensureSkillsLoaded() {
     if (dynamicSystemPrompt) return;
     if (loadingPromise) {
@@ -38,12 +41,18 @@ async function loadSkillsDynamically() {
         }
         const manifestData = await manifestResponse.json();
         
-        // 2. 動態構建技能映射表
+        // 2. 動態構建技能映射表並預加載 Service Worker 技能
         for (const skill of manifestData.skills) {
             SKILL_MAPPINGS[skill.name] = {
                 folder: skill.folder,
-                runInPageContext: skill.runInPageContext !== false  // 預設為 true
+                runInPageContext: skill.runInPageContext !== false
             };
+            
+            // 如果是 Service Worker 技能，預先加載其執行函數
+            if (!skill.runInPageContext) {
+                console.log(`[Gateway] 預加載 Service Worker 技能: ${skill.name}`);
+                await preloadServiceWorkerSkill(skill.name, skill.folder);
+            }
         }
         
         console.log(`[Gateway] 發現技能: ${Object.keys(SKILL_MAPPINGS).join(', ')}`);
@@ -66,17 +75,16 @@ async function loadSkillsDynamically() {
             }
             const mdContent = await mdResponse.text();
             
-            // 2. 構建 Key-Value Pair（.js 文件在需要時由 skills-helper.js 動態加載）
+            // 2. 構建 Key-Value Pair
             SKILL_REGISTRY[skillName] = {
                 mdContent: mdContent,
                 folder: skillConfig.folder,
                 runInPageContext: skillConfig.runInPageContext
-                // 不再存儲 skillFunction - 將在執行時動態加載
             };
             
             // 3. 構建 System Prompt
             promptBuilder += `=== 技能: ${skillName} ===\n${mdContent}\n\n`;
-            console.log(`[Gateway] ✅ 技能 [${skillName}] 已加載 (在${skillConfig.runInPageContext ? '網頁前端' : 'sidepanel 中'}執行)`);
+            console.log(`[Gateway] ✅ 技能 [${skillName}] 已加載 (在${skillConfig.runInPageContext ? '網頁前端' : 'Service Worker'}執行)`);
             
         } catch (e) {
             console.error(`[Gateway] ❌ 技能 [${skillName}] 載入失敗:`, e);
@@ -87,6 +95,34 @@ async function loadSkillsDynamically() {
     promptBuilder += "\n重要規則：\n1. 必須回傳純 JSON 格式\n2. JSON 結構必須遵循技能規範\n3. 如果無法完成任務，回傳 {\"error\": \"原因\"}\n";
     dynamicSystemPrompt = promptBuilder;
     console.log("[Gateway] 技能庫已構建完成。已載入技能:", Object.keys(SKILL_REGISTRY));
+}
+
+// 預加載 Service Worker 技能的執行函數
+async function preloadServiceWorkerSkill(skillName, skillFolder) {
+    try {
+        // 根據技能名稱動態定義執行函數
+        // 對於 open_tab 技能
+        if (skillName === 'open_tab') {
+            SERVICE_WORKER_SKILLS[skillName] = async (args) => {
+                console.log("[Open Tab Skill] 啟動，接收到參數:", args);
+                try {
+                    const url = args.url;
+                    if (!url) {
+                        throw new Error("未提供 URL");
+                    }
+                    const tab = await chrome.tabs.create({ url: url });
+                    console.log("[Open Tab Skill] 成功開啟分頁，ID:", tab.id);
+                    return `成功開啟分頁 (ID: ${tab.id})：${url}`;
+                } catch (error) {
+                    console.error("[Open Tab Skill] 錯誤:", error);
+                    throw new Error(`開啟分頁失敗：${error.message}`);
+                }
+            };
+            console.log(`[Gateway] ✅ 預加載完成: ${skillName}`);
+        }
+    } catch (e) {
+        console.error(`[Gateway] 預加載失敗 [${skillName}]:`, e);
+    }
 }
 
 chrome.runtime.onInstalled.addListener(loadSkillsDynamically);
@@ -185,7 +221,7 @@ async function handleRequest(userPrompt, sendResponse, geminiApiKey = null) {
             // 在網頁前端執行
             await runSkillInTabContext(command.skill, skillInfo, command.args || {}, sendResponse);
         } else {
-            // 在 Service Worker 中執行
+            // 在 Service Worker 中直接執行
             await runSkillInServiceWorker(command.skill, skillInfo, command.args || {}, sendResponse);
         }
         
@@ -195,26 +231,21 @@ async function handleRequest(userPrompt, sendResponse, geminiApiKey = null) {
     }
 }
 
-// --- 在 sidepanel 中動態執行 Service Worker 技能 ---
+// --- 在 Service Worker 中直接執行技能 ---
 async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse) {
     try {
-        console.log(`[Gateway] 在 sidepanel 中動態執行技能: ${skillName}`);
+        console.log(`[Gateway] 在 Service Worker 中執行技能: ${skillName}`);
         
-        // 通過消息發送給 sidepanel（skills-helper.js 會處理）
-        const response = await chrome.runtime.sendMessage({
-            action: "execute_skill_in_helper",
-            skillName: skillName,
-            skillFolder: skillInfo.folder,
-            args: args
-        });
-        
-        console.log(`[Gateway] 技能 ${skillName} 執行結果:`, response);
-        
-        if (response.status === "success") {
-            sendResponse({ status: "success", text: response.result });
-        } else {
-            sendResponse({ status: "error", text: `技能執行失敗: ${response.error}` });
+        // 從預加載的技能映射中獲取執行函數
+        if (!SERVICE_WORKER_SKILLS[skillName]) {
+            throw new Error(`技能 ${skillName} 的執行函數未加載`);
         }
+        
+        const skillFunction = SERVICE_WORKER_SKILLS[skillName];
+        const result = await skillFunction(args);
+        
+        console.log(`[Gateway] 技能 ${skillName} 執行結果:`, result);
+        sendResponse({ status: "success", text: result });
         
     } catch (error) {
         console.error(`[Gateway] 技能執行失敗:`, error);
