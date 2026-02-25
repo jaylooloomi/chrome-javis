@@ -9,7 +9,7 @@ when_to_use:
      Chinese: "打開", "開啟", "訪問", "查看", "前往", "進入"
   
   2. **WEBSITE NAME** (必須有網站名稱):
-     Supported: Google, YouTube, YouTube Music, GitHub, Twitter, LinkedIn, Facebook, Instagram, Yahoo
+     Supported: Google, YouTube, YouTube Music, GitHub, Twitter, LinkedIn, Facebook, Instagram, Yahoo, Gmail
   
   ** DECISION RULE: Check for BOTH verb + website name **
   - If sentence has ACTION VERB + website name → CALL open_tab
@@ -25,6 +25,7 @@ examples_CORRECT_verb_plus_website:
   - "go to Twitter" ✓ (verb: go to, site: Twitter)
   - "check LinkedIn" ✓ (verb: check, site: LinkedIn)
   - "visit Yahoo" ✓ (verb: visit, site: Yahoo)
+  - "open Gmail" ✓ (verb: open, site: Gmail)
 
 examples_INCORRECT_missing_verb:
   - "Google" ✗ (no verb, just website name)
@@ -56,6 +57,7 @@ intent_examples:
     - "打開 GitHub" → Call open_tab with GitHub
     - "go to Twitter" → Call open_tab with Twitter
     - "visit Yahoo" → Call open_tab with Yahoo
+    - "open Gmail" → Call open_tab with Gmail
 
   INCORRECT - do NOT call this skill (MISSING verb OR website):
     - "Google" → REJECT (missing verb)
@@ -92,9 +94,10 @@ URL conversion rules:
 7. If user says "facebook" → "https://facebook.com"
 8. If user says "instagram" → "https://instagram.com"
 9. If user says "yahoo" → "https://yahoo.com"
-10. If user provides full URL, keep it as-is
-11. Always add https:// prefix if missing
-12. Never return empty URL
+10. If user says "gmail" → "https://mail.google.com"
+11. If user provides full URL, keep it as-is
+12. Always add https:// prefix if missing
+13. Never return empty URL
 
 Examples of correct output:
 - User says "open Google" → {"skill": "open_tab", "args": {"url": "https://google.com"}}
@@ -102,6 +105,7 @@ Examples of correct output:
 - User says "open YouTube Music" → {"skill": "open_tab", "args": {"url": "https://music.youtube.com"}}
 - User says "go to github.com" → {"skill": "open_tab", "args": {"url": "https://github.com"}}
 - User says "visit Yahoo" → {"skill": "open_tab", "args": {"url": "https://yahoo.com"}}
+- User says "open Gmail" → {"skill": "open_tab", "args": {"url": "https://mail.google.com"}}
 
 CRITICAL RULE - VERB + WEBSITE REQUIREMENT:
 ✓ MUST HAVE: Action Verb + Website Name

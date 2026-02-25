@@ -14,8 +14,10 @@ export async function open_tab(args) {
         // 簡單的 URL 驗證和轉換
         // 如果不是以 http:// 或 https:// 開頭，則視為網站名稱，轉換為完整 URL
         if (!url.startsWith('http://') && !url.startsWith('https://')) {
-            // 檢查是否包含點號（網域名稱特徵）
-            if (!url.includes('.')) {
+            // 特殊網站轉換
+            if (url.toLowerCase() === 'gmail') {
+                url = 'https://mail.google.com';
+            } else if (!url.includes('.')) {
                 // 如果沒有點號，自動加上 .com
                 url = `https://${url}.com`;
             } else {
