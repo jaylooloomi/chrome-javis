@@ -1,5 +1,5 @@
 // ======== 導入通知工具 ========
-import { showSuccessNotification, showErrorNotification } from './notification-utils.js';
+import { showSuccessToast, showErrorToast } from './toast-notification.js';
 
 // ======== 語音識別初始化 (直接使用 Web Speech API) ========
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -213,11 +213,11 @@ document.getElementById('runBtn').addEventListener('click', async () => {
             document.getElementById('userInput').value = '';
             final_transcript = '';
             interim_transcript = '';
-            await showSuccessNotification('AI 助手', '指令已執行');
+            await showSuccessToast('✅ AI 助手', '指令已執行');
         } else {
             // 顯示通知 - 執行失敗
             console.log("[SidePanel] 執行失敗，顯示錯誤通知");
-            await showErrorNotification('AI 助手', res.error || '執行失敗');
+            await showErrorToast('❌ AI 助手', res.error || '執行失敗');
         }
     } catch (error) {
         console.error("[SidePanel] 錯誤:", error);
@@ -250,13 +250,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 
                 console.log(`[SidePanel] 技能執行成功:`, result);
                 // 顯示成功通知
-                await showSuccessNotification(message.skill, '技能已成功執行');
+                await showSuccessToast(message.skill, '技能已成功執行');
                 sendResponse({ status: "success", result: result });
                 
             } catch (error) {
                 console.error(`[SidePanel] 技能執行失敗:`, error);
                 // 顯示錯誤通知
-                await showErrorNotification(message.skill, error.message);
+                await showErrorToast(message.skill, error.message);
                 sendResponse({ status: "error", error: error.message });
             }
         })();
