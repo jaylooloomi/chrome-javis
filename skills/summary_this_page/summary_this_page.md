@@ -77,6 +77,20 @@ Only respond with THIS EXACT JSON format when user explicitly asks to analyze/se
 If user is NOT asking to analyze the page, respond with:
 {"error": "This request is not asking to analyze the page with Gemini"}
 
+IMPORTANT - Placeholder handling:
+- "ACTIVE_TAB" is a PLACEHOLDER that Service Worker will replace with the actual tabId
+- "ACTIVE_TAB_URL" is a PLACEHOLDER that Service Worker will replace with the actual page URL
+- DO NOT try to get the actual tabId/URL yourself
+- DO NOT hardcode any values
+- Always use these exact placeholders in your response
+- Service Worker will handle the replacement before passing to the skill
+
+Example flow:
+1. User says "給我分析頁面" on https://example.com (tabId=123)
+2. AI returns: {"skill": "summary_this_page", "args": {"tabId": "ACTIVE_TAB", "url": "ACTIVE_TAB_URL"}}
+3. Service Worker replaces: {"args": {"tabId": 123, "url": "https://example.com"}}
+4. Skill receives the actual values
+
 CRITICAL RULE - VERB + PAGE REFERENCE REQUIREMENT:
 ✓ MUST HAVE: Action Verb (ask, send, analyze, summarize, etc.) + Page Reference (implicit or explicit)
 ✗ DO NOT CALL if either is missing

@@ -48,10 +48,10 @@ when_NOT_to_use:
 
 intent_examples:
   CORRECT - call this skill (HAS verb + website):
-    - "open Google" → Call with Google
-    - "visit YouTube" → Call with YouTube
-    - "打開 GitHub" → Call with GitHub
-    - "go to Twitter" → Call with Twitter
+    - "open Google" → Call open_tab with Google
+    - "visit YouTube" → Call open_tab with YouTube
+    - "打開 GitHub" → Call open_tab with GitHub
+    - "go to Twitter" → Call open_tab with Twitter
 
   INCORRECT - do NOT call this skill (MISSING verb OR website):
     - "Google" → REJECT (missing verb)
@@ -63,7 +63,7 @@ intent_examples:
     - "你在幹嘧" → REJECT (no verb + website pattern)
     - "很強喔" → REJECT (no verb + website pattern)
 
-input: User must explicitly ask to open a website
+input: User must explicitly ask to open a website with both verb and website name
 
 output:
 Only respond with THIS EXACT JSON format when user explicitly asks to open a website:
@@ -71,6 +71,11 @@ Only respond with THIS EXACT JSON format when user explicitly asks to open a web
 
 If user is NOT asking to open a website, respond with:
 {"error": "This request is not asking to open a website"}
+
+IMPORTANT - args structure and URL conversion:
+- All parameters must be inside "args" object
+- "url" is the ACTUAL CONVERTED URL (not a placeholder)
+- You must convert website names to full URLs using the rules below
 
 URL conversion rules:
 1. If user says "google" → "https://google.com"
@@ -83,6 +88,11 @@ URL conversion rules:
 8. If user provides full URL, keep it as-is
 9. Always add https:// prefix if missing
 10. Never return empty URL
+
+Examples of correct output:
+- User says "open Google" → {"skill": "open_tab", "args": {"url": "https://google.com"}}
+- User says "visit YouTube" → {"skill": "open_tab", "args": {"url": "https://youtube.com"}}
+- User says "go to github.com" → {"skill": "open_tab", "args": {"url": "https://github.com"}}
 
 CRITICAL RULE - VERB + WEBSITE REQUIREMENT:
 ✓ MUST HAVE: Action Verb + Website Name
