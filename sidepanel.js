@@ -124,51 +124,61 @@ if (SpeechRecognition) {
         }
         
         isListening = false;
-        document.getElementById('micBtn').classList.remove('listening');
-        document.getElementById('micBtn').textContent = '🎤';
+        updateMicSwitchUI();
     };
 } else {
     console.warn("[Speech] 您的浏览器不支持 Web Speech API");
-    document.getElementById('micBtn').disabled = true;
-    document.getElementById('micBtn').title = '您的浏览器不支持语音识别';
+    document.getElementById('micSwitch').disabled = true;
+    document.getElementById('micSwitch').title = '您的浏览器不支持语音识别';
 }
 
-// ======== 麥克風按鈕事件 ========
-document.getElementById('micBtn').addEventListener('click', () => {
+// ======== 更新麥克風開關 UI ========
+function updateMicSwitchUI() {
+    const switchBtn = document.getElementById('micSwitch');
+    const statusLabel = document.getElementById('micStatus');
+    
+    if (isMicEnabled) {
+        switchBtn.classList.add('on');
+        statusLabel.textContent = '開啟';
+    } else {
+        switchBtn.classList.remove('on');
+        statusLabel.textContent = '關閉';
+    }
+}
+
+// ======== 麥克風開關事件 ========
+document.getElementById('micSwitch').addEventListener('click', () => {
     if (!recognition) {
         alert('您的浏览器不支持语音识别');
         return;
     }
 
-    if (isListening) {
-        // 停止識別
-        recognition.stop();
+    // 切換常駐麥克風狀態
+    isMicEnabled = !isMicEnabled;
+    console.log("[Speech] 常駐麥克風狀態:", isMicEnabled ? "開啟" : "關閉");
+    
+    if (isMicEnabled) {
+        // 開啟常駐麥克風
+        updateMicSwitchUI();
+        document.getElementById('output').textContent = '🎤 語音已開啟';
+        console.log("[Speech] 開始常駐監聽");
+        recognition.start();
     } else {
-        // 切換常駐麥克風狀態
-        isMicEnabled = !isMicEnabled;
-        console.log("[Speech] 常駐麥克風狀態:", isMicEnabled ? "開啟" : "關閉");
-        
-        if (isMicEnabled) {
-            // 開啟常駐麥克風
-            document.getElementById('micBtn').textContent = '🎤';
-            document.getElementById('output').textContent = '🎤 常駐麥克風已開啟';
-            console.log("[Speech] 開始常駐監聽");
-            recognition.start();
-        } else {
-            // 關閉常駐麥克風
-            document.getElementById('micBtn').textContent = '🔇';
-            document.getElementById('output').textContent = '🔇 常駐麥克風已關閉';
-            console.log("[Speech] 停止常駐監聽");
-            recognition.stop();
-        }
+        // 關閉常駐麥克風
+        updateMicSwitchUI();
+        document.getElementById('output').textContent = '🔇 語音已關閉';
+        console.log("[Speech] 停止常駐監聽");
+        recognition.stop();
     }
 });
 
 // ======== 頁面加載時自動啟動常駐麥克風 ========
 document.addEventListener('DOMContentLoaded', () => {
+    // 更新開關 UI 初始狀態
+    updateMicSwitchUI();
+    
     if (recognition && isMicEnabled) {
         console.log("[Speech] 頁面載入，自動啟動常駐麥克風");
-        document.getElementById('micBtn').textContent = '🎤';
         recognition.start();
     }
 });
