@@ -312,7 +312,7 @@ document.getElementById('runBtn').addEventListener('click', async () => {
         } else {
             // 顯示通知 - 執行失敗
             console.log("[SidePanel] 執行失敗，顯示錯誤通知");
-            await showErrorToast('❌ AI 助手', res.error || '執行失敗');
+            await showErrorToast('❌ AI 助手', res.error || i18n.t('notification.skill.error'));
         }
     } catch (error) {
         console.error("[SidePanel] 錯誤:", error);
@@ -345,13 +345,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 
                 console.log(`[SidePanel] 技能執行成功:`, result);
                 // 顯示成功通知
-                await showSuccessToast(message.skill, '技能已成功執行');
+                await showSuccessToast(message.skill, i18n.t('notification.skill.success'));
                 sendResponse({ status: "success", result: result });
                 
             } catch (error) {
                 console.error(`[SidePanel] 技能執行失敗:`, error);
                 // 顯示錯誤通知
-                await showErrorToast(message.skill, error.message);
+                await showErrorToast(message.skill, i18n.t('notification.skill.error'));
                 sendResponse({ status: "error", error: error.message });
             }
         })();
