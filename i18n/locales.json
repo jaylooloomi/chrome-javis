@@ -1,7 +1,7 @@
 {
   "zh-TW": {
     "dialog.title": "系統訊息",
-    "dialog.description": "感謝你的陪伴，是我持續創作的動力。希望這個工具能幫助到你。如果喜歡，欢迎責助鼓勵我。💝",
+    "dialog.description": "感謝你的陪伴，是我持續創作的動力。希望這個工具能幫助到你。如果喜歡，歡迎責助鼓勵我。💝",
     "dialog.question": "喜歡這個工具嗎?",
     "dialog.sponsor": "👉 贊助一杯咖啡 ☕",
     "dialog.share": "分享給其他朋友 →",
@@ -132,7 +132,6 @@
   "ko-KR": {
     "dialog.title": "시스템 메시지",
     "dialog.description": "당신의 응원이 제 창작의 원동력입니다. 이 도구가 도움이 되길 바랍니다. 마음에 드멠다면, 저를 후원해주세요. 💝",
-다면, 저를 후원해주세요. 💝",
     "dialog.question": "이 도구가 마음에 드세요?",
     "dialog.sponsor": "👉 커피 한 잔 사주기 ☕",
     "dialog.share": "친구와 공유하기 →",
