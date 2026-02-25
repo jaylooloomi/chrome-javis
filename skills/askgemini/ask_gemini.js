@@ -1,8 +1,6 @@
 // ask_gemini.js - 在 SidePanel 中執行的技能
 // 快速將文字發送到 Google Gemini
 
-import TurndownService from 'turndown';
-
 export async function ask_gemini(args) {
     console.log("[Ask Gemini Skill] 啟動，接收到參數:", args);
 
@@ -30,10 +28,9 @@ export async function ask_gemini(args) {
             throw new Error("無法抓取源頁面的 HTML");
         }
 
-        // 2. 將 HTML 轉換為 Markdown
+        // 2. 將 HTML 轉換為 Markdown（使用 CDN 的 turndown）
         console.log("[Ask Gemini Skill] 正在將 HTML 轉換為 Markdown...");
-        const turndownService = new TurndownService();
-        const pageMarkdown = turndownService.turndown(pageHTML);
+        const pageMarkdown = await convertHtmlToMarkdown(pageHTML);
         console.log("[Ask Gemini Skill] 轉換後 Markdown 長度:", pageMarkdown.length);
 
         // 3. 開啟 Gemini 分頁
@@ -81,6 +78,27 @@ export async function ask_gemini(args) {
         console.error("[Ask Gemini Skill] 錯誤:", error);
         throw new Error(`Ask Gemini 失敗：${error.message}`);
     }
+}
+
+/**
+ * 使用 CDN 的 turndown 將 HTML 轉換為 Markdown
+ */
+async function convertHtmlToMarkdown(html) {
+    // 動態注入 turndown 庫（從 CDN）
+    if (!window.TurndownService) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/turndown@7.1.2/dist/turndown.js';
+        script.type = 'text/javascript';
+        
+        await new Promise((resolve, reject) => {
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+    
+    const turndownService = new window.TurndownService();
+    return turndownService.turndown(html);
 }
 
 /**
