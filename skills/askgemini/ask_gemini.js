@@ -172,6 +172,8 @@ function pasteAndSubmit(text) {
                     break;
                 }
             }
+        } else {
+            result.logs.push("⚠️ 未找到 send-button-icon 元素");
         }
         
         // 方法 2: 嘗試其他選擇器
@@ -211,8 +213,28 @@ function pasteAndSubmit(text) {
                 throw new Error("無法點擊發送按鈕: " + e.message);
             }
         } else {
+            // 詳細的調試信息
             result.logs.push("❌ 找不到發送按鈕");
-            throw new Error("無法找到 Gemini 發送按鈕，頁面可能未完全載入或 UI 結構已改變");
+            
+            // 列出頁面所有 button
+            const allButtons = document.querySelectorAll('button');
+            result.logs.push("📋 頁面中共有 " + allButtons.length + " 個 button：");
+            allButtons.forEach((btn, idx) => {
+                const label = btn.getAttribute('aria-label') || btn.textContent?.substring(0, 30) || '(無標籤)';
+                result.logs.push("  [" + idx + "] " + btn.className + " - " + label);
+            });
+            
+            // 列出所有 mat-icon
+            const allIcons = document.querySelectorAll('mat-icon');
+            result.logs.push("📋 頁面中共有 " + allIcons.length + " 個 mat-icon");
+            if (allIcons.length > 0) {
+                allIcons.forEach((icon, idx) => {
+                    const name = icon.getAttribute('data-mat-icon-name') || icon.textContent?.substring(0, 30) || '(無名稱)';
+                    result.logs.push("  [" + idx + "] data-mat-icon-name=" + name);
+                });
+            }
+            
+            throw new Error("無法找到 Gemini 發送按鈕，詳見上方日誌。頁面可能未完全載入或 UI 結構已改變");
         }
 
         result.success = true;
