@@ -273,7 +273,7 @@ document.getElementById('askGeminiBtn').addEventListener('click', async () => {
         // 3. 直接在 SidePanel 中加載並執行 summary_this_page 技能（不經過 Service Worker）
         try {
             console.log("[SidePanel] 正在加載 summary_this_page 技能模組");
-            const module = await import('./skills/askgemini/summary_this_page.js');
+            const module = await import('./skills/summary_this_page/summary_this_page.js');
             
             const skillFunc = module.summary_this_page;
             if (typeof skillFunc !== 'function') {
