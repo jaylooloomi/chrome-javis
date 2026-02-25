@@ -28,9 +28,9 @@ export async function ask_gemini(args) {
             throw new Error("無法抓取源頁面的 HTML");
         }
 
-        // 2. 將 HTML 轉換為 Markdown（使用 CDN 的 turndown）
+        // 2. 將 HTML 轉換為 Markdown（使用純 JavaScript 實現）
         console.log("[Ask Gemini Skill] 正在將 HTML 轉換為 Markdown...");
-        const pageMarkdown = await convertHtmlToMarkdown(pageHTML);
+        const pageMarkdown = convertHtmlToMarkdown(pageHTML);
         console.log("[Ask Gemini Skill] 轉換後 Markdown 長度:", pageMarkdown.length);
 
         // 3. 開啟 Gemini 分頁
@@ -81,24 +81,68 @@ export async function ask_gemini(args) {
 }
 
 /**
- * 使用 CDN 的 turndown 將 HTML 轉換為 Markdown
+ * 簡單的 HTML 轉 Markdown 轉換器
+ * 不依賴外部庫，只用原生 JavaScript
  */
-async function convertHtmlToMarkdown(html) {
-    // 動態注入 turndown 庫（從 CDN）
-    if (!window.TurndownService) {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/turndown@7.1.2/dist/turndown.js';
-        script.type = 'text/javascript';
-        
-        await new Promise((resolve, reject) => {
-            script.onload = resolve;
-            script.onerror = reject;
-            document.head.appendChild(script);
-        });
-    }
+function convertHtmlToMarkdown(html) {
+    let markdown = html;
     
-    const turndownService = new window.TurndownService();
-    return turndownService.turndown(html);
+    // 移除 script 和 style 標籤
+    markdown = markdown.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    markdown = markdown.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+    
+    // 移除 HTML 註解
+    markdown = markdown.replace(/<!--[\s\S]*?-->/g, '');
+    
+    // 標題
+    markdown = markdown.replace(/<h1[^>]*>(.*?)<\/h1>/gi, '\n# $1\n');
+    markdown = markdown.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '\n## $1\n');
+    markdown = markdown.replace(/<h3[^>]*>(.*?)<\/h3>/gi, '\n### $1\n');
+    markdown = markdown.replace(/<h4[^>]*>(.*?)<\/h4>/gi, '\n#### $1\n');
+    markdown = markdown.replace(/<h5[^>]*>(.*?)<\/h5>/gi, '\n##### $1\n');
+    markdown = markdown.replace(/<h6[^>]*>(.*?)<\/h6>/gi, '\n###### $1\n');
+    
+    // 段落
+    markdown = markdown.replace(/<p[^>]*>(.*?)<\/p>/gi, '\n$1\n');
+    
+    // 換行
+    markdown = markdown.replace(/<br\s*\/?>/gi, '\n');
+    markdown = markdown.replace(/<hr\s*\/?>/gi, '\n---\n');
+    
+    // 粗體和斜體
+    markdown = markdown.replace(/<strong[^>]*>(.*?)<\/strong>/gi, '**$1**');
+    markdown = markdown.replace(/<b[^>]*>(.*?)<\/b>/gi, '**$1**');
+    markdown = markdown.replace(/<em[^>]*>(.*?)<\/em>/gi, '*$1*');
+    markdown = markdown.replace(/<i[^>]*>(.*?)<\/i>/gi, '*$1*');
+    
+    // 代碼
+    markdown = markdown.replace(/<code[^>]*>(.*?)<\/code>/gi, '`$1`');
+    markdown = markdown.replace(/<pre[^>]*>(.*?)<\/pre>/gi, '\n```\n$1\n```\n');
+    
+    // 鏈接
+    markdown = markdown.replace(/<a[^>]*href=["']([^"']*)["'][^>]*>(.*?)<\/a>/gi, '[$2]($1)');
+    
+    // 圖片
+    markdown = markdown.replace(/<img[^>]*src=["']([^"']*)["'][^>]*alt=["']([^"']*)["'][^>]*>/gi, '![$2]($1)');
+    markdown = markdown.replace(/<img[^>]*alt=["']([^"']*)["'][^>]*src=["']([^"']*)["'][^>]*>/gi, '![$1]($2)');
+    markdown = markdown.replace(/<img[^>]*src=["']([^"']*)["'][^>]*>/gi, '![]($1)');
+    
+    // 列表
+    markdown = markdown.replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1\n');
+    markdown = markdown.replace(/<ul[^>]*>(.*?)<\/ul>/gi, '\n$1\n');
+    markdown = markdown.replace(/<ol[^>]*>(.*?)<\/ol>/gi, '\n$1\n');
+    
+    // 引用
+    markdown = markdown.replace(/<blockquote[^>]*>(.*?)<\/blockquote>/gi, '\n> $1\n');
+    
+    // 移除所有其他 HTML 標籤
+    markdown = markdown.replace(/<[^>]*>/g, '');
+    
+    // 清理空白
+    markdown = markdown.replace(/\n\n\n+/g, '\n\n'); // 多個換行變成兩個
+    markdown = markdown.trim();
+    
+    return markdown;
 }
 
 /**
