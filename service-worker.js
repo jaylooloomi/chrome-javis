@@ -264,15 +264,32 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
             // 嘗試從用戶提示詞中提取明確的開啟網站意圖
             console.warn("[Gateway] 檢查是否有明確的開啟網站意圖...");
             
-            // 開啟意圖關鍵詞
+            // 開啟意圖關鍵詞（同時支持中文和英文）
             const openKeywords = ['打開', '開啟', 'open', '訪問', 'visit', '去', '開'];
             const websiteKeywords = ['google', 'youtube', 'github', 'twitter', 'linkedin', 'facebook', 'instagram'];
             
             const userPromptLower = userPrompt.toLowerCase();
+            const userPromptOriginal = userPrompt; // 保留原始文本用於中文匹配
+            
+            console.warn("[Gateway] 用戶輸入 (小寫):", userPromptLower);
+            console.warn("[Gateway] 檢查開啟意圖關鍵詞:", openKeywords);
+            console.warn("[Gateway] 檢查網站名稱關鍵詞:", websiteKeywords);
             
             // 檢查是否同時包含"開啟"意圖和網站名稱
-            const hasOpenIntent = openKeywords.some(keyword => userPromptLower.includes(keyword.toLowerCase()));
+            // 中文關鍵詞需要用原始文本檢查，英文關鍵詞用小寫文本檢查
+            const hasOpenIntent = openKeywords.some(keyword => {
+                if (keyword.match(/[\u4e00-\u9fa5]/)) {
+                    // 中文關鍵詞
+                    return userPromptOriginal.includes(keyword);
+                } else {
+                    // 英文關鍵詞
+                    return userPromptLower.includes(keyword.toLowerCase());
+                }
+            });
             const matchedWebsite = websiteKeywords.find(keyword => userPromptLower.includes(keyword));
+            
+            console.warn("[Gateway] 偵測到開啟意圖:", hasOpenIntent);
+            console.warn("[Gateway] 偵測到網站:", matchedWebsite || '無');
             
             if (hasOpenIntent && matchedWebsite) {
                 console.warn(`[Gateway] 🔧 偵測到開啟意圖和網站: ${matchedWebsite}，使用緊急回退...`);
