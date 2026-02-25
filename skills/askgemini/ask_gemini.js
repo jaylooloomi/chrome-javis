@@ -239,9 +239,8 @@ function pasteAndSubmit(text) {
                 cancelable: true,
                 shiftKey: false
             });
-            inputElement.dispatchEvent(enterDownEvent);
-            console.log("[Gemini Content] ✅ 已觸發 keydown Enter");
-
+            inputElement.dispatchEvent(enterEvent);
+            
             setTimeout(() => {
                 const enterUpEvent = new KeyboardEvent('keyup', {
                     key: 'Enter',
@@ -252,12 +251,16 @@ function pasteAndSubmit(text) {
                     cancelable: true
                 });
                 inputElement.dispatchEvent(enterUpEvent);
-                console.log("[Gemini Content] ✅ 已觸發 keyup Enter，應該已發送");
+                result.logs.push("✅ Enter 鍵已送出");
             }, 50);
         }, 2000);
+
+        result.success = true;
+        return result;
+
     } catch (error) {
-        console.error("[Gemini Content] ❌ 異常:", error);
-        console.error("[Gemini Content] 錯誤堆棧:", error.stack);
-        return { success: false, error: error.message };
+        result.error = error.toString();
+        result.logs.push("❌ 異常: " + error);
+        return result;
     }
 }
