@@ -67,7 +67,7 @@ input: User must explicitly ask to open a website
 
 output:
 Only respond with THIS EXACT JSON format when user explicitly asks to open a website:
-{"skill": "open_tab", "url": "https://...", "args": {}}
+{"skill": "open_tab", "args": {"url": "https://..."}}
 
 If user is NOT asking to open a website, respond with:
 {"error": "This request is not asking to open a website"}
