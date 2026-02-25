@@ -104,14 +104,12 @@ function pasteAndSubmit(text) {
         result.logs.push("=== 開始執行 pasteAndSubmit ===");
         result.logs.push("文字長度: " + text.length);
         
-        // 1. 尋找輸入框
+        // 1. 尋找輸入框 - Gemini 使用 Quill 編輯器
         result.logs.push("正在尋找輸入框...");
         let inputElement = 
             document.querySelector('[contenteditable="true"]') ||  
             document.querySelector('[role="textbox"]') ||           
-            document.querySelector('textarea') ||
-            document.querySelector('[data-testid*="input"]') ||
-            document.querySelector('[data-testid*="chat"]');
+            document.querySelector('textarea');
 
         if (!inputElement) {
             result.error = "找不到聊天輸入框";
@@ -119,35 +117,59 @@ function pasteAndSubmit(text) {
             return result;
         }
 
-        result.logs.push("✅ 找到輸入框: " + inputElement.tagName + " - " + inputElement.className);
+        result.logs.push("✅ 找到輸入框: " + inputElement.tagName + " class=" + inputElement.className);
 
         // 2. 聚焦並貼上文字
         inputElement.focus();
         result.logs.push("✅ 已 focus 到輸入框");
 
-        if (inputElement.tagName === 'TEXTAREA') {
+        // 對於 contenteditable 元素，設置內容並觸發事件
+        if (inputElement.contentEditable === 'true') {
+            // 清空現有內容
+            inputElement.innerHTML = '';
+            
+            // 設置文本
+            const paragraph = document.createElement('p');
+            paragraph.textContent = text;
+            inputElement.appendChild(paragraph);
+            
+            result.logs.push("✅ 文字已設置到 contenteditable");
+        } else if (inputElement.tagName === 'TEXTAREA') {
             inputElement.value = text;
+            result.logs.push("✅ 文字已設置到 textarea");
         } else {
             inputElement.textContent = text;
-            inputElement.innerText = text;
+            result.logs.push("✅ 文字已設置到 textbox");
         }
-        result.logs.push("✅ 文字已設置");
 
-        // 3. 觸發事件
-        inputElement.dispatchEvent(new Event('input', { bubbles: true }));
-        inputElement.dispatchEvent(new Event('change', { bubbles: true }));
-        result.logs.push("✅ 事件已觸發");
+        // 3. 多次觸發事件以確保 Angular 檢測到變化
+        const events = [
+            new Event('input', { bubbles: true, cancelable: true }),
+            new Event('change', { bubbles: true, cancelable: true }),
+            new Event('blur', { bubbles: true, cancelable: true }),
+            new KeyboardEvent('keyup', { bubbles: true, cancelable: true })
+        ];
         
-        // 3. 觸發事件
-        inputElement.dispatchEvent(new Event('input', { bubbles: true }));
-        inputElement.dispatchEvent(new Event('change', { bubbles: true }));
-        result.logs.push("✅ 事件已觸發");
+        events.forEach(evt => {
+            inputElement.dispatchEvent(evt);
+        });
         
-        // 3.5. 等待頁面完全載入和 UI 更新（1500ms）
+        result.logs.push("✅ 已觸發 input/change/blur/keyup 事件");
+        
+        // 檢查輸入框是否真的有內容
+        const contentLength = inputElement.textContent ? inputElement.textContent.trim().length : 0;
+        result.logs.push("📍 輸入框內容長度: " + contentLength);
+        
+        if (contentLength === 0) {
+            result.logs.push("⚠️  警告：輸入框仍為空，文本可能未成功設置");
+        }
+        
+        // 3.5. 等待頁面完全載入和 UI 更新（2000ms，增加等待時間）
         result.logs.push("⏱️ 等待頁面 UI 更新...");
         const startTime = Date.now();
-        while (Date.now() - startTime < 1500) {
-            // 同步等待 1500ms
+        while (Date.now() - startTime < 2000) {
+            // 同步等待 2000ms
+
         }
         result.logs.push("✅ 頁面 UI 已更新");
 
@@ -209,7 +231,9 @@ function pasteAndSubmit(text) {
                 const label = btn.getAttribute('aria-label') || '(無)';
                 const testId = btn.getAttribute('data-testid') || '(無)';
                 const classes = btn.className || '(無)';
-                result.logs.push("  [" + idx + "] classes=" + classes);
+                const isDisabled = btn.disabled ? '🔴 DISABLED' : '🟢 ENABLED';
+                result.logs.push("  [" + idx + "] " + isDisabled);
+                result.logs.push("        classes=" + classes);
                 result.logs.push("        aria-label=" + label + " | data-testid=" + testId);
             });
         }
