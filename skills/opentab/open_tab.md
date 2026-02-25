@@ -9,7 +9,7 @@ when_to_use:
      Chinese: "打開", "開啟", "訪問", "查看", "前往", "進入"
   
   2. **WEBSITE NAME** (必須有網站名稱):
-     Supported: Google, YouTube, GitHub, Twitter, LinkedIn, Facebook, Instagram
+     Supported: Google, YouTube, GitHub, Twitter, LinkedIn, Facebook, Instagram, Yahoo
   
   ** DECISION RULE: Check for BOTH verb + website name **
   - If sentence has ACTION VERB + website name → CALL open_tab
@@ -23,6 +23,7 @@ examples_CORRECT_verb_plus_website:
   - "打開 GitHub" ✓ (verb: 打開, site: GitHub)
   - "go to Twitter" ✓ (verb: go to, site: Twitter)
   - "check LinkedIn" ✓ (verb: check, site: LinkedIn)
+  - "visit Yahoo" ✓ (verb: visit, site: Yahoo)
 
 examples_INCORRECT_missing_verb:
   - "Google" ✗ (no verb, just website name)
@@ -52,6 +53,7 @@ intent_examples:
     - "visit YouTube" → Call open_tab with YouTube
     - "打開 GitHub" → Call open_tab with GitHub
     - "go to Twitter" → Call open_tab with Twitter
+    - "visit Yahoo" → Call open_tab with Yahoo
 
   INCORRECT - do NOT call this skill (MISSING verb OR website):
     - "Google" → REJECT (missing verb)
@@ -85,14 +87,16 @@ URL conversion rules:
 5. If user says "linkedin" → "https://linkedin.com"
 6. If user says "facebook" → "https://facebook.com"
 7. If user says "instagram" → "https://instagram.com"
-8. If user provides full URL, keep it as-is
-9. Always add https:// prefix if missing
-10. Never return empty URL
+8. If user says "yahoo" → "https://yahoo.com"
+9. If user provides full URL, keep it as-is
+10. Always add https:// prefix if missing
+11. Never return empty URL
 
 Examples of correct output:
 - User says "open Google" → {"skill": "open_tab", "args": {"url": "https://google.com"}}
 - User says "visit YouTube" → {"skill": "open_tab", "args": {"url": "https://youtube.com"}}
 - User says "go to github.com" → {"skill": "open_tab", "args": {"url": "https://github.com"}}
+- User says "visit Yahoo" → {"skill": "open_tab", "args": {"url": "https://yahoo.com"}}
 
 CRITICAL RULE - VERB + WEBSITE REQUIREMENT:
 ✓ MUST HAVE: Action Verb + Website Name
