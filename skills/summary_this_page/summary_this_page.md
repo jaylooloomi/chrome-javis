@@ -5,8 +5,8 @@ description: 分析頁面、重點整理 - 使用 Google Gemini 進行頁面內�
 when_to_use:
   MUST HAVE BOTH:
   1. **ACTION VERB** (必須有動詞):
-     English: "ask", "send", "analyze", "summarize", "check", "review", "explain", "evaluate"
-     Chinese: "詢問", "發送", "分析", "總結", "檢查", "審查", "解釋", "評估", "問一下", "給我分析"
+     English: "ask", "send", "analyze", "summarize", "check", "review", "explain", "evaluate", "summary"
+     Chinese: "詢問", "發送", "分析", "總結", "檢查", "審查", "解釋", "評估", "問一下", "給我分析", "摘要"
   
   2. **CONTEXT/OBJECT** (必須有對象):
      Can be: "this page", "current page", "this content", "this article", "the page", "頁面", "當前頁面"
@@ -22,6 +22,7 @@ examples_CORRECT_verb_plus_page:
   - "ask Gemini" ✓ (verb: ask, implicit: current page)
   - "send this page to Gemini" ✓ (verb: send, object: this page)
   - "analyze the current page" ✓ (verb: analyze, object: current page)
+  - "summary page" ✓ (verb: summary, object: page)
   - "分析頁面" ✓ (verb: 分析, object: 頁面)
   - "summarize this" ✓ (verb: summarize, object: this)
   - "重點整理一下" ✓ (verb: 整理, object: 當前頁面 implicit)
@@ -58,6 +59,7 @@ intent_examples:
     - "ask Gemini" → Call summary_this_page (implicit current page)
     - "send this page to Gemini" → Call with current page
     - "analyze the current page" → Call with current page
+    - "summary page" → Call with current page
     - "分析頁面" → Call with current page
     - "重點整理" → Call with current page
     - "給我分析頁面" → Call with current page
