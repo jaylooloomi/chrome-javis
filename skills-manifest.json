@@ -5,6 +5,12 @@
       "folder": "opentab",
       "description": "打开新标签页的技能",
       "runInPageContext": false
+    },
+    {
+      "name": "ask_gemini",
+      "folder": "askgemini",
+      "description": "快速将文字发送到 Google Gemini 进行查询",
+      "runInPageContext": false
     }
   ]
 }

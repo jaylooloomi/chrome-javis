@@ -223,3 +223,61 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true;
     }
 });
+
+// ======== Ask Gemini 按鈕事件 ========
+document.getElementById('askGeminiBtn').addEventListener('click', async () => {
+    console.log("[SidePanel] Ask Gemini 按鈕被點擊");
+    
+    try {
+        // 1. 嘗試從剪貼板讀取文字
+        let selectedText = "";
+        try {
+            selectedText = await navigator.clipboard.readText();
+            console.log("[SidePanel] 從剪貼板讀取文字:", selectedText.substring(0, 50));
+        } catch (err) {
+            console.warn("[SidePanel] 無法讀取剪貼板:", err);
+            selectedText = "";
+        }
+        
+        // 2. 如果剪貼板為空，提示用戶
+        if (!selectedText) {
+            document.getElementById('output').textContent = "⚠️ 剪貼板為空。請先複製要查詢的文字。";
+            return;
+        }
+        
+        document.getElementById('output').textContent = `⏳ 正在開啟 Gemini，準備貼上：${selectedText.substring(0, 50)}...`;
+        
+        // 3. 直接調用 ask_gemini 技能
+        const result = await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                reject(new Error("Ask Gemini 執行超時"));
+            }, 5000);
+            
+            chrome.runtime.sendMessage(
+                {
+                    target: 'SIDE_PANEL',
+                    type: 'EXECUTE_SKILL',
+                    skill: 'ask_gemini',
+                    skillFolder: 'askgemini',
+                    args: { text: selectedText }
+                },
+                (response) => {
+                    clearTimeout(timeout);
+                    if (chrome.runtime.lastError) {
+                        reject(new Error(`無法連接：${chrome.runtime.lastError.message}`));
+                    } else if (response && response.status === 'success') {
+                        resolve(response.result);
+                    } else {
+                        reject(new Error(response?.error || '未知錯誤'));
+                    }
+                }
+            );
+        });
+        
+        document.getElementById('output').textContent = result;
+        
+    } catch (error) {
+        console.error("[SidePanel] Ask Gemini 失敗:", error);
+        document.getElementById('output').textContent = `❌ Ask Gemini 失敗：${error.message}`;
+    }
+});
