@@ -200,6 +200,16 @@ function updateMicSwitchUI() {
     const switchBtn = document.getElementById('micSwitch');
     const statusLabel = document.getElementById('micStatus');
     
+    if (!switchBtn || !statusLabel) {
+        console.warn('[SidePanel] 麥克風開關元素未找到');
+        return;
+    }
+    
+    if (!i18n.isLoaded) {
+        console.warn('[SidePanel] i18n 還未初始化，跳過 updateMicSwitchUI');
+        return;
+    }
+    
     if (isMicEnabled) {
         switchBtn.classList.add('on');
         statusLabel.textContent = i18n.t('button.mic');
@@ -378,7 +388,15 @@ document.querySelector('.close-btn').addEventListener('click', () => {
 // ======== 更新配置狀態文字 ========
 function updateConfigStatus() {
     const configStatus = document.querySelector('.config-status');
-    if (!configStatus) return;
+    if (!configStatus) {
+        console.warn('[SidePanel] config-status 元素未找到');
+        return;
+    }
+    
+    if (!i18n.isLoaded) {
+        console.warn('[SidePanel] i18n 還未初始化，跳過 updateConfigStatus');
+        return;
+    }
     
     if (isMicEnabled) {
         configStatus.textContent = i18n.t('config.status');
@@ -389,8 +407,19 @@ function updateConfigStatus() {
 
 // ======== 頁面加載完成後自動啟動常駐麥克風 ========
 document.addEventListener('DOMContentLoaded', () => {
-    // 更新開關 UI 初始狀態
-    updateMicSwitchUI();
+    // 等待 i18n 加載完成後再更新 UI
+    if (i18n.isLoaded) {
+        updateMicSwitchUI();
+    } else {
+        console.warn('[SidePanel] DOMContentLoaded 時 i18n 還未加載');
+        // 延遲執行，等待 i18n 初始化
+        const checkInterval = setInterval(() => {
+            if (i18n.isLoaded) {
+                updateMicSwitchUI();
+                clearInterval(checkInterval);
+            }
+        }, 50);
+    }
     
     if (recognition && isMicEnabled) {
         console.log("[Speech] 頁面載入，自動啟動常駐麥克風");

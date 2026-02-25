@@ -48,6 +48,12 @@ class I18n {
 
     // 獲取翻譯文本
     t(key) {
+        // 如果还未加载，返回 key 本身作为备用
+        if (!this.isLoaded) {
+            console.warn(`[i18n] i18n 還未加載，無法翻譯: ${key}`);
+            return key;
+        }
+
         const translations = this.translations[this.currentLanguage];
         if (!translations) {
             console.warn(`[i18n] 未找到語言: ${this.currentLanguage}`);
