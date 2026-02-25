@@ -26,6 +26,15 @@ if (SpeechRecognition) {
         isListening = false;
         document.getElementById('micBtn').classList.remove('listening');
         document.getElementById('micBtn').textContent = '🎤';
+        
+        // 識別結束後自動執行
+        const text = final_transcript.trim();
+        if (text) {
+            console.log("[Speech] 自動執行文本:", text);
+            setTimeout(() => {
+                document.getElementById('runBtn').click();
+            }, 300); // 延遲 300ms 讓 UI 更新完成
+        }
     };
 
     recognition.onresult = (event) => {
