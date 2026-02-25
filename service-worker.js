@@ -360,6 +360,18 @@ async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse,
             console.log(`[Gateway] 添加 modelName: ${args.modelName}`);
         }
         
+        // 添加當前語言到 args
+        if (!args.language) {
+            try {
+                const langSettings = await chrome.storage.sync.get('micLanguage');
+                args.language = langSettings.micLanguage || 'zh-TW';
+                console.log(`[Gateway] 添加 language: ${args.language}`);
+            } catch (error) {
+                console.warn(`[Gateway] 無法獲取語言設定:`, error);
+                args.language = 'zh-TW';  // 默認繁體中文
+            }
+        }
+        
         // 改為調用 SidePanel 執行技能
         const result = await executeSidePanelSkill(skillName, skillInfo.folder, args);
         
