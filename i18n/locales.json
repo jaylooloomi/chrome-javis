@@ -50,11 +50,11 @@
     "title.micToggle": "开启/关闭语音",
     "status.listening.indicator": "🎤 正在聆听...",
     "status.speech.error": "❌ 语音识别错误",
-    "error.summary.page": "❌ Summary Page 失败"
-  },
-  "notification": {
-    "skill.success": "技能已成功执行",
-    "skill.error": "技能执行失败"
+    "error.summary.page": "❌ Summary Page 失败",
+    "notification": {
+      "skill.success": "技能已成功执行",
+      "skill.error": "技能执行失败"
+    }
   },
   "en-US": {
     "dialog.title": "System Message",
@@ -81,11 +81,11 @@
     "title.micToggle": "Toggle Microphone",
     "status.listening.indicator": "🎤 Listening...",
     "status.speech.error": "❌ Speech Recognition Error",
-    "error.summary.page": "❌ Summary Page Failed"
-  },
-  "notification": {
-    "skill.success": "Skill executed successfully",
-    "skill.error": "Skill execution failed"
+    "error.summary.page": "❌ Summary Page Failed",
+    "notification": {
+      "skill.success": "Skill executed successfully",
+      "skill.error": "Skill execution failed"
+    }
   },
   "en-GB": {
     "dialog.title": "System Message",
@@ -112,11 +112,11 @@
     "title.micToggle": "Toggle Microphone",
     "status.listening.indicator": "🎤 Listening...",
     "status.speech.error": "❌ Speech Recognition Error",
-    "error.summary.page": "❌ Summary Page Failed"
-  },
-  "notification": {
-    "skill.success": "Skill executed successfully",
-    "skill.error": "Skill execution failed"
+    "error.summary.page": "❌ Summary Page Failed",
+    "notification": {
+      "skill.success": "Skill executed successfully",
+      "skill.error": "Skill execution failed"
+    }
   },
   "ja-JP": {
     "dialog.title": "システムメッセージ",
@@ -143,7 +143,11 @@
     "title.micToggle": "マイクを切り替える",
     "status.listening.indicator": "🎤 リッスン中...",
     "status.speech.error": "❌ 音声認識エラー",
-    "error.summary.page": "❌ Summary Page 失敗"
+    "error.summary.page": "❌ Summary Page 失敗",
+    "notification": {
+      "skill.success": "Skill executed successfully",
+      "skill.error": "Skill execution failed"
+    }
   },
   "ko-KR": {
     "dialog.title": "시스템 메시지",
@@ -170,11 +174,11 @@
     "title.micToggle": "마이크 전환",
     "status.listening.indicator": "🎤 청취 중...",
     "status.speech.error": "❌ 음성 인식 오류",
-    "error.summary.page": "❌ Summary Page 실패"
-  },
-  "notification": {
-    "skill.success": "스킬이 성공적으로 실행되었습니다",
-    "skill.error": "스킬 실행에 실패했습니다"
+    "error.summary.page": "❌ Summary Page 실패",
+    "notification": {
+      "skill.success": "스킬이 성공적으로 실행되었습니다",
+      "skill.error": "스킬 실행에 실패했습니다"
+    }
   },
   "fr-FR": {
     "dialog.title": "Message Système",
@@ -201,11 +205,11 @@
     "title.micToggle": "Basculer le Microphone",
     "status.listening.indicator": "🎤 Écoute...",
     "status.speech.error": "❌ Erreur de Reconnaissance Vocale",
-    "error.summary.page": "❌ Summary Page Échoué"
-  },
-  "notification": {
-    "skill.success": "Compétence exécutée avec succès",
-    "skill.error": "Échec de l'exécution de la compétence"
+    "error.summary.page": "❌ Summary Page Échoué",
+    "notification": {
+      "skill.success": "Compétence exécutée avec succès",
+      "skill.error": "Échec de l'exécution de la compétence"
+    }
   },
   "de-DE": {
     "dialog.title": "Systemnachricht",
@@ -232,11 +236,11 @@
     "title.micToggle": "Mikrofon umschalten",
     "status.listening.indicator": "🎤 Wird abgehört...",
     "status.speech.error": "❌ Spracherkennungsfehler",
-    "error.summary.page": "❌ Summary Page Fehler"
-  },
-  "notification": {
-    "skill.success": "Fähigkeit erfolgreich ausgeführt",
-    "skill.error": "Fehler bei der Ausführung der Fähigkeit"
+    "error.summary.page": "❌ Summary Page Fehler",
+    "notification": {
+      "skill.success": "Fähigkeit erfolgreich ausgeführt",
+      "skill.error": "Fehler bei der Ausführung der Fähigkeit"
+    }
   },
   "es-ES": {
     "dialog.title": "Mensaje del Sistema",
@@ -263,11 +267,11 @@
     "title.micToggle": "Alternar Micrófono",
     "status.listening.indicator": "🎤 Escuchando...",
     "status.speech.error": "❌ Error de Reconocimiento de Voz",
-    "error.summary.page": "❌ Summary Page Fracasado"
-  },
-  "notification": {
-    "skill.success": "Habilidad ejecutada correctamente",
-    "skill.error": "Error al ejecutar la habilidad"
+    "error.summary.page": "❌ Summary Page Fracasado",
+    "notification": {
+      "skill.success": "Habilidad ejecutada correctamente",
+      "skill.error": "Error al ejecutar la habilidad"
+    }
   },
   "it-IT": {
     "dialog.title": "Messaggio di Sistema",
@@ -294,11 +298,11 @@
     "title.micToggle": "Attiva/Disattiva Microfono",
     "status.listening.indicator": "🎤 In ascolto...",
     "status.speech.error": "❌ Errore di Riconoscimento Vocale",
-    "error.summary.page": "❌ Summary Page Fallito"
-  },
-  "notification": {
-    "skill.success": "Abilità eseguita con successo",
-    "skill.error": "Errore nell'esecuzione dell'abilità"
+    "error.summary.page": "❌ Summary Page Fallito",
+    "notification": {
+      "skill.success": "Abilità eseguita con successo",
+      "skill.error": "Errore nell'esecuzione dell'abilità"
+    }
   },
   "pt-BR": {
     "dialog.title": "Mensagem do Sistema",
@@ -325,11 +329,11 @@
     "title.micToggle": "Alternar Microfone",
     "status.listening.indicator": "🎤 Ouvindo...",
     "status.speech.error": "❌ Erro de Reconhecimento de Fala",
-    "error.summary.page": "❌ Summary Page Falhou"
-  },
-  "notification": {
-    "skill.success": "Habilidade executada com sucesso",
-    "skill.error": "Falha na execução da habilidade"
+    "error.summary.page": "❌ Summary Page Falhou",
+    "notification": {
+      "skill.success": "Habilidade executada com sucesso",
+      "skill.error": "Falha na execução da habilidade"
+    }
   },
   "ru-RU": {
     "dialog.title": "Системное сообщение",
@@ -356,10 +360,10 @@
     "title.micToggle": "Переключить Микрофон",
     "status.listening.indicator": "🎤 Прослушивание...",
     "status.speech.error": "❌ Ошибка Распознавания Речи",
-    "error.summary.page": "❌ Summary Page Ошибка"
-  },
-  "notification": {
-    "skill.success": "Навык успешно выполнен",
-    "skill.error": "Ошибка при выполнении навыка"
+    "error.summary.page": "❌ Summary Page Ошибка",
+    "notification": {
+      "skill.success": "Навык успешно выполнен",
+      "skill.error": "Ошибка при выполнении навыка"
+    }
   }
 }
