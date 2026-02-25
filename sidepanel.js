@@ -1,5 +1,10 @@
 // ======== 導入通知工具 ========
 import { showSuccessToast, showErrorToast, showInfoToast } from './toast-notification.js';
+import i18n from './i18n/i18n.js';
+
+// ======== 初始化 i18n ========
+await i18n.load();
+console.log('[SidePanel] i18n 初始化完成');
 
 // ======== 語音識別初始化 (直接使用 Web Speech API) ========
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -66,8 +71,8 @@ if (SpeechRecognition) {
                         recognition.start();
                     }
                     isAutoRunning = false;
-                }, 500);
-            }, 500); // 停顿 0.5s
+                }, 0);
+            }, 0); // 停顿 0.5s
         } else if (!text && isMicEnabled) {
             // 没有识别到内容，继续监听
             console.log("[Speech] 未识别到内容，继续监听");
@@ -164,10 +169,10 @@ function updateMicSwitchUI() {
     
     if (isMicEnabled) {
         switchBtn.classList.add('on');
-        statusLabel.textContent = '開啟';
+        statusLabel.textContent = i18n.t('button.mic');
     } else {
         switchBtn.classList.remove('on');
-        statusLabel.textContent = '關閉';
+        statusLabel.textContent = i18n.t('button.mic.off');
     }
 }
 
@@ -189,14 +194,14 @@ document.getElementById('micSwitch').addEventListener('click', () => {
     if (isMicEnabled) {
         // 開啟常駐麥克風
         updateMicSwitchUI();
-        document.getElementById('output').textContent = '🎤 語音已開啟';
+        document.getElementById('output').textContent = i18n.t('status.ready');
         
         // 更新配置狀態
         if (configStatus) {
-            configStatus.textContent = '麥克風已常駐 • 停頓 0.5s 自動執行 • AI 模型 已載入';
+            configStatus.textContent = i18n.t('config.status');
         }
         if (listeningStatus) {
-            listeningStatus.textContent = '待命中...';
+            listeningStatus.textContent = i18n.t('status.listening');
         }
         
         console.log("[Speech] 開始常駐監聽");
@@ -204,14 +209,14 @@ document.getElementById('micSwitch').addEventListener('click', () => {
     } else {
         // 關閉常駐麥克風
         updateMicSwitchUI();
-        document.getElementById('output').textContent = '🔇 語音已關閉';
+        document.getElementById('output').textContent = i18n.t('status.closed');
         
         // 更新配置狀態
         if (configStatus) {
-            configStatus.textContent = '麥克風已關閉';
+            configStatus.textContent = i18n.t('config.status.disabled');
         }
         if (listeningStatus) {
-            listeningStatus.textContent = '閒置中...';
+            listeningStatus.textContent = i18n.t('status.idle');
         }
         
         console.log("[Speech] 停止常駐監聽");
@@ -219,25 +224,13 @@ document.getElementById('micSwitch').addEventListener('click', () => {
     }
 });
 
-// ======== 頁面加載時自動啟動常駐麥克風 ========
-document.addEventListener('DOMContentLoaded', () => {
-    // 更新開關 UI 初始狀態
-    updateMicSwitchUI();
-    
-    if (recognition && isMicEnabled) {
-        console.log("[Speech] 頁面載入，自動啟動常駐麥克風");
-        recognition.start();
-    }
-});
-
-// ======== 執行按鈕事件 ========
 document.getElementById('runBtn').addEventListener('click', async () => {
     const text = document.getElementById('userInput').value;
     const output = document.getElementById('output');
     
     if (!text) return;
     
-    output.textContent = "處理中...";
+    output.textContent = i18n.t('status.processing');
     
     try {
         // 從 config.json 讀取完整配置
@@ -347,4 +340,65 @@ document.querySelector('.close-btn').addEventListener('click', () => {
     const topInnerPanel = document.querySelector('.top-inner-panel-container');
     topInnerPanel.style.display = 'none';
     console.log('[SidePanel] 系統訊息對話框已關閉');
+});
+
+// ======== i18n 翻譯應用函數 ========
+function applyTranslations() {
+    // 應用所有 data-i18n 屬性
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        element.textContent = i18n.t(key);
+    });
+
+    // 應用所有 data-i18n-placeholder 屬性
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+        const key = element.getAttribute('data-i18n-placeholder');
+        element.placeholder = i18n.t(key);
+    });
+
+    // 應用所有 data-i18n-title 屬性
+    document.querySelectorAll('[data-i18n-title]').forEach(element => {
+        const key = element.getAttribute('data-i18n-title');
+        element.title = i18n.t(key);
+    });
+
+    console.log('[SidePanel] i18n 翻譯已應用');
+}
+
+// ======== 監聽 i18n 語言變更 ========
+i18n.onLanguageChange(() => {
+    applyTranslations();
+    updateMicSwitchUI();
+    updateConfigStatus();
+});
+
+// ======== 更新配置狀態文字 ========
+function updateConfigStatus() {
+    const configStatus = document.querySelector('.config-status');
+    if (!configStatus) return;
+    
+    if (isMicEnabled) {
+        configStatus.textContent = i18n.t('config.status');
+    } else {
+        configStatus.textContent = i18n.t('config.status.disabled');
+    }
+}
+
+// ======== 頁面加載完成後應用翻譯 ========
+document.addEventListener('DOMContentLoaded', async () => {
+    // 等待 i18n 加載完成
+    if (!i18n.isLoaded) {
+        await i18n.load();
+    }
+    
+    // 應用翻譯
+    applyTranslations();
+    
+    // 更新開關 UI 初始狀態
+    updateMicSwitchUI();
+    
+    if (recognition && isMicEnabled) {
+        console.log("[Speech] 頁面載入，自動啟動常駐麥克風");
+        recognition.start();
+    }
 });

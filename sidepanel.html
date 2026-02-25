@@ -483,13 +483,13 @@
         <div class="system-message-dialog">
           <button class="close-btn">✕</button>
           <div class="icon-container">💖</div>
-          <div class="title">系統訊息</div>
-          <div class="description">
+          <div class="title" data-i18n="dialog.title">系統訊息</div>
+          <div class="description" data-i18n="dialog.description">
             一路上有你的陪伴，是我能持續做的最大動力，這份單純的感謝與喜歡來自我真摯的心，希望這項目能幫助到你，如果你認同我的創作價值，或是喜歡在我的內容中獲得一點啟發，我，一點點發發呆決決定。
           </div>
-          <div class="question">喜歡這個工具嗎?</div>
-          <button class="action-btn" id="sponsorBtn">👉 贊助一杯咖啡 ☕</button>
-          <a class="skip-link">分享給其他朋友 →</a>
+          <div class="question" data-i18n="dialog.question">喜歡這個工具嗎?</div>
+          <button class="action-btn" id="sponsorBtn" data-i18n="dialog.sponsor">👉 贊助一杯咖啡 ☕</button>
+          <a class="skip-link" data-i18n="dialog.share">分享給其他朋友 →</a>
         </div>
       </div>
     </div>
@@ -499,10 +499,10 @@
 
     <div class="panel-container">
       <!-- 輸出區域 -->
-      <div id="output">準備就緒...</div>
+      <div id="output" data-i18n="output.ready">準備就緒...</div>
       
       <!-- 配置狀態顯示 -->
-      <div class="config-status">
+      <div class="config-status" data-i18n="config.status">
         麥克風已常駐 • 停頓 0.5s 自動執行 • AI 模型 已載入
       </div>
       
@@ -510,28 +510,27 @@
       <div class="voice-container">
         <div class="listening-text">
           <span class="listening-indicator"></span>
-          <span id="listeningStatus">待命中...</span>
+          <span id="listeningStatus" data-i18n="status.listening">待命中...</span>
         </div>
       </div>
 
       <!-- 輸入框 -->
-      <textarea id="userInput" placeholder="輸入指令 (如：幫我開啟 Google)..."></textarea>
+      <textarea id="userInput" placeholder="輸入指令 (如：幫我開啟 Google)..." data-i18n-placeholder="placeholder.input"></textarea>
       
       <!-- 按鈕容器 1 -->
       <div class="input-container">
         <div class="switch-container">
-          <button class="switch on" id="micSwitch" title="開啟/關閉語音"></button>
-          <span class="switch-label" id="micStatus">開啟</span>
+          <button class="switch on" id="micSwitch" title="開啟/關閉語音" data-i18n-title="title.micToggle"></button>
+          <span class="switch-label" id="micStatus" data-i18n="button.mic">開啟</span>
         </div>
-        <button id="runBtn" class="btn-primary">執行</button>
+        <button id="runBtn" class="btn-primary" data-i18n="button.run">執行</button>
       </div>
       
       <!-- 按鈕容器 2 -->
       <div class="input-container">
-        <button id="askGeminiBtn" class="btn-gemini">💡 Ask Gemini</button>
+        <button id="askGeminiBtn" class="btn-gemini" data-i18n="button.gemini">💡 Ask Gemini</button>
       </div>
     </div>
-    
     <script type="module" src="sidepanel.js"></script>
   </body>
 </html>
