@@ -141,12 +141,6 @@ function pasteAndSubmit(text) {
 
         result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 找到輸入框: " + inputElement.tagName + " class=" + inputElement.className);
 
-        // 1.5. 等待輸入框完全初始化 (Gemini 可能需要時間初始化 UI)
-        result.logs.push("[+0ms] ⏳ 等待輸入框完全初始化 (4 秒)...");
-        const initDelay = Date.now();
-        while (Date.now() - initDelay < 4000) {}
-        result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 輸入框初始化完成");
-
         // 2. 聚焦並貼上文字
         inputElement.focus();
         result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 已 focus 到輸入框");
