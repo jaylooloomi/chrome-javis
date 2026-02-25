@@ -2,17 +2,12 @@
 
 // 1. 【靜態匯入】所有技能模組
 import * as openTabSkill from './skills/opentab/open_tab.js';
-import * as summarizeSkill from './skills/summarize/summarize_page.js';
 
 // 2. 技能註冊表
 const SKILL_REGISTRY = {
     'open_tab': {
         module: openTabSkill,
         mdPath: 'skills/opentab/open_tab.md'
-    },
-    'summarize_page': {
-        module: summarizeSkill,
-        mdPath: 'skills/summarize/summarize_page.md'
     }
 };
 
@@ -121,15 +116,6 @@ async function handleRequest(userPrompt, sendResponse, geminiApiKey = null) {
         // 執行技能
         console.log(`[Gateway] 執行技能: ${command.skill}`);
         const result = await targetSkill.module.run(command.args || {});
-        
-        // 特殊處理：summarize_page 需要進行 AI 總結
-        if (command.skill === 'summarize_page' && result.pageContent) {
-            console.log("[Gateway] 偵測到 summarize_page 內容，進行 AI 總結...");
-            const summaryPrompt = "請用 Markdown 格式，分成「主要內容」、「關鍵重點」、「結論」三個部分，對以下文字進行總結";
-            const summary = await callGeminiFlash(result.pageContent, summaryPrompt, geminiApiKey);
-            sendResponse({ status: "success", text: summary });
-            return;
-        }
         
         sendResponse({ status: "success", text: result });
         
