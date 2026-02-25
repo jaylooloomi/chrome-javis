@@ -1,255 +1,251 @@
 /**
- * 自定義 HTML Toast 通知系統
- * 在 SidePanel 右下角顯示通知氣泡
+ * 現代化 Toast 通知系統
+ * 毛玻璃風格 + 科技感左邊框
  */
 
-// 初始化 toast 容器
+// ======== 初始化 Toast 容器 ========
 function initToastContainer() {
     if (document.getElementById('toast-container')) {
-        return;  // 已存在，無需重複初始化
+        return;
     }
-    
+
     const container = document.createElement('div');
     container.id = 'toast-container';
-    container.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        z-index: 10000;
-        pointer-events: none;
-    `;
-    document.body.appendChild(container);
     
+    // 注入樣式
+    if (!document.getElementById('toast-styles')) {
+        const style = document.createElement('style');
+        style.id = 'toast-styles';
+        style.textContent = `
+            .toast-container {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 10000;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                pointer-events: none;
+            }
+
+            /* ======== Toast 項目 ======== */
+            .toast-item {
+                /* 毛玻璃背景 */
+                background: rgba(15, 23, 42, 0.8);
+                backdrop-filter: blur(10px);
+                
+                /* 科技感細邊框 */
+                border-left: 4px solid #4ade80;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                border-right: 1px solid rgba(255, 255, 255, 0.1);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                
+                border-radius: 8px;
+                padding: 12px 16px;
+                min-width: 280px;
+                max-width: 350px;
+                
+                /* 外發光效果 */
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 0 0 10px rgba(74, 222, 128, 0.1);
+                
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                
+                /* 動畫 */
+                animation: slideIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+                pointer-events: auto;
+            }
+
+            /* ======== 成功樣式 ======== */
+            .toast-item.success {
+                border-left-color: #4ade80;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 0 0 10px rgba(74, 222, 128, 0.1);
+            }
+
+            .toast-item.success .toast-title {
+                color: #4ade80;
+            }
+
+            /* ======== 失敗樣式 ======== */
+            .toast-item.error {
+                border-left-color: #ef4444;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 0 0 10px rgba(239, 68, 68, 0.1);
+            }
+
+            .toast-item.error .toast-title {
+                color: #ef4444;
+            }
+
+            /* ======== 信息樣式 ======== */
+            .toast-item.info {
+                border-left-color: #3b82f6;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 0 0 10px rgba(59, 130, 246, 0.1);
+            }
+
+            .toast-item.info .toast-title {
+                color: #3b82f6;
+            }
+
+            /* ======== Toast 內容 ======== */
+            .toast-content {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+            }
+
+            .toast-icon {
+                font-size: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+
+            .toast-title {
+                font-size: 12px;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+                margin-bottom: 4px;
+            }
+
+            .toast-message {
+                color: #cbd5e1;
+                font-size: 12px;
+                line-height: 1.4;
+                word-break: break-word;
+            }
+
+            /* ======== 關閉按鈕 ======== */
+            .toast-close {
+                background: none;
+                border: none;
+                color: #94a3b8;
+                font-size: 16px;
+                cursor: pointer;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                transition: color 0.2s ease;
+            }
+
+            .toast-close:hover {
+                color: #cbd5e1;
+            }
+
+            /* ======== 進入動畫 ======== */
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateX(50px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            }
+
+            /* ======== 退出動畫 ======== */
+            @keyframes slideOut {
+                from {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+                to {
+                    opacity: 0;
+                    transform: translateX(50px);
+                }
+            }
+
+            .toast-item.exiting {
+                animation: slideOut 0.3s cubic-bezier(0.36, 0, 0.66, -0.56) forwards;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    container.id = 'toast-container';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
     console.log('[Toast] 容器已初始化');
 }
 
-/**
- * 顯示 Toast 通知
- * @param {string} type - 通知類型: 'success' | 'error' | 'info'
- * @param {string} title - 通知標題
- * @param {string} message - 通知訊息
- * @param {number} duration - 顯示時長（毫秒），0 表示不自動關閉
- */
-function showToast(type, title, message, duration = 6000) {
-    try {
-        initToastContainer();
-        
-        // 設定顏色和圖標
-        let bgColor, borderColor, icon;
-        switch (type) {
-            case 'success':
-                bgColor = '#4CAF50';
-                borderColor = '#2E7D32';
-                icon = '✅';
-                break;
-            case 'error':
-                bgColor = '#F44336';
-                borderColor = '#C62828';
-                icon = '❌';
-                break;
-            case 'info':
-                bgColor = '#2196F3';
-                borderColor = '#1565C0';
-                icon = 'ℹ️';
-                break;
-            default:
-                bgColor = '#757575';
-                borderColor = '#424242';
-                icon = '📢';
-        }
-        
-        // 創建 toast 元素
-        const toast = document.createElement('div');
-        const toastId = `toast-${Date.now()}`;
-        toast.id = toastId;
-        toast.style.cssText = `
-            display: flex;
-            align-items: flex-end;
-            gap: 12px;
-            min-width: 300px;
-            max-width: 450px;
-            pointer-events: auto;
-            animation: slideInDown 0.3s ease-out;
-            cursor: pointer;
-        `;
-        
-        // 添加內容（氣泡樣式）
-        const bubbleContent = document.createElement('div');
-        bubbleContent.style.cssText = `
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            padding: 14px 16px;
-            background-color: ${bgColor};
-            color: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif;
-            font-size: 14px;
-            transition: transform 0.3s, opacity 0.3s;
-            position: relative;
-        `;
-        
-        // 添加氣泡尖角（三角形）
-        bubbleContent.innerHTML = `
-            <div style="font-weight: bold;">${title}</div>
-            <div style="font-size: 13px; opacity: 0.95;">${message}</div>
-            <div style="
-                position: absolute;
-                bottom: -8px;
-                right: 16px;
-                width: 0;
-                height: 0;
-                border-left: 8px solid transparent;
-                border-top: 8px solid ${bgColor};
-            "></div>
-        `;
-        
-        toast.appendChild(bubbleContent);
-        
-        // 添加頭像
-        const avatar = document.createElement('img');
-        avatar.src = chrome.runtime.getURL('images/jarvis_pixian_ai.png');
-        avatar.style.cssText = `
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: white;
-            padding: 2px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        `;
-        toast.appendChild(avatar);
-        
-        // 添加關閉按鈕（在氣泡內部）
-        const closeBtn = document.createElement('button');
-        closeBtn.id = `close-${toastId}`;
-        closeBtn.textContent = '✕';
-        closeBtn.style.cssText = `
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            background: rgba(255, 255, 255, 0.3);
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 16px;
-            width: 24px;
-            height: 24px;
-            padding: 0;
-            border-radius: 4px;
-            transition: background 0.2s;
-            display: none;
-        `;
-        bubbleContent.style.position = 'relative';
-        bubbleContent.appendChild(closeBtn);
-        
-        // 鼠標懸停時顯示關閉按鈕
-        toast.addEventListener('mouseenter', () => {
-            closeBtn.style.display = 'block';
-            bubbleContent.style.transform = 'scale(1.02)';
-            bubbleContent.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
-        });
-        
-        toast.addEventListener('mouseleave', () => {
-            closeBtn.style.display = 'none';
-            bubbleContent.style.transform = 'scale(1)';
-            bubbleContent.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-        });
-        
-        // 添加樣式表（如果尚未添加）
-        if (!document.getElementById('toast-styles')) {
-            const style = document.createElement('style');
-            style.id = 'toast-styles';
-            style.textContent = `
-                @keyframes slideInDown {
-                    from {
-                        transform: translateY(-400px);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateY(0);
-                        opacity: 1;
-                    }
-                }
-                
-                @keyframes slideOutUp {
-                    from {
-                        transform: translateY(0);
-                        opacity: 1;
-                    }
-                    to {
-                        transform: translateY(-400px);
-                        opacity: 0;
-                    }
-                }
-                
-                #toast-container:hover button {
-                    background: rgba(255, 255, 255, 0.5) !important;
-                }
-            `;
-            document.head.appendChild(style);
-        }
-        
-        const container = document.getElementById('toast-container');
-        container.appendChild(toast);
-        
-        console.log('[Toast] ✅ 已顯示:', { type, title, toastId });
-        
-        // 關閉按鈕事件
-        closeBtn.addEventListener('click', () => {
-            removeToast(toastId);
-        });
-        
-        // 自動關閉
-        if (duration > 0) {
-            setTimeout(() => {
-                removeToast(toastId);
-            }, duration);
-        }
-        
-    } catch (error) {
-        console.error('[Toast] 顯示失敗:', error);
+// ======== 建立 Toast ========
+function createToast(title, message, type = 'info') {
+    initToastContainer();
+
+    const container = document.getElementById('toast-container');
+
+    // 建立 toast 元素
+    const toast = document.createElement('div');
+    toast.className = `toast-item ${type}`;
+
+    // 圖標映射
+    const icons = {
+        success: '✅',
+        error: '❌',
+        info: 'ℹ️'
+    };
+
+    toast.innerHTML = `
+        <div class="toast-icon">${icons[type] || '📢'}</div>
+        <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message}</div>
+        </div>
+        <button class="toast-close">✕</button>
+    `;
+
+    container.appendChild(toast);
+    container.style.pointerEvents = 'auto';
+
+    // 關閉按鈕事件
+    const closeBtn = toast.querySelector('.toast-close');
+    closeBtn.addEventListener('click', () => {
+        removeToast(toast);
+    });
+
+    // 自動關閉
+    const timeoutId = setTimeout(() => {
+        removeToast(toast);
+    }, 6000);
+
+    // 懸停時暫停自動關閉
+    toast.addEventListener('mouseenter', () => {
+        clearTimeout(timeoutId);
+    });
+
+    toast.addEventListener('mouseleave', () => {
+        setTimeout(() => {
+            removeToast(toast);
+        }, 2000);
+    });
+
+    console.log(`[Toast] ${type.toUpperCase()} - ${title}: ${message}`);
+}
+
+// ======== 移除 Toast ========
+function removeToast(toast) {
+    if (!toast.classList.contains('exiting')) {
+        toast.classList.add('exiting');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
     }
 }
 
-/**
- * 移除 Toast 通知
- */
-function removeToast(toastId) {
-    const toast = document.getElementById(toastId);
-    if (!toast) return;
-    
-    toast.style.animation = 'slideOutUp 0.3s ease-out';
-    setTimeout(() => {
-        toast.remove();
-        console.log('[Toast] 已移除:', toastId);
-    }, 300);
+// ======== 公開 API ========
+export function showSuccessToast(title, message) {
+    createToast(title, message, 'success');
 }
 
-/**
- * 顯示成功通知
- */
-function showSuccessToast(title, message, duration = 6000) {
-    return showToast('success', title, message, duration);
+export function showErrorToast(title, message) {
+    createToast(title, message, 'error');
 }
 
-/**
- * 顯示失敗通知
- */
-function showErrorToast(title, message, duration = 4000) {
-    return showToast('error', title, message, duration);
+export function showInfoToast(title, message) {
+    createToast(title, message, 'info');
 }
-
-/**
- * 顯示信息通知
- */
-function showInfoToast(title, message, duration = 6000) {
-    return showToast('info', title, message, duration);
-}
-
-// 導出函數
-export { showToast, showSuccessToast, showErrorToast, showInfoToast };
