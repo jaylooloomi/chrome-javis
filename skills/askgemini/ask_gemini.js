@@ -189,15 +189,13 @@ function pasteAndSubmit(text) {
         inputElement.dispatchEvent(new Event('ngModelChange', { bubbles: true }));
         
         result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 已觸發多個事件確保 Angular 檢測到變化");
-        
-        // 檢查輸入框是否真的有內容
-        const contentLength = inputElement.textContent ? inputElement.textContent.trim().length : 0;
-        result.logs.push("[+" + (Date.now() - startTime) + "ms] 📍 輸入框內容長度: " + contentLength);
-        // 3.5. 等待頁面完全載入和 UI 更新 - 延長到 6 秒，因為 Gemini 的反機器人保護可能需要更長時間
-        result.logs.push("[+" + (Date.now() - startTime) + "ms] ⏱️ 等待頁面 UI 更新 (6 秒，對抗反機器人)...");
-        const uiDelay = Date.now();
-        while (Date.now() - uiDelay < 6000) {}
-        result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 頁面 UI 已更新");
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] 🛑 現在完全停止所有操作，讓 Gemini 檢測...");
+        // 3.5. 完全停止操作，等待 Gemini 的檢測邏輯運行
+        // Gemini 會實時監控 DOM 操作，只有當操作停止後才會判斷是否啟用按鈕
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] ⏳ 等待 Gemini 反機器人檢測 (20 秒)...");
+        const waitStart = Date.now();
+        while (Date.now() - waitStart < 20000) {}
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ Gemini 檢測完成");
 
         // 4. 立即尋找並點擊發送按鈕
         result.logs.push("[+" + (Date.now() - startTime) + "ms] 正在尋找發送按鈕...");
