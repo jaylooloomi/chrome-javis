@@ -358,7 +358,7 @@ async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse)
                 action: 'SHOW_NOTIFICATION',
                 type: 'success',
                 skillName: skillName,
-                message: '技能已成功執行'
+                messageKey: 'notification.skill.success'
             });
         } catch (error) {
             console.warn('[Gateway] 發送通知失敗:', error);
@@ -375,7 +375,8 @@ async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse)
                 action: 'SHOW_NOTIFICATION',
                 type: 'error',
                 skillName: skillName,
-                message: error.message
+                messageKey: 'notification.skill.error',
+                errorMessage: error.message
             });
         } catch (notifyError) {
             console.warn('[Gateway] 發送失敗通知失敗:', notifyError);

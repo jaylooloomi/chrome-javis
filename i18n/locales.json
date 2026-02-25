@@ -52,6 +52,10 @@
     "status.speech.error": "❌ 语音识别错误",
     "error.summary.page": "❌ Summary Page 失败"
   },
+  "notification": {
+    "skill.success": "技能已成功执行",
+    "skill.error": "技能执行失败"
+  },
   "en-US": {
     "dialog.title": "System Message",
     "dialog.description": "Thank you for your companionship. It's my motivation to create. I hope this tool can help you. If you like it, please consider supporting me. 💝",
@@ -79,6 +83,10 @@
     "status.speech.error": "❌ Speech Recognition Error",
     "error.summary.page": "❌ Summary Page Failed"
   },
+  "notification": {
+    "skill.success": "Skill executed successfully",
+    "skill.error": "Skill execution failed"
+  },
   "en-GB": {
     "dialog.title": "System Message",
     "dialog.description": "Thank you for your companionship. It's my motivation to create. I hope this tool can help you. If you like it, please consider supporting me. 💝",
@@ -105,6 +113,10 @@
     "status.listening.indicator": "🎤 Listening...",
     "status.speech.error": "❌ Speech Recognition Error",
     "error.summary.page": "❌ Summary Page Failed"
+  },
+  "notification": {
+    "skill.success": "Skill executed successfully",
+    "skill.error": "Skill execution failed"
   },
   "ja-JP": {
     "dialog.title": "システムメッセージ",
@@ -160,6 +172,9 @@
     "status.speech.error": "❌ 음성 인식 오류",
     "error.summary.page": "❌ Summary Page 실패"
   },
+  "notification": {
+    "skill.success": "스킬이 성공적으로 실행되었습니다",
+    "skill.error": "스킬 실행에 실패했습니다"
   "fr-FR": {
     "dialog.title": "Message Système",
     "dialog.description": "Votre soutien est ma plus grande motivation. J'espère que cet outil peut vous aider. Si vous l'aimez, s'il vous plaît considérez me soutenir. 💝",
@@ -187,6 +202,9 @@
     "status.speech.error": "❌ Erreur de Reconnaissance Vocale",
     "error.summary.page": "❌ Summary Page Échoué"
   },
+  "notification": {
+    "skill.success": "Compétence exécutée avec succès",
+    "skill.error": "Échec de l'exécution de la compétence"
   "de-DE": {
     "dialog.title": "Systemnachricht",
     "dialog.description": "Deine Unterstütung ist meine größte Motivation. Ich hoffe, dieses Tool kann dir helfen. Wenn es dir gefällt, bitte unterstütze mich. 💝",
@@ -214,6 +232,9 @@
     "status.speech.error": "❌ Spracherkennungsfehler",
     "error.summary.page": "❌ Summary Page Fehler"
   },
+  "notification": {
+    "skill.success": "Fähigkeit erfolgreich ausgeführt",
+    "skill.error": "Fehler bei der Ausführung der Fähigkeit"
   "es-ES": {
     "dialog.title": "Mensaje del Sistema",
     "dialog.description": "Tu apoyo es mi mayor motivación. Espero que esta herramienta te sea útil. Si te gusta, por favor considerá apoyarme. 💝",
@@ -241,6 +262,9 @@
     "status.speech.error": "❌ Error de Reconocimiento de Voz",
     "error.summary.page": "❌ Summary Page Fracasado"
   },
+  "notification": {
+    "skill.success": "Habilidad ejecutada correctamente",
+    "skill.error": "Error al ejecutar la habilidad"
   "it-IT": {
     "dialog.title": "Messaggio di Sistema",
     "dialog.description": "Il tuo sostegno è la mia più grande motivazione. Spero che questo strumento possa aiutarti. Se ti piace, per favore considerami di supportarmi. 💝",
@@ -268,6 +292,9 @@
     "status.speech.error": "❌ Errore di Riconoscimento Vocale",
     "error.summary.page": "❌ Summary Page Fallito"
   },
+  "notification": {
+    "skill.success": "Abilità eseguita con successo",
+    "skill.error": "Errore nell'esecuzione dell'abilità"
   "pt-BR": {
     "dialog.title": "Mensagem do Sistema",
     "dialog.description": "Seu apoio é minha maior motivação. Espero que esta ferramenta possa ajudá-lo. Se você gostar, por favor considere me apoiar. 💝",
@@ -295,6 +322,9 @@
     "status.speech.error": "❌ Erro de Reconhecimento de Fala",
     "error.summary.page": "❌ Summary Page Falhou"
   },
+  "notification": {
+    "skill.success": "Habilidade executada com sucesso",
+    "skill.error": "Falha na execução da habilidade"
   "ru-RU": {
     "dialog.title": "Системное сообщение",
     "dialog.description": "Ваша поддержка - мотивация для меня. Надеюсь, этот инструмент вам поможет. Если вам нравится, пожалуйста, поддержите меня. 💝",
@@ -321,5 +351,8 @@
     "status.listening.indicator": "🎤 Прослушивание...",
     "status.speech.error": "❌ Ошибка Распознавания Речи",
     "error.summary.page": "❌ Summary Page Ошибка"
-  }
+  },
+  "notification": {
+    "skill.success": "Навык успешно выполнен",
+    "skill.error": "Ошибка при выполнении навыка"
 }
