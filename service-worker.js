@@ -1,8 +1,29 @@
 // service-worker.js - 核心网关 (Gateway-Client 模式)
 // 方案 B：使用 chrome.scripting.executeScript 在網頁前端執行技能
 
-// 技能註冊表 (Key-Value Pair，僅存儲 .md 說明)
-// 格式: { skillName: { mdContent: "..." } }
+// ======== 靜態導入 Service Worker 技能 ========
+// 註：必須使用靜態 import，Service Worker 不支持動態 import()
+
+// Service Worker 技能執行函數映射表
+const SERVICE_WORKER_SKILLS = {
+    open_tab: async (args) => {
+        console.log("[Open Tab Skill] 啟動，接收到參數:", args);
+        try {
+            const url = args.url;
+            if (!url) {
+                throw new Error("未提供 URL");
+            }
+            const tab = await chrome.tabs.create({ url: url });
+            console.log("[Open Tab Skill] 成功開啟分頁，ID:", tab.id);
+            return `成功開啟分頁 (ID: ${tab.id})：${url}`;
+        } catch (error) {
+            console.error("[Open Tab Skill] 錯誤:", error);
+            throw new Error(`開啟分頁失敗：${error.message}`);
+        }
+    }
+};
+
+// ======== 技能註冊表和快取 ========
 const SKILL_REGISTRY = {};
 
 // 系統提示詞緩存
@@ -66,15 +87,14 @@ async function loadSkillsDynamically() {
             }
             const mdContent = await mdResponse.text();
             
-            // 2. 如果是 Service Worker 執行的技能，動態導入 .js 文件
-            let skillModule = null;
+            // 2. 如果是 Service Worker 執行的技能，從 SERVICE_WORKER_SKILLS 獲取執行函數
+            let skillFunction = null;
             if (!skillConfig.runInPageContext) {
-                console.log(`[Gateway] 動態導入 Service Worker 技能: skills/${skillConfig.folder}/${skillName}_service.js`);
-                try {
-                    skillModule = await import(`./skills/${skillConfig.folder}/${skillName}_service.js`);
-                } catch (importError) {
-                    console.warn(`[Gateway] ⚠️ 無法導入 ${skillName}_service.js:`, importError);
+                if (!SERVICE_WORKER_SKILLS[skillName]) {
+                    throw new Error(`未找到 Service Worker 技能 ${skillName} 的執行函數`);
                 }
+                skillFunction = SERVICE_WORKER_SKILLS[skillName];
+                console.log(`[Gateway] ✅ 已綁定 Service Worker 技能函數: ${skillName}`);
             }
             
             // 3. 構建 Key-Value Pair
@@ -82,7 +102,7 @@ async function loadSkillsDynamically() {
                 mdContent: mdContent,
                 folder: skillConfig.folder,
                 runInPageContext: skillConfig.runInPageContext,
-                module: skillModule
+                skillFunction: skillFunction  // Service Worker 技能的執行函數
             };
             
             // 4. 構建 System Prompt
@@ -209,19 +229,14 @@ async function handleRequest(userPrompt, sendResponse, geminiApiKey = null) {
 // --- 在 Service Worker 中執行技能 ---
 async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse) {
     try {
-        if (!skillInfo.module) {
-            throw new Error(`技能 ${skillName} 的模塊未加載`);
+        if (!skillInfo.skillFunction) {
+            throw new Error(`技能 ${skillName} 的執行函數未加載`);
         }
         
         console.log(`[Gateway] 在 Service Worker 中執行技能: ${skillName}`);
         
-        // 呼叫技能的執行函數
-        const functionName = `run${skillName.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('')}Skill`;
-        if (typeof skillInfo.module[functionName] !== 'function') {
-            throw new Error(`技能模塊未匯出 ${functionName} 函數`);
-        }
-        
-        const result = await skillInfo.module[functionName](args);
+        // 直接呼叫技能的執行函數
+        const result = await skillInfo.skillFunction(args);
         console.log(`[Gateway] 技能 ${skillName} 執行結果:`, result);
         
         sendResponse({ status: "success", text: result });
