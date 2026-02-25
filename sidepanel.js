@@ -266,7 +266,7 @@ document.getElementById('askGeminiBtn').addEventListener('click', async () => {
         // 2. 從當前頁面抓取 HTML
         document.getElementById('output').textContent = "⏳ 正在抓取頁面 HTML...";
         
-        const htmlResult = await chrome.tabs.executeScript({
+        const htmlResult = await chrome.scripting.executeScript({
             target: { tabId: activeTab.id },
             function: () => {
                 return document.documentElement.outerHTML;
