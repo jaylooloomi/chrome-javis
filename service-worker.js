@@ -18,6 +18,44 @@ const SKILL_MAPPINGS = {};
 // 所有 Service Worker 技能在此定義
 const SERVICE_WORKER_SKILLS = {};
 
+// --- 按需加載技能 ---
+async function loadAndRunSkillInServiceWorker(skillName, skillFolder, args) {
+    try {
+        // 檢查是否已經加載過
+        if (!SERVICE_WORKER_SKILLS[skillName]) {
+            console.log(`[Gateway] 正在加載技能: ${skillName}`);
+            
+            const skillPath = `skills/${skillFolder}/${skillName}.js`;
+            const fullUrl = chrome.runtime.getURL(skillPath);
+            
+            // 動態加載技能文件
+            const response = await fetch(fullUrl);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: 無法加載技能文件`);
+            }
+            
+            const scriptContent = await response.text();
+            
+            // 在全局上下文中執行腳本（IIFE 會自動註冊技能）
+            const fn = new Function(scriptContent);
+            fn.call(globalThis);
+            
+            console.log(`[Gateway] ✅ 技能 ${skillName} 已加載`);
+        }
+        
+        // 執行技能
+        const skillFunc = SERVICE_WORKER_SKILLS[skillName];
+        if (typeof skillFunc === 'function') {
+            return await skillFunc(args);
+        } else {
+            throw new Error(`技能 ${skillName} 的執行函數未加載`);
+        }
+    } catch (error) {
+        console.error(`[Gateway] 加載/執行技能失敗 [${skillName}]:`, error);
+        throw error;
+    }
+}
+
 // --- 階段 A：啟動與技能裝載（動態掃描） ---
 async function ensureSkillsLoaded() {
     if (dynamicSystemPrompt) return;
@@ -43,18 +81,12 @@ async function loadSkillsDynamically() {
         }
         const manifestData = await manifestResponse.json();
         
-        // 2. 動態構建技能映射表並預加載 Service Worker 技能
+        // 2. 動態構建技能映射表（不再預加載 Service Worker 技能，改為按需加載）
         for (const skill of manifestData.skills) {
             SKILL_MAPPINGS[skill.name] = {
                 folder: skill.folder,
                 runInPageContext: skill.runInPageContext !== false
             };
-            
-            // 如果是 Service Worker 技能，預先加載其執行函數
-            if (!skill.runInPageContext) {
-                console.log(`[Gateway] 預加載 Service Worker 技能: ${skill.name}`);
-                await preloadServiceWorkerSkill(skill.name, skill.folder);
-            }
         }
         
         console.log(`[Gateway] 發現技能: ${Object.keys(SKILL_MAPPINGS).join(', ')}`);
@@ -102,66 +134,6 @@ async function loadSkillsDynamically() {
         + "5. 始終檢查用戶輸入是否匹配任何技能\n";
     dynamicSystemPrompt = promptBuilder;
     console.log("[Gateway] 技能庫已構建完成。已載入技能:", Object.keys(SKILL_REGISTRY));
-}
-
-// 預加載 Service Worker 技能
-// 使用 fetch 動態加載技能文件，技能在文件中會自己註冊
-async function preloadServiceWorkerSkill(skillName, skillFolder) {
-    try {
-        console.log(`[Gateway] 預加載技能: ${skillName}`);
-        
-        // 先檢查是否已預加載
-        if (SERVICE_WORKER_SKILLS[skillName]) {
-            console.log(`[Gateway] ✅ 技能 ${skillName} 已預加載`);
-            return true;
-        }
-        
-        // 如果未預加載，使用 fetch 動態加載
-        const skillPath = `skills/${skillFolder}/${skillName}.js`;
-        const fullUrl = chrome.runtime.getURL(skillPath);
-        console.log(`[Gateway] 動態加載技能文件: ${fullUrl}`);
-        
-        // 使用 import() 加載 ES Module 技能
-        try {
-            // 嘗試作為 ES Module 導入
-            await import(fullUrl);
-            console.log(`[Gateway] ✅ 以 ES Module 方式加載成功`);
-        } catch (importError) {
-            // 如果 import 失敗，嘗試 fetch + eval
-            console.warn(`[Gateway] ⚠️  ES Module 加載失敗，嘗試 fetch 方式`);
-            
-            const response = await fetch(fullUrl);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: 無法加載技能文件`);
-            }
-            
-            const scriptContent = await response.text();
-            console.log(`[Gateway] ✅ 已取得腳本 (${scriptContent.length} 字符)`);
-            
-            // 在全局上下文中執行腳本
-            const fn = new Function(scriptContent);
-            fn.call(globalThis);
-            console.log(`[Gateway] ✅ 腳本已執行`);
-        }
-        
-        // 等待一個事件循環，確保 SERVICE_WORKER_SKILLS 被填充
-        await new Promise(resolve => setTimeout(resolve, 10));
-        
-        // 驗證技能是否被成功註冊
-        if (SERVICE_WORKER_SKILLS[skillName]) {
-            console.log(`[Gateway] ✅ 技能 ${skillName} 已成功註冊`);
-            return true;
-        } else {
-            console.error(`[Gateway] ❌ 技能 ${skillName} 未成功註冊`);
-            console.error(`[Gateway] 已註冊的技能:`, Object.keys(SERVICE_WORKER_SKILLS));
-            return false;
-        }
-    } catch (e) {
-        console.error(`[Gateway] 預加載失敗 [${skillName}]:`, e.message);
-        console.error(`[Gateway] 完整錯誤:`, e);
-        console.error(`[Gateway] 錯誤堆棧:`, e.stack);
-        return false;
-    }
 }
 
 chrome.runtime.onInstalled.addListener(loadSkillsDynamically);
@@ -336,13 +308,8 @@ async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse)
     try {
         console.log(`[Gateway] 在 Service Worker 中執行技能: ${skillName}`);
         
-        // 從預加載的技能映射中獲取執行函數
-        if (!SERVICE_WORKER_SKILLS[skillName]) {
-            throw new Error(`技能 ${skillName} 的執行函數未加載`);
-        }
-        
-        const skillFunction = SERVICE_WORKER_SKILLS[skillName];
-        const result = await skillFunction(args);
+        // 按需加載並執行技能
+        const result = await loadAndRunSkillInServiceWorker(skillName, skillInfo.folder, args);
         
         console.log(`[Gateway] 技能 ${skillName} 執行結果:`, result);
         sendResponse({ status: "success", text: result });
