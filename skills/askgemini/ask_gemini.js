@@ -145,124 +145,41 @@ function pasteAndSubmit(text) {
         inputElement.dispatchEvent(new Event('blur', { bubbles: true }));
         inputElement.dispatchEvent(new Event('focus', { bubbles: true }));
 
-        // 4. 等待 2 秒後再尋找發送按鈕
+        // 4. 等待 2 秒後 focus 並按 Enter 發送
         console.log("[Gemini Content] 等待 2 秒鐘讓 Gemini 頁面渲染...");
         setTimeout(() => {
-            console.log("[Gemini Content] 正在尋找發送按鈕...");
-            waitForButtonAndClick(inputElement, 0);
+            console.log("[Gemini Content] Focus 到輸入框並按 Enter 發送");
+            inputElement.focus();
+            
+            // 按 Enter
+            const enterDownEvent = new KeyboardEvent('keydown', {
+                key: 'Enter',
+                code: 'Enter',
+                keyCode: 13,
+                which: 13,
+                bubbles: true,
+                cancelable: true,
+                shiftKey: false
+            });
+            inputElement.dispatchEvent(enterDownEvent);
+            console.log("[Gemini Content] ✅ 已觸發 keydown Enter");
+
+            setTimeout(() => {
+                const enterUpEvent = new KeyboardEvent('keyup', {
+                    key: 'Enter',
+                    code: 'Enter',
+                    keyCode: 13,
+                    which: 13,
+                    bubbles: true,
+                    cancelable: true
+                });
+                inputElement.dispatchEvent(enterUpEvent);
+                console.log("[Gemini Content] ✅ 已觸發 keyup Enter，應該已發送");
+            }, 50);
         }, 2000);
     } catch (error) {
         console.error("[Gemini Content] ❌ 異常:", error);
         console.error("[Gemini Content] 錯誤堆棧:", error.stack);
         return { success: false, error: error.message };
     }
-}
-
-/**
- * 輪詢等待發送按鈕出現，然後點擊
- */
-function waitForButtonAndClick(inputElement, attempts = 0, maxAttempts = 20) {
-    const sendButton = findSendButton();
-    
-    if (sendButton) {
-        console.log("[Gemini Content] ✅ 找到發送按鈕 (嘗試 " + (attempts + 1) + " 次)");
-        console.log("[Gemini Content] 🔘 正在點擊按鈕");
-        sendButton.click();
-        console.log("[Gemini Content] ✅ 發送按鈕已點擊");
-        return;
-    }
-
-    if (attempts >= maxAttempts) {
-        console.warn("[Gemini Content] ⚠️ 無法找到發送按鈕 (已嘗試 " + maxAttempts + " 次)");
-        console.log("[Gemini Content] 最後的後備方案：按 Enter");
-        
-        inputElement.focus();
-        const enterEvent = new KeyboardEvent('keydown', {
-            key: 'Enter',
-            code: 'Enter',
-            keyCode: 13,
-            which: 13,
-            bubbles: true,
-            cancelable: true,
-            shiftKey: false
-        });
-        inputElement.dispatchEvent(enterEvent);
-        console.log("[Gemini Content] 已觸發 keydown Enter");
-
-        setTimeout(() => {
-            const enterUpEvent = new KeyboardEvent('keyup', {
-                key: 'Enter',
-                code: 'Enter',
-                keyCode: 13,
-                which: 13,
-                bubbles: true,
-                cancelable: true
-            });
-            inputElement.dispatchEvent(enterUpEvent);
-            console.log("[Gemini Content] 已觸發 keyup Enter");
-        }, 50);
-        return;
-    }
-
-    // 重試：等待 300ms 後再檢查
-    console.log("[Gemini Content] 等待按鈕出現... (嘗試 " + (attempts + 1) + "/" + maxAttempts + ")");
-    setTimeout(() => {
-        waitForButtonAndClick(inputElement, attempts + 1, maxAttempts);
-    }, 300);
-}
-
-/**
- * 尋找發送按鈕
- */
-function findSendButton() {
-    // 優先尋找 mat-mdc-button-touch-target 的按鈕
-    let sendButton = document.querySelector('.mat-mdc-button-touch-target');
-    if (sendButton) {
-        console.log("[Gemini Content] 通過 .mat-mdc-button-touch-target 找到按鈕");
-        return sendButton;
-    }
-
-    // 次優先：mat-ripple mat-mdc-button-ripple
-    sendButton = document.querySelector('.mat-ripple.mat-mdc-button-ripple');
-    if (sendButton) {
-        console.log("[Gemini Content] 通過 .mat-ripple 找到按鈕");
-        return sendButton;
-    }
-
-    // 多個發送按鈕選擇器
-    const buttonSelectors = [
-        '[aria-label*="Send"]',
-        '[aria-label*="send"]',
-        '[aria-label*="發送"]',
-        '[aria-label*="提交"]',
-        'button[aria-label*="Send"]',
-        'button[aria-label*="send"]',
-        '.send-button',
-        '[data-testid*="send"]',
-        '[data-testid*="submit"]'
-    ];
-
-    for (const selector of buttonSelectors) {
-        const btn = document.querySelector(selector);
-        if (btn && btn.offsetHeight > 0) {  // 確保按鈕是可見的
-            console.log("[Gemini Content] 通過選擇器 '" + selector + "' 找到按鈕");
-            return btn;
-        }
-    }
-
-    // 試著搜索所有按鈕
-    const allButtons = document.querySelectorAll('button');
-    for (let btn of allButtons) {
-        const label = (btn.getAttribute('aria-label') || '').toLowerCase();
-        const text = (btn.textContent || '').toLowerCase();
-        
-        if ((label.includes('send') || text.includes('send') || 
-             label.includes('submit') || text.includes('submit')) &&
-            btn.offsetHeight > 0) {  // 確保按鈕是可見的
-            console.log("[Gemini Content] 通過按鈕文字找到發送按鈕");
-            return btn;
-        }
-    }
-
-    return null;
 }
