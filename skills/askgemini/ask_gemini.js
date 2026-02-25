@@ -1,6 +1,8 @@
 // ask_gemini.js - 在 SidePanel 中執行的技能
 // 快速將文字發送到 Google Gemini
 
+import TurndownService from 'turndown';
+
 export async function ask_gemini(args) {
     console.log("[Ask Gemini Skill] 啟動，接收到參數:", args);
 
@@ -28,22 +30,28 @@ export async function ask_gemini(args) {
             throw new Error("無法抓取源頁面的 HTML");
         }
 
-        // 2. 開啟 Gemini 分頁
+        // 2. 將 HTML 轉換為 Markdown
+        console.log("[Ask Gemini Skill] 正在將 HTML 轉換為 Markdown...");
+        const turndownService = new TurndownService();
+        const pageMarkdown = turndownService.turndown(pageHTML);
+        console.log("[Ask Gemini Skill] 轉換後 Markdown 長度:", pageMarkdown.length);
+
+        // 3. 開啟 Gemini 分頁
         const tab = await chrome.tabs.create({ 
             url: 'https://gemini.google.com/' 
         });
         console.log("[Ask Gemini Skill] 已開啟 Gemini 分頁，ID:", tab.id);
 
-        // 3. 等待頁面加載（重試機制，最多等待 8 秒）
+        // 4. 等待頁面加載（重試機制，最多等待 8 秒）
         await waitForPageLoad(tab.id);
 
-        // 4. 在 Gemini 分頁中注入腳本，自動貼上文字並發送
+        // 5. 在 Gemini 分頁中注入腳本，自動貼上文字並發送
         console.log("[Ask Gemini Skill] 正在注入自動貼上腳本");
         try {
             const scriptResults = await chrome.scripting.executeScript({
                 target: { tabId: tab.id },
                 function: pasteAndSubmit,
-                args: [pageHTML]
+                args: [pageMarkdown]
             });
             
             // 詳細輸出結果
@@ -66,8 +74,8 @@ export async function ask_gemini(args) {
             console.warn("[Ask Gemini Skill] executeScript 失敗:", error);
         }
 
-        const preview = pageHTML.length > 100 ? pageHTML.substring(0, 100) + "..." : pageHTML;
-        return `✅ 已開啟 Gemini 分頁\n\n📄 已貼上頁面內容 (${pageHTML.length} 字元)\n\n摘要：\n${preview}`;
+        const preview = pageMarkdown.length > 100 ? pageMarkdown.substring(0, 100) + "..." : pageMarkdown;
+        return `✅ 已開啟 Gemini 分頁\n\n📄 已轉換為 Markdown 並貼上 (${pageMarkdown.length} 字元)\n\n摘要：\n${preview}`;
         
     } catch (error) {
         console.error("[Ask Gemini Skill] 錯誤:", error);
