@@ -145,11 +145,21 @@ function pasteAndSubmit(text) {
         inputElement.dispatchEvent(new Event('blur', { bubbles: true }));
         inputElement.dispatchEvent(new Event('focus', { bubbles: true }));
 
-        // 4. 延遲後尋找發送按鈕
+        // 4. 延遲後尋找發送按鈕並點擊
         console.log("[Gemini Content] 延遲 500ms 後尋找發送按鈕...");
         setTimeout(() => {
             console.log("[Gemini Content] 開始尋找發送按鈕");
             
+            // 優先尋找 mat-ripple mat-mdc-button-ripple 的按鈕
+            let sendButton = document.querySelector('.mat-ripple.mat-mdc-button-ripple');
+            
+            if (sendButton) {
+                console.log("[Gemini Content] ✅ 找到 mat-ripple 按鈕!");
+                sendButton.click();
+                console.log("[Gemini Content] 🔘 已點擊 mat-ripple 按鈕");
+                return;
+            }
+
             // 多個發送按鈕選擇器
             const buttonSelectors = [
                 '[aria-label*="Send"]',
@@ -163,72 +173,65 @@ function pasteAndSubmit(text) {
                 '[data-testid*="submit"]'
             ];
 
-            let sendButton = null;
             for (const selector of buttonSelectors) {
                 const btn = document.querySelector(selector);
                 if (btn) {
                     console.log("[Gemini Content] 通過選擇器找到按鈕:", selector);
-                    sendButton = btn;
-                    break;
+                    console.log("[Gemini Content] 🔘 正在點擊按鈕");
+                    btn.click();
+                    console.log("[Gemini Content] ✅ 按鈕已點擊");
+                    return;
                 }
             }
 
             // 如果還是沒找到，試著搜索所有按鈕
-            if (!sendButton) {
-                console.log("[Gemini Content] 嘗試搜索所有按鈕...");
-                const allButtons = document.querySelectorAll('button');
-                console.log("[Gemini Content] 找到按鈕數量:", allButtons.length);
+            console.log("[Gemini Content] 嘗試搜索所有按鈕...");
+            const allButtons = document.querySelectorAll('button');
+            console.log("[Gemini Content] 找到按鈕數量:", allButtons.length);
+            
+            for (let btn of allButtons) {
+                const label = (btn.getAttribute('aria-label') || '').toLowerCase();
+                const text = (btn.textContent || '').toLowerCase();
+                console.log("[Gemini Content] 按鈕:", label, text);
                 
-                for (let btn of allButtons) {
-                    const label = (btn.getAttribute('aria-label') || '').toLowerCase();
-                    const text = (btn.textContent || '').toLowerCase();
-                    console.log("[Gemini Content] 按鈕:", label, text);
-                    
-                    if (label.includes('send') || text.includes('send') || 
-                        label.includes('submit') || text.includes('submit')) {
-                        console.log("[Gemini Content] ✅ 找到可能的發送按鈕!");
-                        sendButton = btn;
-                        break;
-                    }
+                if (label.includes('send') || text.includes('send') || 
+                    label.includes('submit') || text.includes('submit')) {
+                    console.log("[Gemini Content] ✅ 找到可能的發送按鈕!");
+                    console.log("[Gemini Content] 🔘 正在點擊按鈕");
+                    btn.click();
+                    console.log("[Gemini Content] ✅ 按鈕已點擊");
+                    return;
                 }
             }
 
-            if (sendButton) {
-                console.log("[Gemini Content] 🔘 找到發送按鈕，正在點擊");
-                sendButton.click();
-                console.log("[Gemini Content] ✅ 發送按鈕已點擊");
-            } else {
-                console.log("[Gemini Content] ❌ 找不到發送按鈕，嘗試按 Enter");
-                
-                // 焦點到輸入框
-                inputElement.focus();
-                
-                // 按 Enter
-                const enterEvent = new KeyboardEvent('keydown', {
+            // 最後的後備方案：按 Enter
+            console.log("[Gemini Content] ❌ 找不到發送按鈕，嘗試按 Enter");
+            inputElement.focus();
+            
+            const enterEvent = new KeyboardEvent('keydown', {
+                key: 'Enter',
+                code: 'Enter',
+                keyCode: 13,
+                which: 13,
+                bubbles: true,
+                cancelable: true,
+                shiftKey: false
+            });
+            inputElement.dispatchEvent(enterEvent);
+            console.log("[Gemini Content] 已觸發 keydown Enter");
+
+            setTimeout(() => {
+                const enterUpEvent = new KeyboardEvent('keyup', {
                     key: 'Enter',
                     code: 'Enter',
                     keyCode: 13,
                     which: 13,
                     bubbles: true,
-                    cancelable: true,
-                    shiftKey: false
+                    cancelable: true
                 });
-                inputElement.dispatchEvent(enterEvent);
-                console.log("[Gemini Content] 已觸發 keydown Enter");
-
-                setTimeout(() => {
-                    const enterUpEvent = new KeyboardEvent('keyup', {
-                        key: 'Enter',
-                        code: 'Enter',
-                        keyCode: 13,
-                        which: 13,
-                        bubbles: true,
-                        cancelable: true
-                    });
-                    inputElement.dispatchEvent(enterUpEvent);
-                    console.log("[Gemini Content] 已觸發 keyup Enter");
-                }, 50);
-            }
+                inputElement.dispatchEvent(enterUpEvent);
+                console.log("[Gemini Content] 已觸發 keyup Enter");
+            }, 50);
 
         }, 500);
 
