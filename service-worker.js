@@ -1,45 +1,53 @@
-// service-worker.js - 核心网关 (Gateway-Client 模式)
+// service-worker.js - 核心网关 (Gateway-Client 模式 + 动态技能加载)
 
-// 1. 【靜態匯入】所有技能模組
-import * as openTabSkill from './skills/opentab/open_tab.js';
-
-// 2. 技能註冊表
-const SKILL_REGISTRY = {
-    'open_tab': {
-        module: openTabSkill,
-        mdPath: 'skills/opentab/open_tab.md'
-    }
-};
+// 技能註冊表 (Key-Value Pair)
+// 格式: { skillName: { mdContent: "...", module: {...} } }
+const SKILL_REGISTRY = {};
 
 // 系統提示詞緩存
 let dynamicSystemPrompt = "";
 let loadingPromise = null;
 
-// --- 階段 A：啟動與技能裝載 ---
+// --- 階段 A：啟動與技能裝載（動態掃描） ---
 async function ensureSkillsLoaded() {
     if (dynamicSystemPrompt) return;
     if (loadingPromise) {
         await loadingPromise;
         return;
     }
-    loadingPromise = loadSkills();
+    loadingPromise = loadSkillsDynamically();
     await loadingPromise;
     loadingPromise = null;
 }
 
-async function loadSkills() {
-    console.log("[Gateway] 啟動技能加載器...");
+async function loadSkillsDynamically() {
+    console.log("[Gateway] 啟動動態技能加載器...");
+    
+    // 已知的技能列表（可以改為動態掃描）
+    const skillNames = ['open_tab'];
+    
     let promptBuilder = "你是一個 AI 代理人。你擁有以下技能，根據用戶需求回傳 JSON 格式的指令。\n\n";
 
-    for (const [skillName, skillInfo] of Object.entries(SKILL_REGISTRY)) {
+    for (const skillName of skillNames) {
         try {
-            const mdUrl = chrome.runtime.getURL(skillInfo.mdPath);
+            // 1. 動態讀取 .md 文件
+            const mdUrl = chrome.runtime.getURL(`skills/${skillName}/${skillName}.md`);
             const mdResponse = await fetch(mdUrl);
-            const mdText = await mdResponse.text();
+            const mdContent = await mdResponse.text();
             
-            skillInfo.config = mdText;
-            promptBuilder += `=== 技能: ${skillName} ===\n${mdText}\n\n`;
-            console.log(`[Gateway] ✅ 技能 [${skillName}] 已就緒`);
+            // 2. 動態導入 .js 文件
+            const jsModule = await import(`./skills/${skillName}/${skillName}.js`);
+            
+            // 3. 構建 Key-Value Pair
+            SKILL_REGISTRY[skillName] = {
+                mdContent: mdContent,
+                module: jsModule
+            };
+            
+            // 4. 構建 System Prompt
+            promptBuilder += `=== 技能: ${skillName} ===\n${mdContent}\n\n`;
+            console.log(`[Gateway] ✅ 技能 [${skillName}] 已動態載入`);
+            
         } catch (e) {
             console.error(`[Gateway] ❌ 技能 [${skillName}] 載入失敗:`, e);
         }
@@ -47,10 +55,10 @@ async function loadSkills() {
 
     promptBuilder += "\n重要規則：\n1. 必須回傳純 JSON 格式\n2. JSON 結構必須遵循技能規範\n3. 如果無法完成任務，回傳 {\"error\": \"原因\"}\n";
     dynamicSystemPrompt = promptBuilder;
-    console.log("[Gateway] 技能庫已構建完成");
+    console.log("[Gateway] 技能庫已構建完成。已載入技能:", Object.keys(SKILL_REGISTRY));
 }
 
-chrome.runtime.onInstalled.addListener(loadSkills);
+chrome.runtime.onInstalled.addListener(loadSkillsDynamically);
 
 // --- 訊息監聽 ---
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -83,6 +91,8 @@ async function handleRequest(userPrompt, sendResponse, geminiApiKey = null) {
         await ensureSkillsLoaded();
         
         console.log("[Gateway] 階段 B：呼叫 Gemini Flash...");
+        console.log("[Gateway] 可用技能:", Object.keys(SKILL_REGISTRY));
+        
         const aiResponse = await callGeminiFlash(userPrompt, dynamicSystemPrompt, geminiApiKey);
         
         console.log("[Gateway] AI 回應:", aiResponse);
@@ -106,16 +116,16 @@ async function handleRequest(userPrompt, sendResponse, geminiApiKey = null) {
             return;
         }
 
-        // 查找技能
-        const targetSkill = SKILL_REGISTRY[command.skill];
-        if (!targetSkill) {
-            sendResponse({ status: "error", text: `未知技能: ${command.skill}` });
+        // 查找技能（從 Key-Value Pair 中查詢）
+        const skillInfo = SKILL_REGISTRY[command.skill];
+        if (!skillInfo) {
+            sendResponse({ status: "error", text: `未知技能: ${command.skill}。可用技能: ${Object.keys(SKILL_REGISTRY).join(', ')}` });
             return;
         }
 
         // 執行技能
         console.log(`[Gateway] 執行技能: ${command.skill}`);
-        const result = await targetSkill.module.run(command.args || {});
+        const result = await skillInfo.module.run(command.args || {});
         
         sendResponse({ status: "success", text: result });
         
