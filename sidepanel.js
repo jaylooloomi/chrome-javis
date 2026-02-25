@@ -173,7 +173,7 @@ document.getElementById('micSwitch').addEventListener('click', () => {
         
         // 更新配置狀態
         if (configStatus) {
-            configStatus.textContent = '麥克風已常駐';
+            configStatus.textContent = '麥克風已常駐 • 停頓 0.5s 自動執行 • AI 模型 已載入';
         }
         if (listeningStatus) {
             listeningStatus.textContent = '待命中...';
@@ -191,7 +191,7 @@ document.getElementById('micSwitch').addEventListener('click', () => {
             configStatus.textContent = '麥克風已關閉';
         }
         if (listeningStatus) {
-            listeningStatus.textContent = '閒置中';
+            listeningStatus.textContent = '閒置中...';
         }
         
         console.log("[Speech] 停止常駐監聽");
