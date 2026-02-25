@@ -24,7 +24,11 @@
     "title.micToggle": "開啟/關閉語音",
     "status.listening.indicator": "🎤 正在聆聽...",
     "status.speech.error": "❌ 語音識別錯誤",
-    "error.summary.page": "❌ Summary Page 失敗"
+    "error.summary.page": "❌ Summary Page 失敗",
+    "notification": {
+      "skill.success": "技能已成功执行",
+      "skill.error": "技能执行失败"
+    }
   },
   "zh-CN": {
     "dialog.title": "系统消息",
@@ -145,8 +149,8 @@
     "status.speech.error": "❌ 音声認識エラー",
     "error.summary.page": "❌ Summary Page 失敗",
     "notification": {
-      "skill.success": "Skill executed successfully",
-      "skill.error": "Skill execution failed"
+      "skill.success": "スキルが正常に実行されました",
+      "skill.error": "スキルの実行に失敗しました"
     }
   },
   "ko-KR": {
