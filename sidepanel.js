@@ -263,10 +263,9 @@ document.getElementById('askGeminiBtn').addEventListener('click', async () => {
         const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
         console.log("[SidePanel] 當前活動標籤頁:", activeTab.id, activeTab.title, activeTab.url);
         
-        // 2. 獲取自訂提示詞（如果有輸入框的話）
-        const inputPromptElement = document.getElementById('inputPrompt');
-        const inputPrompt = inputPromptElement ? inputPromptElement.value : '';
-        console.log("[SidePanel] 自訂提示詞:", inputPrompt);
+        // 2. 獲取 userInput 作為 prompt
+        const prompt = document.getElementById('userInput').value;
+        console.log("[SidePanel] prompt:", prompt);
         
         document.getElementById('output').textContent = `⏳ 正在開啟 Gemini，準備貼上頁面內容...`;
         
@@ -281,7 +280,7 @@ document.getElementById('askGeminiBtn').addEventListener('click', async () => {
             }
             
             console.log("[SidePanel] 執行 summary_this_page 技能，傳遞 tabId:", activeTab.id);
-            const result = await skillFunc({ tabId: activeTab.id, url: activeTab.url }, inputPrompt);
+            const result = await skillFunc({ tabId: activeTab.id, url: activeTab.url, prompt: prompt }, prompt);
             
             console.log("[SidePanel] summary_this_page 執行成功:", result);
             document.getElementById('output').textContent = result;

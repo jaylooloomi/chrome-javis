@@ -72,7 +72,7 @@ input: User must explicitly ask to analyze/summarize the current page using Gemi
 
 output:
 Only respond with THIS EXACT JSON format when user explicitly asks to analyze/send current page to Gemini:
-{"skill": "summary_this_page", "args": {"tabId": "ACTIVE_TAB", "url": "ACTIVE_TAB_URL"}}
+{"skill": "summary_this_page", "args": {"tabId": "ACTIVE_TAB", "url": "ACTIVE_TAB_URL", "prompt": ""}}
 
 If user is NOT asking to analyze the page, respond with:
 {"error": "This request is not asking to analyze the page with Gemini"}
@@ -80,6 +80,7 @@ If user is NOT asking to analyze the page, respond with:
 IMPORTANT - Placeholder handling:
 - "ACTIVE_TAB" is a PLACEHOLDER that Service Worker will replace with the actual tabId
 - "ACTIVE_TAB_URL" is a PLACEHOLDER that Service Worker will replace with the actual page URL
+- "prompt" is the user's custom instruction/prompt for Gemini (entire user input, can be empty string "" if not provided)
 - DO NOT try to get the actual tabId/URL yourself
 - DO NOT hardcode any values
 - Always use these exact placeholders in your response

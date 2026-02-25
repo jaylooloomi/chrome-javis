@@ -69,7 +69,7 @@ input: User must explicitly ask to open a website with both verb and website nam
 
 output:
 Only respond with THIS EXACT JSON format when user explicitly asks to open a website:
-{"skill": "open_tab", "args": {"url": "https://..."}}
+{"skill": "open_tab", "args": {"url": "https://...", "prompt": "user input"}}
 
 If user is NOT asking to open a website, respond with:
 {"error": "This request is not asking to open a website"}
@@ -77,6 +77,7 @@ If user is NOT asking to open a website, respond with:
 IMPORTANT - args structure and URL conversion:
 - All parameters must be inside "args" object
 - "url" is the ACTUAL CONVERTED URL (not a placeholder)
+- "prompt" is the entire user input (included for consistency with other skills, but not used by open_tab)
 - You must convert website names to full URLs using the rules below
 
 URL conversion rules:
