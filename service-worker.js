@@ -301,10 +301,10 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
         // 根據技能的執行環境選擇執行方式
         if (skillInfo.runInPageContext) {
             // 在網頁前端執行
-            await runSkillInTabContext(command.skill, skillInfo, command, sendResponse);
+            await runSkillInTabContext(command.skill, skillInfo, command.args, sendResponse);
         } else {
             // 在 Service Worker 中直接執行
-            await runSkillInServiceWorker(command.skill, skillInfo, command, sendResponse);
+            await runSkillInServiceWorker(command.skill, skillInfo, command.args, sendResponse);
         }
         
     } catch (error) {
@@ -317,6 +317,7 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
 async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse) {
     try {
         console.log(`[Gateway] 將技能轉發給 SidePanel 執行: ${skillName}`);
+        console.log(`[Gateway] 傳遞的參數:`, args);
         
         // 替換佔位符：將 ACTIVE_TAB 和 ACTIVE_TAB_URL 替換為實際的 tabId 和 url
         if (args.tabId === "ACTIVE_TAB" || args.url === "ACTIVE_TAB_URL") {
