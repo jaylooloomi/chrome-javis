@@ -1,8 +1,8 @@
-// who_you_are.js - 在 SidePanel 中執行的技能
+// who_are_you.js - 在 SidePanel 中執行的技能
 // 介紹 OmniAssistant 和自己的身份
 
-export async function who_you_are(args) {
-    console.log("[Who You Are Skill] 啟動");
+export async function who_are_you(args) {
+    console.log("[Who Are You Skill] 啟動");
 
     try {
         const introduction = `
@@ -47,11 +47,11 @@ export async function who_you_are(args) {
 - "介紹你的功能"
         `.trim();
 
-        console.log("[Who You Are Skill] 成功返回介紹");
+        console.log("[Who Are You Skill] 成功返回介紹");
         return introduction;
 
     } catch (error) {
-        console.error("[Who You Are Skill] 執行失敗:", error);
+        console.error("[Who Are You Skill] 執行失敗:", error);
         throw new Error(`介紹自己失敗: ${error.message}`);
     }
 }

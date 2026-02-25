@@ -13,8 +13,8 @@
       "runInPageContext": false
     },
     {
-      "name": "who_you_are",
-      "folder": "who_you_are",
+      "name": "who_are_you",
+      "folder": "who_are_you",
       "description": "介绍 OmniAssistant 的功能和能力",
       "runInPageContext": false
     }
