@@ -141,33 +141,52 @@ function pasteAndSubmit(text) {
         // 4. 立即尋找並點擊發送按鈕
         result.logs.push("正在尋找發送按鈕...");
         
-        // 嘗試多個發送按鈕選擇器
-        const sendButtonSelectors = [
-            // 查找包含 send-button-icon 的按鈕
-            'button:has(.send-button-icon)',
-            'button:has(mat-icon[data-mat-icon-name="send"])',
-            // 標準選擇器
-            'button[aria-label*="Send"]',
-            'button[aria-label*="send"]',
-            'button[data-testid*="send"]',
-            '[aria-label="Send message"]',
-            '[aria-label="send message"]',
-            'button.send-button',
-            'button[type="submit"]',
-            'div[role="button"][data-testid*="send"]'
-        ];
-        
+        // 方法 1: 直接找 send-button-icon 元素，然後找它的父按鈕
         let sendButton = null;
-        for (const selector of sendButtonSelectors) {
-            try {
-                const btn = document.querySelector(selector);
-                if (btn && btn.offsetHeight > 0) {
-                    sendButton = btn;
-                    result.logs.push("✅ 找到發送按鈕（選擇器: " + selector + "）");
+        
+        const sendIcon = document.querySelector('.send-button-icon');
+        if (sendIcon) {
+            result.logs.push("✅ 找到 send-button-icon 元素");
+            // 沿著父節點往上找按鈕
+            let current = sendIcon;
+            for (let i = 0; i < 10; i++) {
+                current = current.parentElement;
+                if (!current) break;
+                
+                if (current.tagName === 'BUTTON' || current.getAttribute('role') === 'button') {
+                    sendButton = current;
+                    result.logs.push("✅ 找到父按鈕: " + current.tagName);
                     break;
                 }
-            } catch (e) {
-                result.logs.push("⚠️ 選擇器 " + selector + " 不支持: " + e.message);
+            }
+        }
+        
+        // 方法 2: 嘗試其他選擇器
+        if (!sendButton) {
+            const sendButtonSelectors = [
+                'button[aria-label*="Send"]',
+                'button[aria-label*="send"]',
+                '[aria-label="Send message"]',
+                '[aria-label="send message"]',
+                'button.send-button',
+                'button[data-testid*="send"]',
+                'button[type="submit"]',
+                'div[role="button"][data-testid*="send"]',
+                // 查找所有 button，篩選出包含 mat-icon send 的
+                'button[type="button"]'
+            ];
+            
+            for (const selector of sendButtonSelectors) {
+                try {
+                    const btn = document.querySelector(selector);
+                    if (btn && btn.offsetHeight > 0) {
+                        sendButton = btn;
+                        result.logs.push("✅ 找到發送按鈕（選擇器: " + selector + "）");
+                        break;
+                    }
+                } catch (e) {
+                    result.logs.push("⚠️ 選擇器 " + selector + " 不支持: " + e.message);
+                }
             }
         }
         
