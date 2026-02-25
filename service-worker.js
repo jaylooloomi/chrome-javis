@@ -214,17 +214,21 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
             aiResponse = await callGeminiFlash(userPrompt, dynamicSystemPrompt, configData.gemini);
         }
         
-        console.log("[Gateway] AI 原始回應:", aiResponse);
+        console.log("[Gateway] AI 原始回應 (長度:", aiResponse.length, "):", aiResponse);
+        console.log("[Gateway] AI 回應前 200 字:", aiResponse.substring(0, 200));
+        console.log("[Gateway] AI 回應後 200 字:", aiResponse.substring(Math.max(0, aiResponse.length - 200)));
         
         // 解析 AI 回應
         let command;
         try {
             const cleanJson = aiResponse.replace(/```json|```/g, '').trim();
+            console.log("[Gateway] 清理後的 JSON (長度:", cleanJson.length, "):", cleanJson);
             command = JSON.parse(cleanJson);
-            console.log("[Gateway] 解析後的命令:", command);
+            console.log("[Gateway] ✅ 成功解析命令:", JSON.stringify(command));
         } catch (e) {
-            console.error("[Gateway] JSON 解析失敗:", e);
+            console.error("[Gateway] ❌ JSON 解析失敗:", e.message);
             console.error("[Gateway] 原始回應:", aiResponse);
+            console.error("[Gateway] 嘗試清理後的文本:", aiResponse.replace(/```json|```/g, '').trim());
             sendResponse({ status: "error", text: `AI 回應格式錯誤: ${aiResponse}` });
             return;
         }
@@ -232,10 +236,7 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
         // 驗證和修復：檢查是否為空對象或缺少必要字段
         if (!command.skill || Object.keys(command).length === 0) {
             console.warn("[Gateway] ⚠️  檢測到空或無效的 AI 回應，嘗試進行故障排除...");
-            console.warn("[Gateway] 原始 AI 回應內容:", aiResponse);
-            sendResponse({ status: "error", text: `AI 未生成有效的命令。回應: ${aiResponse}` });
-            return;
-        }
+            console.warn("[Gateway] 原始 AI 回應內容:", aiResponse);\n            \n            // 嘗試從用戶提示詞中提取 URL (最後的手段)\n            console.warn(\"[Gateway] 嘗試從用戶提示詞提取關鍵字...\");\n            const websiteKeywords = ['google', 'youtube', 'github', 'twitter', 'linkedin', 'facebook', 'instagram'];\n            const userPromptLower = userPrompt.toLowerCase();\n            const matchedWebsite = websiteKeywords.find(keyword => userPromptLower.includes(keyword));\n            \n            if (matchedWebsite) {\n                console.warn(`[Gateway] 🔧 偵測到網站關鍵字: ${matchedWebsite}，使用緊急回退...`);\n                command = {\n                    skill: \"open_tab\",\n                    url: `https://${matchedWebsite}.com`,\n                    args: {}\n                };\n                console.warn(\"[Gateway] ✅ 緊急回退成功，使用命令:\", command);\n            } else {\n                console.error(\"[Gateway] ❌ 無法從提示詞中提取網站資訊\");\n                sendResponse({ status: \"error\", text: `AI 未生成有效的命令。回應: ${aiResponse}` });\n                return;\n            }\n        }
 
         console.log("[Gateway] 階段 C：調度技能...");
         
@@ -393,15 +394,20 @@ async function callOllama(prompt, systemPrompt, ollamaConfig) {
 
         const url = `${ollamaConfig.baseUrl}/api/generate`;
         
+        // 强制 Ollama 返回 JSON 格式
+        const forcedPrompt = `${systemPrompt}\n\n用戶指令: ${prompt}\n\n請立即回應以下 JSON 格式，不要有任何其他文字或解釋:\n{"skill": "...", ...}`;
+        console.log("[Ollama] 發送的提示 (長度:", forcedPrompt.length, "字)")
+        
         const response = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 model: ollamaConfig.model || "gemma2:2b",
-                prompt: `${systemPrompt}\n\n用戶指令: ${prompt}`,
-                temperature: ollamaConfig.temperature || 0.3,
-                num_predict: ollamaConfig.numPredict || 2048,
-                stream: false
+                prompt: forcedPrompt,
+                temperature: ollamaConfig.temperature || 0.1,  // 降低温度以获得更稳定的 JSON
+                num_predict: ollamaConfig.numPredict || 500,    // 减少生成长度，避免超过 token 限制
+                stream: false,
+                system: "你是一個 JSON 格式生成器。只生成有效的 JSON，不要生成任何其他文字。"
             })
         });
         
@@ -413,9 +419,12 @@ async function callOllama(prompt, systemPrompt, ollamaConfig) {
         const data = await response.json();
         
         if (data.response) {
-            console.log("[Ollama] ✅ 成功");
+            console.log("[Ollama] ✅ 收到回應 (長度:", data.response.length, "字)");
+            console.log("[Ollama] 原始回應:", data.response);
+            console.log("[Ollama] 回應前 300 字:", data.response.substring(0, 300));
             return data.response;
         } else {
+            console.error("[Ollama] ❌ 回應數據:", JSON.stringify(data));
             throw new Error("Ollama API 回應缺少預期的數據");
         }
     } catch (e) {
