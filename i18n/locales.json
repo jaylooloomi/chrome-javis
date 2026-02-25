@@ -175,6 +175,7 @@
   "notification": {
     "skill.success": "스킬이 성공적으로 실행되었습니다",
     "skill.error": "스킬 실행에 실패했습니다"
+  },
   "fr-FR": {
     "dialog.title": "Message Système",
     "dialog.description": "Votre soutien est ma plus grande motivation. J'espère que cet outil peut vous aider. Si vous l'aimez, s'il vous plaît considérez me soutenir. 💝",
