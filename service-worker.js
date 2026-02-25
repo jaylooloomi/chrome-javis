@@ -3,6 +3,10 @@
 
 console.log("[Gateway] 🚀 Service Worker 已加載");
 
+// ======== 靜態導入 Service Worker 技能 ========
+// 技能的 IIFE 會在導入時自動執行並向 self.SERVICE_WORKER_SKILLS 註冊
+import './skills/opentab/open_tab.js';
+
 // ======== 技能註冊表和快取 ========
 const SKILL_REGISTRY = {};
 
@@ -18,30 +22,20 @@ const SKILL_MAPPINGS = {};
 // 所有 Service Worker 技能在此定義（掛載到 self 全域上下文）
 self.SERVICE_WORKER_SKILLS = {};
 
-// --- 按需加載技能 ---
+// --- 執行已加載的 Service Worker 技能 ---
+// 所有 Service Worker 技能通過靜態 import 在啟動時加載
 async function loadAndRunSkillInServiceWorker(skillName, skillFolder, args) {
     try {
-        // 檢查是否已經加載過
-        if (!self.SERVICE_WORKER_SKILLS[skillName]) {
-            console.log(`[Gateway] 正在加載技能: ${skillName}`);
-            
-            // 使用原生 import()，避免 CSP eval 問題
-            // IIFE 在模組加載時會自動向 self.SERVICE_WORKER_SKILLS 註冊
-            const skillPath = `./skills/${skillFolder}/${skillName}.js`;
-            await import(skillPath);
-            
-            console.log(`[Gateway] ✅ 技能 ${skillName} 已加載`);
-        }
-        
-        // 執行技能
+        // 檢查技能是否已註冊
         const skillFunc = self.SERVICE_WORKER_SKILLS[skillName];
         if (typeof skillFunc === 'function') {
+            console.log(`[Gateway] 執行技能: ${skillName}`);
             return await skillFunc(args);
         } else {
-            throw new Error(`技能 ${skillName} 的執行函數未加載`);
+            throw new Error(`技能 ${skillName} 未加載或未註冊`);
         }
     } catch (error) {
-        console.error(`[Gateway] 加載/執行技能失敗 [${skillName}]:`, error);
+        console.error(`[Gateway] 執行技能失敗 [${skillName}]:`, error);
         throw error;
     }
 }
