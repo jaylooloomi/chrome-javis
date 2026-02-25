@@ -1,6 +1,8 @@
 // service-worker.js - 核心网关 (Gateway-Client 模式)
 // 唯一的邏輯中樞 - 所有操作在此執行
 
+console.log("[Gateway] 🚀 Service Worker 已加載");
+
 // ======== 技能註冊表和快取 ========
 const SKILL_REGISTRY = {};
 
@@ -144,9 +146,9 @@ async function preloadServiceWorkerSkill(skillName, skillFolder) {
 chrome.runtime.onInstalled.addListener(loadSkillsDynamically);
 
 // --- 訊息監聽 ---
+console.log("[Gateway] 📡 註冊消息監聽器...");
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log("[Gateway] ✉️  收到訊息:", request.action);
-    console.log("[Gateway] 完整訊息內容:", JSON.stringify(request, null, 2));
+    console.log("[Gateway] ✉️  收到訊息:", request.action);\n    console.log("[Gateway] 完整訊息內容:", JSON.stringify(request, null, 2));
     console.log("[Gateway] 訊息中的 config:", request.config ? '存在' : '❌ 不存在');\n    try {
         if (request.action === "ask_ai") {
             console.log("[Gateway] 轉發給 handleRequest，config 類型:", typeof request.config);
