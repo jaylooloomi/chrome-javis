@@ -1,5 +1,5 @@
-// open_tab.js - Service Worker 中執行的技能
-// 此文件直接在 service-worker 中呼叫，無需在網頁前端注入
+// open_tab_service.js - 在 sidepanel 上下文中執行的技能
+// 此文件由 skills-helper.js 動態加載和執行
 
 async function runOpenTabSkill(args) {
     console.log("[Open Tab Skill] 啟動，接收到參數:", args);
@@ -11,7 +11,7 @@ async function runOpenTabSkill(args) {
             throw new Error("未提供 URL");
         }
         
-        // 呼叫 Chrome API 開啟分頁
+        // 通過 Chrome API 開啟分頁（在 sidepanel 上下文中可以訪問 chrome API）
         const tab = await chrome.tabs.create({ url: url });
         
         console.log("[Open Tab Skill] 成功開啟分頁，ID:", tab.id);

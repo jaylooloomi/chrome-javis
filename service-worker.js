@@ -1,27 +1,6 @@
 // service-worker.js - 核心网关 (Gateway-Client 模式)
 // 方案 B：使用 chrome.scripting.executeScript 在網頁前端執行技能
-
-// ======== 靜態導入 Service Worker 技能 ========
-// 註：必須使用靜態 import，Service Worker 不支持動態 import()
-
-// Service Worker 技能執行函數映射表
-const SERVICE_WORKER_SKILLS = {
-    open_tab: async (args) => {
-        console.log("[Open Tab Skill] 啟動，接收到參數:", args);
-        try {
-            const url = args.url;
-            if (!url) {
-                throw new Error("未提供 URL");
-            }
-            const tab = await chrome.tabs.create({ url: url });
-            console.log("[Open Tab Skill] 成功開啟分頁，ID:", tab.id);
-            return `成功開啟分頁 (ID: ${tab.id})：${url}`;
-        } catch (error) {
-            console.error("[Open Tab Skill] 錯誤:", error);
-            throw new Error(`開啟分頁失敗：${error.message}`);
-        }
-    }
-};
+// Service Worker 技能通過 sidepanel.js 中的 skills-helper.js 動態加載執行
 
 // ======== 技能註冊表和快取 ========
 const SKILL_REGISTRY = {};
@@ -87,27 +66,17 @@ async function loadSkillsDynamically() {
             }
             const mdContent = await mdResponse.text();
             
-            // 2. 如果是 Service Worker 執行的技能，從 SERVICE_WORKER_SKILLS 獲取執行函數
-            let skillFunction = null;
-            if (!skillConfig.runInPageContext) {
-                if (!SERVICE_WORKER_SKILLS[skillName]) {
-                    throw new Error(`未找到 Service Worker 技能 ${skillName} 的執行函數`);
-                }
-                skillFunction = SERVICE_WORKER_SKILLS[skillName];
-                console.log(`[Gateway] ✅ 已綁定 Service Worker 技能函數: ${skillName}`);
-            }
-            
-            // 3. 構建 Key-Value Pair
+            // 2. 構建 Key-Value Pair（.js 文件在需要時由 skills-helper.js 動態加載）
             SKILL_REGISTRY[skillName] = {
                 mdContent: mdContent,
                 folder: skillConfig.folder,
-                runInPageContext: skillConfig.runInPageContext,
-                skillFunction: skillFunction  // Service Worker 技能的執行函數
+                runInPageContext: skillConfig.runInPageContext
+                // 不再存儲 skillFunction - 將在執行時動態加載
             };
             
-            // 4. 構建 System Prompt
+            // 3. 構建 System Prompt
             promptBuilder += `=== 技能: ${skillName} ===\n${mdContent}\n\n`;
-            console.log(`[Gateway] ✅ 技能 [${skillName}] 已載入 (在${skillConfig.runInPageContext ? '網頁前端' : 'Service Worker'}執行)`);
+            console.log(`[Gateway] ✅ 技能 [${skillName}] 已加載 (在${skillConfig.runInPageContext ? '網頁前端' : 'sidepanel 中'}執行)`);
             
         } catch (e) {
             console.error(`[Gateway] ❌ 技能 [${skillName}] 載入失敗:`, e);
@@ -226,20 +195,26 @@ async function handleRequest(userPrompt, sendResponse, geminiApiKey = null) {
     }
 }
 
-// --- 在 Service Worker 中執行技能 ---
+// --- 在 sidepanel 中動態執行 Service Worker 技能 ---
 async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse) {
     try {
-        if (!skillInfo.skillFunction) {
-            throw new Error(`技能 ${skillName} 的執行函數未加載`);
+        console.log(`[Gateway] 在 sidepanel 中動態執行技能: ${skillName}`);
+        
+        // 通過消息發送給 sidepanel（skills-helper.js 會處理）
+        const response = await chrome.runtime.sendMessage({
+            action: "execute_skill_in_helper",
+            skillName: skillName,
+            skillFolder: skillInfo.folder,
+            args: args
+        });
+        
+        console.log(`[Gateway] 技能 ${skillName} 執行結果:`, response);
+        
+        if (response.status === "success") {
+            sendResponse({ status: "success", text: response.result });
+        } else {
+            sendResponse({ status: "error", text: `技能執行失敗: ${response.error}` });
         }
-        
-        console.log(`[Gateway] 在 Service Worker 中執行技能: ${skillName}`);
-        
-        // 直接呼叫技能的執行函數
-        const result = await skillInfo.skillFunction(args);
-        console.log(`[Gateway] 技能 ${skillName} 執行結果:`, result);
-        
-        sendResponse({ status: "success", text: result });
         
     } catch (error) {
         console.error(`[Gateway] 技能執行失敗:`, error);
