@@ -156,36 +156,61 @@ function pasteAndSubmit(text) {
         
         let sendButton = null;
         
-        // 方法：尋找所有按鈕，根據特徵找到發送按鈕
-        const allButtons = document.querySelectorAll('button');
-        result.logs.push("📍 開始搜尋，頁面有 " + allButtons.length + " 個 button");
+        // 方法1：直接用 class 名稱查找（最可靠）
+        sendButton = document.querySelector('button.send-button');
+        if (sendButton) {
+            result.logs.push("✅ 用 'button.send-button' 找到發送按鈕");
+        }
         
-        for (let btn of allButtons) {
-            const ariaLabel = btn.getAttribute('aria-label') || '';
-            const dataTestId = btn.getAttribute('data-testid') || '';
-            const className = btn.className || '';
-            const innerHTML = btn.innerHTML || '';
+        // 方法2：如果方法1失敗，尋找所有按鈕並檢查特徵
+        if (!sendButton) {
+            const allButtons = document.querySelectorAll('button');
+            result.logs.push("📍 開始搜尋，頁面有 " + allButtons.length + " 個 button");
             
-            // 檢查是否包含 send-button-icon
-            if (innerHTML.includes('send-button-icon') || 
-                ariaLabel.toLowerCase().includes('send') ||
-                dataTestId.includes('send')) {
-                sendButton = btn;
-                result.logs.push("✅ 找到發送按鈕");
-                result.logs.push("   aria-label: " + ariaLabel);
-                result.logs.push("   data-testid: " + dataTestId);
-                result.logs.push("   className: " + className);
-                break;
+            for (let btn of allButtons) {
+                const ariaLabel = btn.getAttribute('aria-label') || '';
+                const dataTestId = btn.getAttribute('data-testid') || '';
+                const className = btn.className || '';
+                const innerHTML = btn.innerHTML || '';
+                
+                // 檢查 className 是否包含 send-button
+                if (className.includes('send-button')) {
+                    sendButton = btn;
+                    result.logs.push("✅ 用 className 找到發送按鈕");
+                    result.logs.push("   className: " + className);
+                    break;
+                }
+                
+                // 檢查是否包含 send-button-icon 圖標
+                if (innerHTML.includes('send-button-icon')) {
+                    sendButton = btn;
+                    result.logs.push("✅ 用 send-button-icon 找到發送按鈕");
+                    result.logs.push("   className: " + className);
+                    break;
+                }
+                
+                // 檢查 aria-label 或 data-testid
+                if (ariaLabel.toLowerCase().includes('send') ||
+                    dataTestId.toLowerCase().includes('send')) {
+                    sendButton = btn;
+                    result.logs.push("✅ 用 aria-label/data-testid 找到發送按鈕");
+                    result.logs.push("   aria-label: " + ariaLabel);
+                    result.logs.push("   data-testid: " + dataTestId);
+                    break;
+                }
             }
         }
         
         // 如果還是沒找到，列出所有 buttons 以供調試
         if (!sendButton) {
-            result.logs.push("❌ 透過特徵未找到發送按鈕，列出所有 buttons:");
+            result.logs.push("❌ 未找到發送按鈕，列出所有 buttons 的詳細資訊:");
+            const allButtons = document.querySelectorAll('button');
             allButtons.forEach((btn, idx) => {
                 const label = btn.getAttribute('aria-label') || '(無)';
                 const testId = btn.getAttribute('data-testid') || '(無)';
-                result.logs.push("  [" + idx + "] aria-label=" + label + " | data-testid=" + testId);
+                const classes = btn.className || '(無)';
+                result.logs.push("  [" + idx + "] classes=" + classes);
+                result.logs.push("        aria-label=" + label + " | data-testid=" + testId);
             });
         }
         
