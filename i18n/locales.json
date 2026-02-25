@@ -26,9 +26,11 @@
     "status.speech.error": "❌ 語音識別錯誤",
     "error.summary.page": "❌ Summary Page 失敗",
     "notification": {
-      "skill.success": "技能已成功執行",
-      "skill.error": "技能執行失敗",
-      "title": "⚙️ AI 助手"
+      "title": "⚙️ AI 助手",
+      "skill": {
+        "success": "技能已成功執行",
+        "error": "技能執行失敗"
+      }
     }
   },
   "zh-CN": {
@@ -57,9 +59,11 @@
     "status.speech.error": "❌ 语音识别错误",
     "error.summary.page": "❌ Summary Page 失败",
     "notification": {
-      "skill.success": "技能已成功执行",
-      "skill.error": "技能执行失败",
-      "title": "⚙️ AI 助手"
+      "title": "⚙️ AI 助手",
+      "skill": {
+        "success": "技能已成功执行",
+        "error": "技能执行失败"
+      }
     }
   },
   "en-US": {
@@ -89,9 +93,11 @@
     "status.speech.error": "❌ Speech Recognition Error",
     "error.summary.page": "❌ Summary Page Failed",
     "notification": {
-      "skill.success": "Skill executed successfully",
-      "skill.error": "Skill execution failed",
-      "title": "⚙️ AI Assistant"
+      "title": "⚙️ AI Assistant",
+      "skill": {
+        "success": "Skill executed successfully",
+        "error": "Skill execution failed"
+      }
     }
   },
   "en-GB": {
@@ -121,8 +127,11 @@
     "status.speech.error": "❌ Speech Recognition Error",
     "error.summary.page": "❌ Summary Page Failed",
     "notification": {
-      "skill.success": "Skill executed successfully",
-      "skill.error": "Skill execution failed"
+      "title": "",
+      "skill": {
+        "success": "Skill executed successfully",
+        "error": "Skill execution failed"
+      }
     }
   },
   "ja-JP": {
@@ -152,9 +161,11 @@
     "status.speech.error": "❌ 音声認識エラー",
     "error.summary.page": "❌ Summary Page 失敗",
     "notification": {
-      "skill.success": "スキルが正常に実行されました",
-      "skill.error": "スキルの実行に失敗しました",
-      "title": "⚙️ AI アシスタント"
+      "title": "⚙️ AI アシスタント",
+      "skill": {
+        "success": "スキルが正常に実行されました",
+        "error": "スキルの実行に失敗しました"
+      }
     }
   },
   "ko-KR": {
@@ -184,9 +195,11 @@
     "status.speech.error": "❌ 음성 인식 오류",
     "error.summary.page": "❌ Summary Page 실패",
     "notification": {
-      "skill.success": "스킬이 성공적으로 실행되었습니다",
-      "skill.error": "스킬 실행에 실패했습니다",
-      "title": "⚙️ AI 어시스턴트"
+      "title": "⚙️ AI 어시스턴트",
+      "skill": {
+        "success": "스킬이 성공적으로 실행되었습니다",
+        "error": "스킬 실행에 실패했습니다"
+      }
     }
   },
   "fr-FR": {
@@ -216,9 +229,11 @@
     "status.speech.error": "❌ Erreur de Reconnaissance Vocale",
     "error.summary.page": "❌ Summary Page Échoué",
     "notification": {
-      "skill.success": "Compétence exécutée avec succès",
-      "skill.error": "Échec de l'exécution de la compétence",
-      "title": "⚙️ Assistant IA"
+      "title": "⚙️ Assistant IA",
+      "skill": {
+        "success": "Compétence exécutée avec succès",
+        "error": "Échec de l'exécution de la compétence"
+      }
     }
   },
   "de-DE": {
@@ -248,9 +263,11 @@
     "status.speech.error": "❌ Spracherkennungsfehler",
     "error.summary.page": "❌ Summary Page Fehler",
     "notification": {
-      "skill.success": "Fähigkeit erfolgreich ausgeführt",
-      "skill.error": "Fehler bei der Ausführung der Fähigkeit",
-      "title": "⚙️ KI-Assistent"
+      "title": "⚙️ KI-Assistent",
+      "skill": {
+        "success": "Fähigkeit erfolgreich ausgeführt",
+        "error": "Fehler bei der Ausführung der Fähigkeit"
+      }
     }
   },
   "es-ES": {
@@ -280,9 +297,11 @@
     "status.speech.error": "❌ Error de Reconocimiento de Voz",
     "error.summary.page": "❌ Summary Page Fracasado",
     "notification": {
-      "skill.success": "Habilidad ejecutada correctamente",
-      "skill.error": "Error al ejecutar la habilidad",
-      "title": "⚙️ Asistente IA"
+      "title": "⚙️ Asistente IA",
+      "skill": {
+        "success": "Habilidad ejecutada correctamente",
+        "error": "Error al ejecutar la habilidad"
+      }
     }
   },
   "it-IT": {
@@ -312,9 +331,11 @@
     "status.speech.error": "❌ Errore di Riconoscimento Vocale",
     "error.summary.page": "❌ Summary Page Fallito",
     "notification": {
-      "skill.success": "Abilità eseguita con successo",
-      "skill.error": "Errore nell'esecuzione dell'abilità",
-      "title": "⚙️ Assistente IA"
+      "title": "⚙️ Assistente IA",
+      "skill": {
+        "success": "Abilità eseguita con successo",
+        "error": "Errore nell'esecuzione dell'abilità"
+      }
     }
   },
   "pt-BR": {
@@ -344,9 +365,11 @@
     "status.speech.error": "❌ Erro de Reconhecimento de Fala",
     "error.summary.page": "❌ Summary Page Falhou",
     "notification": {
-      "skill.success": "Habilidade executada com sucesso",
-      "skill.error": "Falha na execução da habilidade",
-      "title": "⚙️ Assistente IA"
+      "title": "⚙️ Assistente IA",
+      "skill": {
+        "success": "Habilidade executada com sucesso",
+        "error": "Falha na execução da habilidade"
+      }
     }
   },
   "ru-RU": {
@@ -376,9 +399,11 @@
     "status.speech.error": "❌ Ошибка Распознавания Речи",
     "error.summary.page": "❌ Summary Page Ошибка",
     "notification": {
-      "skill.success": "Навык успешно выполнен",
-      "skill.error": "Ошибка при выполнении навыка",
-      "title": "⚙️ ИИ Помощник"
+      "title": "⚙️ ИИ Помощник",
+      "skill": {
+        "success": "Навык успешно выполнен",
+        "error": "Ошибка при выполнении навыка"
+      }
     }
   }
 }
