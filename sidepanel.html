@@ -356,13 +356,135 @@
         height: 100%;
         margin: 5px;
         background: transparent;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* ======== 系統訊息對話框 ======== */
+      .system-message-dialog {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        padding: 32px 24px;
+        background: var(--card-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        text-align: center;
+      }
+
+      .system-message-dialog .close-btn {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: transparent;
+        border: none;
+        color: var(--text-sub);
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.3s ease;
+      }
+
+      .system-message-dialog .close-btn:hover {
+        color: var(--text-main);
+      }
+
+      .system-message-dialog .icon-container {
+        width: 80px;
+        height: 80px;
+        background: rgba(56, 189, 248, 0.1);
+        border: 2px solid rgba(56, 189, 248, 0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+        font-size: 40px;
+      }
+
+      .system-message-dialog .title {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 16px;
+        letter-spacing: 0.5px;
+      }
+
+      .system-message-dialog .description {
+        font-size: 12px;
+        color: var(--text-sub);
+        line-height: 1.6;
+        margin-bottom: 24px;
+        max-width: 280px;
+      }
+
+      .system-message-dialog .question {
+        font-size: 12px;
+        color: var(--accent-blue);
+        font-weight: 500;
+        margin-bottom: 16px;
+      }
+
+      .system-message-dialog .action-btn {
+        background: linear-gradient(135deg, #ff9500, #ff6b00);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 16px;
+        letter-spacing: 0.5px;
+      }
+
+      .system-message-dialog .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+      }
+
+      .system-message-dialog .skip-link {
+        font-size: 11px;
+        color: var(--text-sub);
+        text-decoration: none;
+        cursor: pointer;
+        transition: color 0.3s ease;
+      }
+
+      .system-message-dialog .skip-link:hover {
+        color: var(--accent-blue);
       }
     </style>
   </head>
   <body>
     <!-- 上方 Panel -->
     <div class="top-panel-container">
-      <div class="top-inner-panel-container"></div>
+      <div class="top-inner-panel-container">
+        <div class="system-message-dialog">
+          <button class="close-btn">✕</button>
+          <div class="icon-container">💖</div>
+          <div class="title">系統訊息</div>
+          <div class="description">
+            一路上有你的陪伴，是我能持續做的最大動力，這份單純的感謝與喜歡來自我真摯的心，希望這項目能幫助到你，如果你認同我的創作價值，或是喜歡在我的內容中獲得一點啟發，我，一點點發發呆決決定。
+          </div>
+          <div class="question">喜歡這個工具嗎?</div>
+          <button class="action-btn">👉 贊助一杯咖啡 ☕</button>
+          <a class="skip-link">跳過並開始分析 →</a>
+        </div>
+      </div>
     </div>
 
     <div class="panel-container">
