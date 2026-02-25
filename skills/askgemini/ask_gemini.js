@@ -1,7 +1,7 @@
 // ask_gemini.js - 在 SidePanel 中執行的技能
 // 快速將文字發送到 Google Gemini
 
-export async function ask_gemini(args) {
+export async function ask_gemini(args,inputPrompt) {
     console.log("[Ask Gemini Skill] 啟動，接收到參數:", args);
 
     try {
@@ -48,7 +48,7 @@ export async function ask_gemini(args) {
             const scriptResults = await chrome.scripting.executeScript({
                 target: { tabId: tab.id },
                 function: pasteAndSubmit,
-                args: [pageMarkdown]
+                args: [pageMarkdown + "\n"+inputPrompt]  // 可以在這裡添加一些提示語，引導 Gemini 進行更好的總結
             });
             
             // 詳細輸出結果
