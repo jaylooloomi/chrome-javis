@@ -20,7 +20,10 @@
     "button.run": "執行",
     "button.gemini": "💡 Ask Gemini",
     "button.options": "打開選項頁面",
-    "title.micToggle": "開啟/關閉語音"
+    "title.micToggle": "開啟/關閉語音",
+    "status.listening.indicator": "🎤 正在聆聽...",
+    "status.speech.error": "❌ 語音識別錯誤",
+    "error.summary.page": "❌ Summary Page 失敗"
   },
   "zh-CN": {
     "dialog.title": "系统消息",
@@ -43,7 +46,10 @@
     "button.run": "执行",
     "button.gemini": "💡 Ask Gemini",
     "button.options": "打开选项页面",
-    "title.micToggle": "开启/关闭语音"
+    "title.micToggle": "开启/关闭语音",
+    "status.listening.indicator": "🎤 正在聆听...",
+    "status.speech.error": "❌ 语音识别错误",
+    "error.summary.page": "❌ Summary Page 失败"
   },
   "en-US": {
     "dialog.title": "System Message",
@@ -66,7 +72,10 @@
     "button.run": "Execute",
     "button.gemini": "💡 Ask Gemini",
     "button.options": "Open Options",
-    "title.micToggle": "Toggle Microphone"
+    "title.micToggle": "Toggle Microphone",
+    "status.listening.indicator": "🎤 Listening...",
+    "status.speech.error": "❌ Speech Recognition Error",
+    "error.summary.page": "❌ Summary Page Failed"
   },
   "en-GB": {
     "dialog.title": "System Message",
@@ -89,7 +98,10 @@
     "button.run": "Execute",
     "button.gemini": "💡 Ask Gemini",
     "button.options": "Open Options",
-    "title.micToggle": "Toggle Microphone"
+    "title.micToggle": "Toggle Microphone",
+    "status.listening.indicator": "🎤 Listening...",
+    "status.speech.error": "❌ Speech Recognition Error",
+    "error.summary.page": "❌ Summary Page Failed"
   },
   "ja-JP": {
     "dialog.title": "システムメッセージ",
@@ -112,7 +124,10 @@
     "button.run": "実行",
     "button.gemini": "💡 Ask Gemini",
     "button.options": "オプションを開く",
-    "title.micToggle": "マイクを切り替える"
+    "title.micToggle": "マイクを切り替える",
+    "status.listening.indicator": "🎤 リッスン中...",
+    "status.speech.error": "❌ 音声認識エラー",
+    "error.summary.page": "❌ Summary Page 失敗"
   },
   "ko-KR": {
     "dialog.title": "시스템 메시지",
@@ -135,7 +150,10 @@
     "button.run": "실행",
     "button.gemini": "💡 Ask Gemini",
     "button.options": "옵션 열기",
-    "title.micToggle": "마이크 전환"
+    "title.micToggle": "마이크 전환",
+    "status.listening.indicator": "🎤 청취 중...",
+    "status.speech.error": "❌ 음성 인식 오류",
+    "error.summary.page": "❌ Summary Page 실패"
   },
   "fr-FR": {
     "dialog.title": "Message Système",
@@ -158,7 +176,10 @@
     "button.run": "Exécuter",
     "button.gemini": "💡 Ask Gemini",
     "button.options": "Ouvrir les Options",
-    "title.micToggle": "Basculer le Microphone"
+    "title.micToggle": "Basculer le Microphone",
+    "status.listening.indicator": "🎤 Écoute...",
+    "status.speech.error": "❌ Erreur de Reconnaissance Vocale",
+    "error.summary.page": "❌ Summary Page Échoué"
   },
   "de-DE": {
     "dialog.title": "Systemnachricht",
@@ -181,7 +202,10 @@
     "button.run": "Ausführen",
     "button.gemini": "💡 Ask Gemini",
     "button.options": "Optionen Öffnen",
-    "title.micToggle": "Mikrofon umschalten"
+    "title.micToggle": "Mikrofon umschalten",
+    "status.listening.indicator": "🎤 Wird abgehört...",
+    "status.speech.error": "❌ Spracherkennungsfehler",
+    "error.summary.page": "❌ Summary Page Fehler"
   },
   "es-ES": {
     "dialog.title": "Mensaje del Sistema",
@@ -204,7 +228,10 @@
     "button.run": "Ejecutar",
     "button.gemini": "💡 Ask Gemini",
     "button.options": "Abrir Opciones",
-    "title.micToggle": "Alternar Micrófono"
+    "title.micToggle": "Alternar Micrófono",
+    "status.listening.indicator": "🎤 Escuchando...",
+    "status.speech.error": "❌ Error de Reconocimiento de Voz",
+    "error.summary.page": "❌ Summary Page Fracasado"
   },
   "it-IT": {
     "dialog.title": "Messaggio di Sistema",
@@ -227,7 +254,10 @@
     "button.run": "Eseguire",
     "button.gemini": "💡 Ask Gemini",
     "button.options": "Apri Opzioni",
-    "title.micToggle": "Attiva/Disattiva Microfono"
+    "title.micToggle": "Attiva/Disattiva Microfono",
+    "status.listening.indicator": "🎤 In ascolto...",
+    "status.speech.error": "❌ Errore di Riconoscimento Vocale",
+    "error.summary.page": "❌ Summary Page Fallito"
   },
   "pt-BR": {
     "dialog.title": "Mensagem do Sistema",
@@ -250,7 +280,10 @@
     "button.run": "Executar",
     "button.gemini": "💡 Ask Gemini",
     "button.options": "Abrir Opções",
-    "title.micToggle": "Alternar Microfone"
+    "title.micToggle": "Alternar Microfone",
+    "status.listening.indicator": "🎤 Ouvindo...",
+    "status.speech.error": "❌ Erro de Reconhecimento de Fala",
+    "error.summary.page": "❌ Summary Page Falhou"
   },
   "ru-RU": {
     "dialog.title": "Системное сообщение",
@@ -273,6 +306,9 @@
     "button.run": "Выполнить",
     "button.gemini": "💡 Ask Gemini",
     "button.options": "Открыть Опции",
-    "title.micToggle": "Переключить Микрофон"
+    "title.micToggle": "Переключить Микрофон",
+    "status.listening.indicator": "🎤 Прослушивание...",
+    "status.speech.error": "❌ Ошибка Распознавания Речи",
+    "error.summary.page": "❌ Summary Page Ошибка"
   }
 }

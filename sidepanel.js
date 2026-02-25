@@ -69,7 +69,7 @@ if (SpeechRecognition) {
     recognition.onstart = () => {
         console.log("[Speech] 語音識別已啟動");
         isListening = true;
-        document.getElementById('output').textContent = '🎤 正在聆聽...';
+        document.getElementById('output').textContent = i18n.t('status.listening.indicator');
         
         // 累計 onstart 次數，每 5 次才顯示一次 toast
         speechStartCount++;
@@ -165,7 +165,7 @@ if (SpeechRecognition) {
                 </div>
             `;
             const btn = document.createElement('button');
-            btn.textContent = '打开选项页面';
+            btn.textContent = i18n.t('button.options');
             btn.style.cssText = 'margin-top: 10px; padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;';
             btn.onclick = () => {
                 chrome.runtime.openOptionsPage();
@@ -174,7 +174,7 @@ if (SpeechRecognition) {
         } else {
             // 暫時註解不要刪除
             //showErrorToast('❌ 語音錯誤', errorMsg);
-            document.getElementById('output').textContent = `❌ 語音識別錯誤: ${errorMsg}`;
+            document.getElementById('output').textContent = i18n.t('status.speech.error') + ': ' + errorMsg;
         }
         
         isListening = false;
@@ -370,7 +370,7 @@ document.getElementById('askGeminiBtn').addEventListener('click', async () => {
         
     } catch (error) {
         console.error("[SidePanel] Summary Page 失敗:", error);
-        document.getElementById('output').textContent = `❌ Summary Page 失敗：${error.message}`;
+        document.getElementById('output').textContent = i18n.t('error.summary.page') + '：' + error.message;
     }
 });
 
