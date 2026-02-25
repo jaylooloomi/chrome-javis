@@ -1,4 +1,42 @@
 // ======== 選項頁面 - 麥克風權限授予 ========
+
+// 語言選擇保存
+document.getElementById('languageSelect').addEventListener('change', async (e) => {
+    const selectedLanguage = e.target.value;
+    const languageStatus = document.getElementById('languageStatus');
+    
+    try {
+        // 使用 chrome.storage.local 保存語言設置
+        await chrome.storage.local.set({ voiceLanguage: selectedLanguage });
+        
+        languageStatus.textContent = `✅ 語言已保存：${document.getElementById('languageSelect').options[document.getElementById('languageSelect').selectedIndex].text}`;
+        languageStatus.className = 'status success';
+        console.log("[Options] 語言設置已保存:", selectedLanguage);
+        
+        setTimeout(() => {
+            languageStatus.textContent = '';
+            languageStatus.className = '';
+        }, 3000);
+    } catch (error) {
+        console.error("[Options] 保存語言設置失敗:", error);
+        languageStatus.textContent = `❌ 保存失敗: ${error.message}`;
+        languageStatus.className = 'status error';
+    }
+});
+
+// 頁面加載時載入已保存的語言設置
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const result = await chrome.storage.local.get('voiceLanguage');
+        const savedLanguage = result.voiceLanguage || 'zh-TW';
+        document.getElementById('languageSelect').value = savedLanguage;
+        console.log("[Options] 已載入語言設置:", savedLanguage);
+    } catch (error) {
+        console.error("[Options] 載入語言設置失敗:", error);
+    }
+});
+
+// 麥克風權限授予
 document.getElementById('requestMicBtn').addEventListener('click', async () => {
     const statusDiv = document.getElementById('status');
     statusDiv.textContent = '';

@@ -5,12 +5,19 @@ let isListening = false;
 let final_transcript = '';
 let interim_transcript = '';
 let isAutoRunning = false;  // 標記是否在自動執行流程中
+let currentLanguage = 'zh-TW';  // 當前使用的語言
 
 if (SpeechRecognition) {
     recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = true;  // 顯示實時轉錄文本
-    recognition.lang = 'zh-TW';
+    
+    // 初始化語言設置
+    chrome.storage.local.get('voiceLanguage', (result) => {
+        currentLanguage = result.voiceLanguage || 'zh-TW';
+        recognition.lang = currentLanguage;
+        console.log("[Speech] 初始化語言:", currentLanguage);
+    });
 
     recognition.onstart = () => {
         console.log("[Speech] 語音識別已啟動");
@@ -119,7 +126,7 @@ if (SpeechRecognition) {
 }
 
 // ======== 麥克風按鈕事件 ========
-document.getElementById('micBtn').addEventListener('click', () => {
+document.getElementById('micBtn').addEventListener('click', async () => {
     if (!recognition) {
         alert('您的浏览器不支持语音识别');
         return;
@@ -129,6 +136,16 @@ document.getElementById('micBtn').addEventListener('click', () => {
         // 停止識別
         recognition.stop();
     } else {
+        // 開始識別前，重新讀取語言設置
+        try {
+            const result = await chrome.storage.local.get('voiceLanguage');
+            currentLanguage = result.voiceLanguage || 'zh-TW';
+            recognition.lang = currentLanguage;
+            console.log("[Speech] 設置語言:", currentLanguage);
+        } catch (error) {
+            console.error("[Speech] 讀取語言設置失敗:", error);
+        }
+        
         // 開始識別
         document.getElementById('userInput').focus();
         recognition.start();
