@@ -436,7 +436,7 @@ async function callOllama(prompt, systemPrompt, ollamaConfig) {
         
         // 强制 Ollama 返回 JSON 格式
         const forcedPrompt = `${systemPrompt}\n\n用戶指令: ${prompt}\n\n請立即回應以下 JSON 格式，不要有任何其他文字或解釋:\n{"skill": "...", ...}`;
-        console.log("[Ollama] 發送的提示 (長度:", forcedPrompt.length, "字)")
+        console.log("[Ollama] 發送的提示 (長度:", forcedPrompt.length, "字)");
         
         const response = await fetch(url, {
             method: "POST",
