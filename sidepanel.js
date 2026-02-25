@@ -162,16 +162,38 @@ document.getElementById('micSwitch').addEventListener('click', () => {
     isMicEnabled = !isMicEnabled;
     console.log("[Speech] 常駐麥克風狀態:", isMicEnabled ? "開啟" : "關閉");
     
+    // 更新配置狀態文字
+    const configStatus = document.querySelector('.config-status');
+    const listeningStatus = document.getElementById('listeningStatus');
+    
     if (isMicEnabled) {
         // 開啟常駐麥克風
         updateMicSwitchUI();
         document.getElementById('output').textContent = '🎤 語音已開啟';
+        
+        // 更新配置狀態
+        if (configStatus) {
+            configStatus.textContent = '麥克風已常駐 • 停頓 0.5s 自動執行 • AI 模型 已載入';
+        }
+        if (listeningStatus) {
+            listeningStatus.textContent = '待命中...';
+        }
+        
         console.log("[Speech] 開始常駐監聽");
         recognition.start();
     } else {
         // 關閉常駐麥克風
         updateMicSwitchUI();
         document.getElementById('output').textContent = '🔇 語音已關閉';
+        
+        // 更新配置狀態
+        if (configStatus) {
+            configStatus.textContent = '麥克風已關閉 • 手動點擊按鈕執行 • AI 模型 已載入';
+        }
+        if (listeningStatus) {
+            listeningStatus.textContent = '已關閉';
+        }
+        
         console.log("[Speech] 停止常駐監聽");
         recognition.stop();
     }
