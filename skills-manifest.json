@@ -2,7 +2,7 @@
   "skills": [
     {
       "name": "open_tab",
-      "folder": "opentab",
+      "folder": "open_tab",
       "description": "打开新标签页的技能",
       "runInPageContext": false
     },
