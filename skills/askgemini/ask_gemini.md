@@ -1,15 +1,16 @@
 # ask_gemini
 
-快速將選取的文字發送到 Google Gemini 進行查詢。
+快速將當前頁面發送到 Google Gemini 進行查詢。
 
 ## 功能
-- 抓取頁面 HTML
+- 抓取源頁面 HTML
 - 開啟 Gemini 頁面
-- 自動貼上文字
+- 自動貼上頁面內容
 - 自動送出
 
 ## 參數
-- text: (string) 要查詢的文字內容
+- tabId: (number) 源頁面的標籤頁 ID
+- url: (string) 源頁面的 URL
 
 ## 返回
-成功訊息，包含開啟的 Gemini URL 和文字內容摘要
+成功訊息，包含開啟的 Gemini URL 和頁面內容摘要
