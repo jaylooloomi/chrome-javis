@@ -9,6 +9,7 @@ let final_transcript = '';
 let interim_transcript = '';
 let isAutoRunning = false;  // 標記是否在自動執行流程中
 let isMicEnabled = true;    // 常駐麥克風狀態 (預設開啟)
+let speechStartCount = 0;   // 累計 onstart 的次數
 
 if (SpeechRecognition) {
     recognition = new SpeechRecognition();
@@ -20,7 +21,14 @@ if (SpeechRecognition) {
         console.log("[Speech] 語音識別已啟動");
         isListening = true;
         document.getElementById('output').textContent = '🎤 正在聆聽...';
-        showInfoToast('🎤 語音助手', '正在聆聽...', 0);  // 不自動關閉
+        
+        // 累計 onstart 次數，每 2 次才顯示一次 toast
+        speechStartCount++;
+        if (speechStartCount % 2 === 0) {
+            showInfoToast('🎤 語音助手', '正在聆聽...', 0);  // 不自動關閉
+        }
+        console.log(`[Speech] onstart 累計次數: ${speechStartCount}`);
+        
         final_transcript = '';
         interim_transcript = '';
     };
