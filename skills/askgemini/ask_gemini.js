@@ -143,24 +143,31 @@ function pasteAndSubmit(text) {
         
         // 嘗試多個發送按鈕選擇器
         const sendButtonSelectors = [
+            // 查找包含 send-button-icon 的按鈕
+            'button:has(.send-button-icon)',
+            'button:has(mat-icon[data-mat-icon-name="send"])',
+            // 標準選擇器
             'button[aria-label*="Send"]',
             'button[aria-label*="send"]',
-            'button:has(svg[aria-label*="Send"])',
+            'button[data-testid*="send"]',
             '[aria-label="Send message"]',
             '[aria-label="send message"]',
             'button.send-button',
-            'button[data-testid*="send"]',
             'button[type="submit"]',
             'div[role="button"][data-testid*="send"]'
         ];
         
         let sendButton = null;
         for (const selector of sendButtonSelectors) {
-            const btn = document.querySelector(selector);
-            if (btn && btn.offsetHeight > 0) {
-                sendButton = btn;
-                result.logs.push("✅ 找到發送按鈕（選擇器: " + selector + "）");
-                break;
+            try {
+                const btn = document.querySelector(selector);
+                if (btn && btn.offsetHeight > 0) {
+                    sendButton = btn;
+                    result.logs.push("✅ 找到發送按鈕（選擇器: " + selector + "）");
+                    break;
+                }
+            } catch (e) {
+                result.logs.push("⚠️ 選擇器 " + selector + " 不支持: " + e.message);
             }
         }
         
