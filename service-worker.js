@@ -255,7 +255,28 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
         // 驗證和修復：檢查是否為空對象或缺少必要字段
         if (!command.skill || Object.keys(command).length === 0) {
             console.warn("[Gateway] ⚠️  檢測到空或無效的 AI 回應，嘗試進行故障排除...");
-            console.warn("[Gateway] 原始 AI 回應內容:", aiResponse);\n            \n            // 嘗試從用戶提示詞中提取 URL (最後的手段)\n            console.warn(\"[Gateway] 嘗試從用戶提示詞提取關鍵字...\");\n            const websiteKeywords = ['google', 'youtube', 'github', 'twitter', 'linkedin', 'facebook', 'instagram'];\n            const userPromptLower = userPrompt.toLowerCase();\n            const matchedWebsite = websiteKeywords.find(keyword => userPromptLower.includes(keyword));\n            \n            if (matchedWebsite) {\n                console.warn(`[Gateway] 🔧 偵測到網站關鍵字: ${matchedWebsite}，使用緊急回退...`);\n                command = {\n                    skill: \"open_tab\",\n                    url: `https://${matchedWebsite}.com`,\n                    args: {}\n                };\n                console.warn(\"[Gateway] ✅ 緊急回退成功，使用命令:\", command);\n            } else {\n                console.error(\"[Gateway] ❌ 無法從提示詞中提取網站資訊\");\n                sendResponse({ status: \"error\", text: `AI 未生成有效的命令。回應: ${aiResponse}` });\n                return;\n            }\n        }
+            console.warn("[Gateway] 原始 AI 回應內容:", aiResponse);
+            
+            // 嘗試從用戶提示詞中提取 URL (最後的手段)
+            console.warn("[Gateway] 嘗試從用戶提示詞提取關鍵字...");
+            const websiteKeywords = ['google', 'youtube', 'github', 'twitter', 'linkedin', 'facebook', 'instagram'];
+            const userPromptLower = userPrompt.toLowerCase();
+            const matchedWebsite = websiteKeywords.find(keyword => userPromptLower.includes(keyword));
+            
+            if (matchedWebsite) {
+                console.warn(`[Gateway] 🔧 偵測到網站關鍵字: ${matchedWebsite}，使用緊急回退...`);
+                command = {
+                    skill: "open_tab",
+                    url: `https://${matchedWebsite}.com`,
+                    args: {}
+                };
+                console.warn("[Gateway] ✅ 緊急回退成功，使用命令:", command);
+            } else {
+                console.error("[Gateway] ❌ 無法從提示詞中提取網站資訊");
+                sendResponse({ status: "error", text: `AI 未生成有效的命令。回應: ${aiResponse}` });
+                return;
+            }
+        }
 
         console.log("[Gateway] 階段 C：調度技能...");
         
