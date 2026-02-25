@@ -1,4 +1,7 @@
-// service-worker.js - 核心网关 (Gateway-Client 模式 + 动态技能加载)
+// service-worker.js - 核心网关 (Gateway-Client 模式 + 静态技能加载)
+
+// 靜態導入技能模塊（必須在 Service Worker 中使用靜態 import）
+import * as openTabSkill from './skills/opentab/open_tab.js';
 
 // 技能註冊表 (Key-Value Pair)
 // 格式: { skillName: { mdContent: "...", module: {...} } }
@@ -21,19 +24,23 @@ async function ensureSkillsLoaded() {
 }
 
 async function loadSkillsDynamically() {
-    console.log("[Gateway] 啟動動態技能加載器...");
+    console.log("[Gateway] 啟動技能加載器...");
     
-    // 已知的技能列表：{displayName: folderName}
+    // 技能映射：{skillName: {folderName, module}}
+    // module 通過靜態 import 在頂部導入（Service Worker 不支持動態 import()）
     const skillMappings = {
-        'open_tab': 'opentab'  // displayName: folderName
+        'open_tab': { 
+            folderName: 'opentab',
+            module: openTabSkill
+        }
     };
     
     let promptBuilder = "你是一個 AI 代理人。你擁有以下技能，根據用戶需求回傳 JSON 格式的指令。\n\n";
 
-    for (const [skillName, folderName] of Object.entries(skillMappings)) {
+    for (const [skillName, skillInfo] of Object.entries(skillMappings)) {
         try {
             // 1. 動態讀取 .md 文件
-            const mdUrl = chrome.runtime.getURL(`skills/${folderName}/${skillName}.md`);
+            const mdUrl = chrome.runtime.getURL(`skills/${skillInfo.folderName}/${skillName}.md`);
             console.log(`[Gateway] 讀取 MD: ${mdUrl}`);
             const mdResponse = await fetch(mdUrl);
             if (!mdResponse.ok) {
@@ -41,20 +48,15 @@ async function loadSkillsDynamically() {
             }
             const mdContent = await mdResponse.text();
             
-            // 2. 動態導入 .js 文件
-            const jsPath = `./skills/${folderName}/${skillName}.js`;
-            console.log(`[Gateway] 導入 JS: ${jsPath}`);
-            const jsModule = await import(jsPath);
-            
-            // 3. 構建 Key-Value Pair
+            // 2. 構建 Key-Value Pair（module 使用靜態導入）
             SKILL_REGISTRY[skillName] = {
                 mdContent: mdContent,
-                module: jsModule
+                module: skillInfo.module
             };
             
-            // 4. 構建 System Prompt
+            // 3. 構建 System Prompt
             promptBuilder += `=== 技能: ${skillName} ===\n${mdContent}\n\n`;
-            console.log(`[Gateway] ✅ 技能 [${skillName}] 已動態載入`);
+            console.log(`[Gateway] ✅ 技能 [${skillName}] 已載入`);
             
         } catch (e) {
             console.error(`[Gateway] ❌ 技能 [${skillName}] 載入失敗:`, e);
