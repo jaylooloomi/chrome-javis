@@ -1,27 +1,27 @@
-// ask_gemini.js - ??SidePanel 中執行�??�??
-// 快速�??��??�送到 Google Gemini
+// ask_gemini.js - 在 SidePanel 中執行的技能
+// 快速將文字發送到 Google Gemini
 
 export async function ask_gemini(args) {
-    console.log("[Ask Gemini Skill] ?��?，接?�到?�數:", args);
+    console.log("[Ask Gemini Skill] 啟動，接收到參數:", args);
 
     try {
         let text = args.text;
         
         if (!text) {
-            throw new Error("?��?供查詢�?�?);
+            throw new Error("未提供查詢文字");
         }
 
-        // 1. ?��? Gemini ?��?
+        // 1. 開啟 Gemini 分頁
         const tab = await chrome.tabs.create({ 
             url: 'https://gemini.google.com/' 
         });
-        console.log("[Ask Gemini Skill] 已�???Gemini ?��?，ID:", tab.id);
+        console.log("[Ask Gemini Skill] 已開啟 Gemini 分頁，ID:", tab.id);
 
-        // 2. 等�??�面?��?（�?試�??��??�多�?�?8 秒�?
+        // 2. 等待頁面加載（重試機制，最多等待 8 秒）
         await waitForPageLoad(tab.id);
 
-        // 3. ??Gemini ?��?中注?�腳?��??��?貼�??��?並發??
-        console.log("[Ask Gemini Skill] �?��注入?��?貼�??�本");
+        // 3. 在 Gemini 分頁中注入腳本，自動貼上文字並發送
+        console.log("[Ask Gemini Skill] 正在注入自動貼上腳本");
         try {
             const scriptResults = await chrome.scripting.executeScript({
                 target: { tabId: tab.id },
@@ -29,53 +29,53 @@ export async function ask_gemini(args) {
                 args: [text]
             });
             
-            // 詳細輸出結�?
+            // 詳細輸出結果
             if (scriptResults && scriptResults.length > 0) {
                 const result = scriptResults[0].result;
-                console.log("[Ask Gemini Skill] ?�本?��?結�?:", result);
+                console.log("[Ask Gemini Skill] 腳本執行結果:", result);
                 
                 if (result && result.logs) {
-                    console.log("[Ask Gemini Skill] 詳細?��?:");
+                    console.log("[Ask Gemini Skill] 詳細日誌:");
                     result.logs.forEach(log => {
                         console.log("[Ask Gemini Skill]   " + log);
                     });
                 }
                 
                 if (result && result.error) {
-                    console.warn("[Ask Gemini Skill] ?��??�發?�錯�? " + result.error);
+                    console.warn("[Ask Gemini Skill] 執行時發生錯誤: " + result.error);
                 }
             }
         } catch (error) {
-            console.warn("[Ask Gemini Skill] executeScript 失�?:", error);
+            console.warn("[Ask Gemini Skill] executeScript 失敗:", error);
         }
 
         const preview = text.length > 100 ? text.substring(0, 100) + "..." : text;
-        return `??已�???Gemini ?��?\n\n?? 待查詢內容�?\n${preview}`;
+        return `✅ 已開啟 Gemini 分頁\n\n📝 待查詢內容：\n${preview}`;
         
     } catch (error) {
-        console.error("[Ask Gemini Skill] ?�誤:", error);
-        throw new Error(`Ask Gemini 失�?�?{error.message}`);
+        console.error("[Ask Gemini Skill] 錯誤:", error);
+        throw new Error(`Ask Gemini 失敗：${error.message}`);
     }
 }
 
 /**
- * 等�? Gemini ?�面?��?完�?
- * ?�試多次檢查?�天框是?�出??
+ * 等待 Gemini 頁面加載完成
+ * 嘗試多次檢查聊天框是否出現
  */
 async function waitForPageLoad(tabId, maxAttempts = 20, delayMs = 500) {
     for (let i = 0; i < maxAttempts; i++) {
         try {
-            // ?�試檢查?�面中是?��??��?天輸?��???input-area 容器
+            // 嘗試檢查頁面中是否存在聊天輸入框和 input-area 容器
             const results = await chrome.scripting.executeScript({
                 target: { tabId },
                 function: () => {
-                    // 檢查 input-area 容器?�否存在（這是?�鍵�?
+                    // 檢查 input-area 容器是否存在（這是關鍵）
                     const hasInputArea = !!(
                         document.querySelector('input-area-v2') ||
                         document.querySelector('[data-node-type="input-area"]')
                     );
                     
-                    // ?��?檢查輸入�?
+                    // 同時檢查輸入框
                     const hasInputElement = !!(
                         document.querySelector('[contenteditable="true"]') ||
                         document.querySelector('[role="textbox"]') ||
@@ -87,94 +87,88 @@ async function waitForPageLoad(tabId, maxAttempts = 20, delayMs = 500) {
             });
 
             if (results[0]?.result) {
-                console.log(`[Ask Gemini Skill] ?�面?��?完�?�?{i + 1} 次�?試�?`);
+                console.log(`[Ask Gemini Skill] 頁面加載完成（${i + 1} 次嘗試）`);
                 return;
             }
         } catch (error) {
-            console.log(`[Ask Gemini Skill] 檢查?�面?��?... (${i + 1}/${maxAttempts})`);
+            console.log(`[Ask Gemini Skill] 檢查頁面加載... (${i + 1}/${maxAttempts})`);
         }
 
-        // 等�??��?�?
+        // 等待再重試
         await new Promise(resolve => setTimeout(resolve, delayMs));
     }
 
-    console.warn("[Ask Gemini Skill] ?��?確�??�面已�?載�?但繼續執�?);
+    console.warn("[Ask Gemini Skill] 無法確認頁面已加載，但繼續執行");
 }
 
 /**
- * ??Gemini ?�面中執行�?尋找?�天框、貼上�?字、發??
- * ?�個函?��???Gemini ?�面??DOM 上�??�中?��?
+ * 在 Gemini 頁面中執行：尋找聊天框、貼上文字、發送
+ * 這個函數會在 Gemini 頁面的 DOM 上下文中執行
  */
 function pasteAndSubmit(text) {
     const result = { success: false, logs: [], error: null };
-    const startTime = Date.now(); // 記�??��??��?
-    
-    function log(msg) {
-        const elapsed = Date.now() - startTime;
-        log("[+" + elapsed + "ms] " + msg);
-    }
     
     try {
-        log("=== ?��??��? pasteAndSubmit ===");
-        log("?��??�度: " + text.length);
+        result.logs.push("=== 開始執行 pasteAndSubmit ===");
+        result.logs.push("文字長度: " + text.length);
         
-        // 0.5. 首�?檢查?�面?��??�??
-        log("?? 檢查?�面?�??..");
-        log("  document.readyState: " + document.readyState);
-        log("  body 中�??��??? " + document.body.children.length);
+        // 0.5. 首先檢查頁面整體狀態
+        result.logs.push("📍 檢查頁面狀態...");
+        result.logs.push("  document.readyState: " + document.readyState);
+        result.logs.push("  body 中的元素數: " + document.body.children.length);
         
-        // 檢查?�否?�到 input-area 容器
+        // 檢查是否找到 input-area 容器
         const inputAreaContainer = document.querySelector('input-area-v2, [data-node-type="input-area"]');
         if (inputAreaContainer) {
-            log("???�到 input-area 容器");
+            result.logs.push("✅ 找到 input-area 容器");
         } else {
-            log("?��?  ?�找??input-area 容器 - ?�面?�能?��??��???);
+            result.logs.push("⚠️  未找到 input-area 容器 - 頁面可能未完全載入");
         }
         
-        // 1. 尋找輸入�?- Gemini 使用 Quill 編輯??
-        log("�?��尋找輸入�?..");
+        // 1. 尋找輸入框 - Gemini 使用 Quill 編輯器
+        result.logs.push("正在尋找輸入框...");
         let inputElement = 
             document.querySelector('[contenteditable="true"]') ||  
             document.querySelector('[role="textbox"]') ||           
             document.querySelector('textarea');
 
         if (!inputElement) {
-            result.error = "?��??��?天輸?��?";
-            log("??" + result.error);
+            result.error = "找不到聊天輸入框";
+            result.logs.push("❌ " + result.error);
             return result;
         }
 
-        log("???�到輸入�? " + inputElement.tagName + " class=" + inputElement.className);
+        result.logs.push("✅ 找到輸入框: " + inputElement.tagName + " class=" + inputElement.className);
 
-        // 1.5. 等�?輸入框�??��?始�? (Gemini ?�能?�要�??��?始�? UI)
-        log("??等�?輸入框�??��?始�? (2 �?...");
+        // 1.5. 等待輸入框完全初始化 (Gemini 可能需要時間初始化 UI)
+        result.logs.push("⏳ 等待輸入框完全初始化 (2 秒)...");
         const initDelay = Date.now();
         while (Date.now() - initDelay < 2000) {}
-        log("??輸入框�?始�?完�?");
+        result.logs.push("✅ 輸入框初始化完成");
 
-        // 2. ?�焦並貼上�?�?
+        // 2. 聚焦並貼上文字
         inputElement.focus();
-        log("??�?focus ?�輸?��?");
+        result.logs.push("✅ 已 focus 到輸入框");
 
-        // 對於 contenteditable ?��?，設置�??�內�?
+        // 對於 contenteditable 元素，設置文本內容
         if (inputElement.contentEditable === 'true') {
-            // ?��?1: ?�接設置 textContent
+            // 方法1: 直接設置 textContent
             inputElement.textContent = text;
             
-            // ?��?2: 也設�?innerText
+            // 方法2: 也設置 innerText
             inputElement.innerText = text;
             
-            log("???��?已設置到 contenteditable");
+            result.logs.push("✅ 文字已設置到 contenteditable");
         } else if (inputElement.tagName === 'TEXTAREA') {
             inputElement.value = text;
-            log("???��?已設置到 textarea");
+            result.logs.push("✅ 文字已設置到 textarea");
         } else {
             inputElement.textContent = text;
             inputElement.innerText = text;
-            log("???��?已設置到 textbox");
+            result.logs.push("✅ 文字已設置到 textbox");
         }
 
-        // 3. 觸發?�?�可?��?事件，�? Angular ??Quill 檢測?��???
+        // 3. 觸發所有可能的事件，讓 Angular 和 Quill 檢測到變化
         const events = [
             new Event('input', { bubbles: true, cancelable: true }),
             new Event('change', { bubbles: true, cancelable: true }),
@@ -190,33 +184,33 @@ function pasteAndSubmit(text) {
             });
         }
         
-        // 添�? Angular ?�好?��?�?
+        // 添加 Angular 友好的事件
         inputElement.dispatchEvent(new Event('ngModelChange', { bubbles: true }));
         
-        log("??已觸?��??��?件確�?Angular 檢測?��???);
+        result.logs.push("✅ 已觸發多個事件確保 Angular 檢測到變化");
         
-        // 檢查輸入框是?��??��??�容
+        // 檢查輸入框是否真的有內容
         const contentLength = inputElement.textContent ? inputElement.textContent.trim().length : 0;
-        log("?? 輸入框內容長�? " + contentLength);
-        // 3.5. 等�??�面完全載入??UI ?�新
-        log("?��? 等�??�面 UI ?�新 (3 �?...");
+        result.logs.push("📍 輸入框內容長度: " + contentLength);
+        // 3.5. 等待頁面完全載入和 UI 更新
+        result.logs.push("⏱️ 等待頁面 UI 更新 (3 秒)...");
         const uiDelay = Date.now();
         while (Date.now() - uiDelay < 3000) {}
-        log("???�面 UI 已更??);
+        result.logs.push("✅ 頁面 UI 已更新");
 
-        // 4. 立即尋找並�??�發?��???
-        log("�?��尋找?�送�???..");
+        // 4. 立即尋找並點擊發送按鈕
+        result.logs.push("正在尋找發送按鈕...");
         
-        // ?��?1：直?�用 class ?�稱?�找（�??��?�?
+        // 方法1：直接用 class 名稱查找（最可靠）
         sendButton = document.querySelector('button.send-button');
         if (sendButton) {
-            log("????'button.send-button' ?�到?�送�???);
+            result.logs.push("✅ 用 'button.send-button' 找到發送按鈕");
         }
         
-        // ?��?2：�??�方�?失�?，�??��??��??�並檢查?�徵
+        // 方法2：如果方法1失敗，尋找所有按鈕並檢查特徵
         if (!sendButton) {
             const allButtons = document.querySelectorAll('button');
-            log("?? ?��??��?，�??��? " + allButtons.length + " ??button");
+            result.logs.push("📍 開始搜尋，頁面有 " + allButtons.length + " 個 button");
             
             for (let btn of allButtons) {
                 const ariaLabel = btn.getAttribute('aria-label') || '';
@@ -224,93 +218,93 @@ function pasteAndSubmit(text) {
                 const className = btn.className || '';
                 const innerHTML = btn.innerHTML || '';
                 
-                // 檢查 className ?�否?�含 send-button
+                // 檢查 className 是否包含 send-button
                 if (className.includes('send-button')) {
                     sendButton = btn;
-                    log("????className ?�到?�送�???);
-                    log("   className: " + className);
+                    result.logs.push("✅ 用 className 找到發送按鈕");
+                    result.logs.push("   className: " + className);
                     break;
                 }
                 
-                // 檢查?�否?�含 send-button-icon ?��?
+                // 檢查是否包含 send-button-icon 圖標
                 if (innerHTML.includes('send-button-icon')) {
                     sendButton = btn;
-                    log("????send-button-icon ?�到?�送�???);
-                    log("   className: " + className);
+                    result.logs.push("✅ 用 send-button-icon 找到發送按鈕");
+                    result.logs.push("   className: " + className);
                     break;
                 }
                 
-                // 檢查 aria-label ??data-testid
+                // 檢查 aria-label 或 data-testid
                 if (ariaLabel.toLowerCase().includes('send') ||
                     dataTestId.toLowerCase().includes('send')) {
                     sendButton = btn;
-                    log("????aria-label/data-testid ?�到?�送�???);
-                    log("   aria-label: " + ariaLabel);
-                    log("   data-testid: " + dataTestId);
+                    result.logs.push("✅ 用 aria-label/data-testid 找到發送按鈕");
+                    result.logs.push("   aria-label: " + ariaLabel);
+                    result.logs.push("   data-testid: " + dataTestId);
                     break;
                 }
             }
         }
         
-        // 如�??�是沒找?��??�出?�??buttons 以�?調試
+        // 如果還是沒找到，列出所有 buttons 以供調試
         if (!sendButton) {
-            log("???�找?�發?��??��??�出?�??buttons ?�詳細�?�?");
+            result.logs.push("❌ 未找到發送按鈕，列出所有 buttons 的詳細資訊:");
             const allButtons = document.querySelectorAll('button');
             allButtons.forEach((btn, idx) => {
-                const label = btn.getAttribute('aria-label') || '(??';
-                const testId = btn.getAttribute('data-testid') || '(??';
-                const classes = btn.className || '(??';
-                const isDisabled = btn.disabled ? '?�� DISABLED' : '?�� ENABLED';
-                log("  [" + idx + "] " + isDisabled);
-                log("        classes=" + classes);
-                log("        aria-label=" + label + " | data-testid=" + testId);
+                const label = btn.getAttribute('aria-label') || '(無)';
+                const testId = btn.getAttribute('data-testid') || '(無)';
+                const classes = btn.className || '(無)';
+                const isDisabled = btn.disabled ? '🔴 DISABLED' : '🟢 ENABLED';
+                result.logs.push("  [" + idx + "] " + isDisabled);
+                result.logs.push("        classes=" + classes);
+                result.logs.push("        aria-label=" + label + " | data-testid=" + testId);
             });
         }
         
         if (sendButton) {
             try {
-                log("?? ?��??�?? disabled=" + sendButton.disabled + ", aria-disabled=" + sendButton.getAttribute('aria-disabled'));
+                result.logs.push("📍 按鈕狀態: disabled=" + sendButton.disabled + ", aria-disabled=" + sendButton.getAttribute('aria-disabled'));
                 
-                // ?��??��??�方法�?簡單??click()
+                // 唯一有效的方法：簡單的 click()
                 sendButton.click();
-                log("??已�??�發?��???);
+                result.logs.push("✅ 已點擊發送按鈕");
                 
             } catch (e) {
-                log("??點�??�送�??�失?? " + e);
-                throw new Error("?��?點�??�送�??? " + e.message);
+                result.logs.push("❌ 點擊發送按鈕失敗: " + e);
+                throw new Error("無法點擊發送按鈕: " + e.message);
             }
         } else {
-            // 詳細?�調試信??
-            log("???��??�發?��???);
+            // 詳細的調試信息
+            result.logs.push("❌ 找不到發送按鈕");
             
-            // ?�出?�面?�??button
+            // 列出頁面所有 button
             const allButtons = document.querySelectorAll('button');
-            log("?? ?�面中共??" + allButtons.length + " ??button�?);
+            result.logs.push("📋 頁面中共有 " + allButtons.length + " 個 button：");
             allButtons.forEach((btn, idx) => {
-                const label = btn.getAttribute('aria-label') || btn.textContent?.substring(0, 30) || '(?��?�?';
-                log("  [" + idx + "] " + btn.className + " - " + label);
+                const label = btn.getAttribute('aria-label') || btn.textContent?.substring(0, 30) || '(無標籤)';
+                result.logs.push("  [" + idx + "] " + btn.className + " - " + label);
             });
             
-            // ?�出?�??mat-icon
+            // 列出所有 mat-icon
             const allIcons = document.querySelectorAll('mat-icon');
-            log("?? ?�面中共??" + allIcons.length + " ??mat-icon");
+            result.logs.push("📋 頁面中共有 " + allIcons.length + " 個 mat-icon");
             if (allIcons.length > 0) {
                 allIcons.forEach((icon, idx) => {
-                    const name = icon.getAttribute('data-mat-icon-name') || icon.textContent?.substring(0, 30) || '(?��?�?';
-                    log("  [" + idx + "] data-mat-icon-name=" + name);
+                    const name = icon.getAttribute('data-mat-icon-name') || icon.textContent?.substring(0, 30) || '(無名稱)';
+                    result.logs.push("  [" + idx + "] data-mat-icon-name=" + name);
                 });
             }
             
-            throw new Error("?��??�到 Gemini ?�送�??��?詳�?上方?��??��??�可?�未完全載入??UI 結�?已改�?);
+            throw new Error("無法找到 Gemini 發送按鈕，詳見上方日誌。頁面可能未完全載入或 UI 結構已改變");
         }
 
         result.success = true;
-        log("??流�?已�???);
+        result.logs.push("✅ 流程已完成");
         return result;
 
     } catch (error) {
         result.error = error.toString();
-        log("???�常: " + error);
+        result.logs.push("❌ 異常: " + error);
         return result;
     }
 }
