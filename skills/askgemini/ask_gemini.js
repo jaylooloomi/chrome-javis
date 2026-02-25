@@ -216,8 +216,24 @@ function pasteAndSubmit(text) {
         
         if (sendButton) {
             try {
+                // 方法1：直接 click()
                 sendButton.click();
-                result.logs.push("✅ 已點擊發送按鈕");
+                result.logs.push("✅ 已點擊發送按鈕 (方法1: .click())");
+                
+                // 方法2：觸發 mousedown, mouseup, click 事件
+                sendButton.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+                sendButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+                result.logs.push("✅ 已觸發 mousedown/mouseup 事件");
+                
+                // 方法3：焦點 + Enter 鍵
+                sendButton.focus();
+                sendButton.dispatchEvent(new KeyboardEvent('keydown', { 
+                    key: 'Enter', 
+                    code: 'Enter', 
+                    keyCode: 13,
+                    bubbles: true 
+                }));
+                result.logs.push("✅ 已觸發焦點和 Enter 鍵事件");
             } catch (e) {
                 result.logs.push("❌ 點擊發送按鈕失敗: " + e);
                 throw new Error("無法點擊發送按鈕: " + e.message);
