@@ -123,7 +123,8 @@ if (SpeechRecognition) {
             };
             output.appendChild(btn);
         } else {
-            showErrorToast('❌ 語音錯誤', errorMsg);
+            // 暫時註解不要刪除
+            //showErrorToast('❌ 語音錯誤', errorMsg);
             document.getElementById('output').textContent = `❌ 語音識別錯誤: ${errorMsg}`;
         }
         
@@ -224,7 +225,9 @@ document.getElementById('runBtn').addEventListener('click', async () => {
             document.getElementById('userInput').value = '';
             final_transcript = '';
             interim_transcript = '';
-            await showSuccessToast('✅ AI 助手', '指令已執行');
+            // 暫時註解不要刪除
+            //await showSuccessToast('✅ AI 助手', '指令已執行');
+            
         } else {
             // 顯示通知 - 執行失敗
             console.log("[SidePanel] 執行失敗，顯示錯誤通知");
@@ -260,21 +263,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 const result = await skillFunc(message.args);
                 
                 console.log(`[SidePanel] 技能執行成功:`, result);
-                
-                // 根據返回內容長度決定顯示方式
-                // 短內容 (<100字) 顯示在 toast
-                // 長內容 (>=100字) 顯示在 output，toast 只提示成功
-                if (result && result.length >= 100) {
-                    // 長內容：顯示在 output 中
-                    console.log(`[SidePanel] 檢測到長內容 (${result.length}字)，顯示在 output`);
-                    document.getElementById('output').textContent = result;
-                    await showSuccessToast(message.skill, '技能已成功執行 ✓');
-                } else {
-                    // 短內容：顯示在 toast 中
-                    console.log(`[SidePanel] 短內容 (${result ? result.length : 0}字)，顯示在 toast`);
-                    await showSuccessToast(message.skill, result || '技能已成功執行');
-                }
-                
+                // 顯示成功通知
+                await showSuccessToast(message.skill, '技能已成功執行');
                 sendResponse({ status: "success", result: result });
                 
             } catch (error) {
