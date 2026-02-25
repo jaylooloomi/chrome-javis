@@ -203,6 +203,31 @@ async function handleChromeApiCall(request, sendResponse) {
     }
 }
 
+// --- 模型選擇與調用 ---
+async function selectAndCallAIModel(userPrompt, systemPrompt, configData) {
+    console.log("[Gateway] ═══ 階段 B：選擇並呼叫 AI 模型 ═══");
+    console.log("[Gateway] activeModel 值:", configData.activeModel);
+    console.log("[Gateway] activeModel 類型:", typeof configData.activeModel);
+    
+    if (configData.activeModel === 'ollamaGemma2B') {
+        console.log("[Gateway] ✅ 選擇使用 Ollama Gemma 2B 模型 (小模型)");
+        console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemma2B, null, 2));
+        return await callOllama(userPrompt, systemPrompt, configData.ollamaGemma2B);
+    } else if (configData.activeModel === 'ollamaGemmaLarge') {
+        console.log("[Gateway] ✅ 選擇使用 Ollama Gemma Large 模型 (大模型)");
+        console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemmaLarge, null, 2));
+        return await callOllama(userPrompt, systemPrompt, configData.ollamaGemmaLarge);
+    } else if (configData.activeModel === 'ollamaMinimaxM2') {
+        console.log("[Gateway] ✅ 選擇使用 Ollama Minimax M2 模型");
+        console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaMinimaxM2, null, 2));
+        return await callOllama(userPrompt, systemPrompt, configData.ollamaMinimaxM2);
+    } else {
+        console.log("[Gateway] ✅ 選擇使用 Gemini 2.5 Flash 模型");
+        console.log("[Gateway] Gemini 配置:", JSON.stringify({...configData.geminiFlash, apiKey: '***'}));
+        return await callGeminiFlash(userPrompt, systemPrompt, configData.geminiFlash);
+    }
+}
+
 // --- 階段 B & C：接收指令、思考與調度 ---
 async function handleRequest(userPrompt, sendResponse, configData = null) {
     try {
@@ -220,30 +245,10 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
 
         await ensureSkillsLoaded();
         
-        console.log("[Gateway] ═══ 階段 B：呼叫 AI 模型 ═══");
         console.log("[Gateway] 接收到的 config:", JSON.stringify(configData, null, 2));
-        console.log("[Gateway] activeModel 值:", configData.activeModel);
-        console.log("[Gateway] activeModel 類型:", typeof configData.activeModel);
         console.log("[Gateway] 可用技能:", Object.keys(SKILL_REGISTRY));
         
-        let aiResponse;
-        if (configData.activeModel === 'ollamaGemma2B') {
-            console.log("[Gateway] ✅ 選擇使用 Ollama Gemma 2B 模型 (小模型)");
-            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemma2B, null, 2));
-            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaGemma2B);
-        } else if (configData.activeModel === 'ollamaGemmaLarge') {
-            console.log("[Gateway] ✅ 選擇使用 Ollama Gemma Large 模型 (大模型)");
-            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemmaLarge, null, 2));
-            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaGemmaLarge);
-        } else if (configData.activeModel === 'ollamaMinimaxM2') {
-            console.log("[Gateway] ✅ 選擇使用 Ollama Minimax M2 模型");
-            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaMinimaxM2, null, 2));
-            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaMinimaxM2);
-        } else {
-            console.log("[Gateway] ✅ 選擇使用 Gemini 2.5 Flash 模型");
-            console.log("[Gateway] Gemini 配置:", JSON.stringify({...configData.geminiFlash, apiKey: '***'}));
-            aiResponse = await callGeminiFlash(userPrompt, dynamicSystemPrompt, configData.geminiFlash);
-        }
+        const aiResponse = await selectAndCallAIModel(userPrompt, dynamicSystemPrompt, configData);
         
         console.log("[Gateway] AI 原始回應 (長度:", aiResponse.length, "):", aiResponse);
         console.log("[Gateway] AI 回應前 200 字:", aiResponse.substring(0, 200));
