@@ -323,6 +323,11 @@ async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse)
         console.log(`[Gateway] 將技能轉發給 SidePanel 執行: ${skillName}`);
         console.log(`[Gateway] 傳遞的參數:`, args);
         
+        // 確保 args 是一個對象，如果沒有參數則初始化為空對象
+        if (!args) {
+            args = {};
+        }
+        
         // 替換佔位符：將 ACTIVE_TAB 和 ACTIVE_TAB_URL 替換為實際的 tabId 和 url
         if (args.tabId === "ACTIVE_TAB" || args.url === "ACTIVE_TAB_URL") {
             console.log(`[Gateway] 檢測到佔位符，正在獲取當前活動分頁...`);
