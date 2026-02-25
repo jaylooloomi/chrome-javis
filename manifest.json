@@ -23,6 +23,10 @@
     "service_worker": "service-worker.js",
     "type": "module"
   },
+  "content_security_policy": {
+    "script-src": ["'self'", "'wasm-unsafe-eval'", "'inline-speculation-rules'", "https://cdn.jsdelivr.net"],
+    "style-src": ["'self'", "https://cdn.jsdelivr.net"]
+  },
   "action": {
     "default_title": "開啟 OmniAssistant"
   },
