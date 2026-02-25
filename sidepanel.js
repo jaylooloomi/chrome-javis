@@ -361,17 +361,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 });
 
-// ======== Ask Gemini 按鈕事件 ========
-document.getElementById('askGeminiBtn').addEventListener('click', async () => {
-    console.log("[SidePanel] Ask Gemini 按鈕被點擊");
-    
-    try {
-        // 都透過skills執行, 不走這裡了, 但先不刪除
-        
-    } catch (error) {
-        console.error("[SidePanel] Summary Page 失敗:", error);
-        document.getElementById('output').textContent = i18n.t('error.summary.page') + '：' + error.message;
-    }
+// ======== Setting 按鈕事件 ========
+document.getElementById('settingBtn').addEventListener('click', () => {
+    chrome.runtime.openOptionsPage();
 });
 
 // ======== 贊助按鈕點擊事件 ========
