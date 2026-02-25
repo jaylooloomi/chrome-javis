@@ -60,19 +60,15 @@ class I18n {
             return key;
         }
 
-        const keys = key.split('.');
-        let value = translations;
+        // 直接查找键（翻译文件使用平坦键结构）
+        const value = translations[key];
         
-        for (const k of keys) {
-            if (value && typeof value === 'object') {
-                value = value[k];
-            } else {
-                console.warn(`[i18n] 未找到翻譯鍵: ${key} (語言: ${this.currentLanguage})`);
-                return key;
-            }
+        if (value === undefined) {
+            console.warn(`[i18n] 未找到翻譯鍵: ${key} (語言: ${this.currentLanguage})`);
+            return key;
         }
 
-        return value || key;
+        return value;
     }
 
     // 監聽語言變更
