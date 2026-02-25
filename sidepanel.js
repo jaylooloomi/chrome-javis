@@ -1,5 +1,5 @@
 // ======== 導入通知工具 ========
-import { showSuccessToast, showErrorToast } from './toast-notification.js';
+import { showSuccessToast, showErrorToast, showInfoToast } from './toast-notification.js';
 
 // ======== 語音識別初始化 (直接使用 Web Speech API) ========
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -20,6 +20,7 @@ if (SpeechRecognition) {
         console.log("[Speech] 語音識別已啟動");
         isListening = true;
         document.getElementById('output').textContent = '🎤 正在聆聽...';
+        showInfoToast('🎤 語音助手', '正在聆聽...', 0);  // 不自動關閉
         final_transcript = '';
         interim_transcript = '';
     };
@@ -113,6 +114,7 @@ if (SpeechRecognition) {
             };
             output.appendChild(btn);
         } else {
+            showErrorToast('❌ 語音錯誤', errorMsg);
             document.getElementById('output').textContent = `❌ 語音識別錯誤: ${errorMsg}`;
         }
         
