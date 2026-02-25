@@ -1,4 +1,4 @@
-// ask_gemini.js - 在 SidePanel 中執行的技能
+// summary_this_page.js - 在 SidePanel 中執行的技能
 // 快速將頁面內容總結並發送到 Google Gemini
 
 export async function summary_this_page(args) {
