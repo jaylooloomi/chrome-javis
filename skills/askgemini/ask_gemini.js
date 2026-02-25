@@ -212,8 +212,15 @@ function waitForButtonAndClick(inputElement, attempts = 0, maxAttempts = 20) {
  * 尋找發送按鈕
  */
 function findSendButton() {
-    // 優先尋找 mat-ripple mat-mdc-button-ripple 的按鈕
-    let sendButton = document.querySelector('.mat-ripple.mat-mdc-button-ripple');
+    // 優先尋找 mat-mdc-button-touch-target 的按鈕
+    let sendButton = document.querySelector('.mat-mdc-button-touch-target');
+    if (sendButton) {
+        console.log("[Gemini Content] 通過 .mat-mdc-button-touch-target 找到按鈕");
+        return sendButton;
+    }
+
+    // 次優先：mat-ripple mat-mdc-button-ripple
+    sendButton = document.querySelector('.mat-ripple.mat-mdc-button-ripple');
     if (sendButton) {
         console.log("[Gemini Content] 通過 .mat-ripple 找到按鈕");
         return sendButton;
