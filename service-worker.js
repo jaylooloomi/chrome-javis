@@ -1,17 +1,20 @@
-// service-worker.js - 核心网关 (Gateway-Client 模式 + 静态技能加载)
+// service-worker.js - 核心网关 (Gateway-Client 模式)
+// 方案 B：使用 chrome.scripting.executeScript 在網頁前端執行技能
 
-// 靜態導入技能模塊（必須在 Service Worker 中使用靜態 import）
-import * as openTabSkill from './skills/opentab/open_tab.js';
-
-// 技能註冊表 (Key-Value Pair)
-// 格式: { skillName: { mdContent: "...", module: {...} } }
+// 技能註冊表 (Key-Value Pair，僅存儲 .md 說明)
+// 格式: { skillName: { mdContent: "..." } }
 const SKILL_REGISTRY = {};
 
 // 系統提示詞緩存
 let dynamicSystemPrompt = "";
 let loadingPromise = null;
 
-// --- 階段 A：啟動與技能裝載（動態掃描） ---
+// 技能對應表：{skillName: folderName}
+const SKILL_MAPPINGS = {
+    'open_tab': 'opentab'
+};
+
+// --- 階段 A：啟動與技能裝載（僅讀取 .md 文件） ---
 async function ensureSkillsLoaded() {
     if (dynamicSystemPrompt) return;
     if (loadingPromise) {
@@ -26,21 +29,12 @@ async function ensureSkillsLoaded() {
 async function loadSkillsDynamically() {
     console.log("[Gateway] 啟動技能加載器...");
     
-    // 技能映射：{skillName: {folderName, module}}
-    // module 通過靜態 import 在頂部導入（Service Worker 不支持動態 import()）
-    const skillMappings = {
-        'open_tab': { 
-            folderName: 'opentab',
-            module: openTabSkill
-        }
-    };
-    
     let promptBuilder = "你是一個 AI 代理人。你擁有以下技能，根據用戶需求回傳 JSON 格式的指令。\n\n";
 
-    for (const [skillName, skillInfo] of Object.entries(skillMappings)) {
+    for (const [skillName, folderName] of Object.entries(SKILL_MAPPINGS)) {
         try {
-            // 1. 動態讀取 .md 文件
-            const mdUrl = chrome.runtime.getURL(`skills/${skillInfo.folderName}/${skillName}.md`);
+            // 1. 動態讀取 .md 文件（獲取技能說明）
+            const mdUrl = chrome.runtime.getURL(`skills/${folderName}/${skillName}.md`);
             console.log(`[Gateway] 讀取 MD: ${mdUrl}`);
             const mdResponse = await fetch(mdUrl);
             if (!mdResponse.ok) {
@@ -48,10 +42,10 @@ async function loadSkillsDynamically() {
             }
             const mdContent = await mdResponse.text();
             
-            // 2. 構建 Key-Value Pair（module 使用靜態導入）
+            // 2. 構建 Key-Value Pair（僅存儲 .md 內容，.js 稍後在網頁前端執行）
             SKILL_REGISTRY[skillName] = {
                 mdContent: mdContent,
-                module: skillInfo.module
+                folderName: folderName
             };
             
             // 3. 構建 System Prompt
@@ -81,6 +75,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true; 
         }
         
+        // 處理來自網頁前端技能的 Chrome API 調用請求
+        if (request.action === "execute_chrome_api") {
+            handleChromeApiCall(request, sendResponse);
+            return true;
+        }
+        
         console.warn("[Gateway] 未知的訊息類型:", request.action);
         sendResponse({ status: "error", text: "未知訊息類型" });
         return true;
@@ -90,6 +90,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }
 });
+
+// 處理來自網頁前端技能的 Chrome API 調用
+async function handleChromeApiCall(request, sendResponse) {
+    try {
+        console.log(`[Gateway] 執行 Chrome API: ${request.apiCall}`);
+        
+        if (request.apiCall === "tabs.create") {
+            const tab = await chrome.tabs.create(request.params);
+            console.log(`[Gateway] tabs.create 成功，ID: ${tab.id}`);
+            sendResponse({ status: "success", result: tab });
+        } else {
+            throw new Error(`未支持的 API: ${request.apiCall}`);
+        }
+    } catch (error) {
+        console.error(`[Gateway] API 調用失敗:`, error);
+        sendResponse({ status: "error", error: error.message });
+    }
+}
 
 // --- 階段 B & C：接收指令、思考與調度 ---
 async function handleRequest(userPrompt, sendResponse, geminiApiKey = null) {
@@ -134,15 +152,58 @@ async function handleRequest(userPrompt, sendResponse, geminiApiKey = null) {
             return;
         }
 
-        // 執行技能
+        // 執行技能：使用 chrome.scripting.executeScript 在網頁前端注入並執行
         console.log(`[Gateway] 執行技能: ${command.skill}`);
-        const result = await skillInfo.module.run(command.args || {});
-        
-        sendResponse({ status: "success", text: result });
+        await runSkillInTabContext(command.skill, skillInfo, command.args || {}, sendResponse);
         
     } catch (error) {
         console.error("[Gateway] 執行失敗:", error);
         sendResponse({ status: "error", text: error.message });
+    }
+}
+
+// --- 在網頁前端執行技能 ---
+async function runSkillInTabContext(skillName, skillInfo, args, sendResponse) {
+    try {
+        // 1. 取得當前活動分頁
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tab) {
+            throw new Error("無法找到活動分頁");
+        }
+
+        console.log(`[Gateway] 在分頁 ID ${tab.id} 注入技能: ${skillName}`);
+
+        // 2. 注入技能腳本到網頁前端
+        const skillFilePath = `skills/${skillInfo.folderName}/${skillName}.js`;
+        console.log(`[Gateway] 注入文件: ${skillFilePath}`);
+        
+        // 3. 執行技能腳本，並通過 executeScript 的結果獲取返回值
+        const results = await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            files: [skillFilePath]
+        });
+
+        console.log(`[Gateway] 技能腳本已注入`);
+
+        // 4. 在網頁前端調用技能的 run() 函數
+        // 注意：技能腳本執行後會在網頁前端的全局作用域中定義 skillRun 函數
+        const callResult = await chrome.tabs.sendMessage(tab.id, {
+            action: "run_skill",
+            skillName: skillName,
+            args: args
+        });
+
+        console.log(`[Gateway] 技能執行結果:`, callResult);
+        
+        if (callResult.status === "success") {
+            sendResponse({ status: "success", text: callResult.result });
+        } else {
+            sendResponse({ status: "error", text: callResult.error });
+        }
+
+    } catch (error) {
+        console.error(`[Gateway] 技能執行失敗:`, error);
+        sendResponse({ status: "error", text: `技能執行失敗: ${error.message}` });
     }
 }
 
