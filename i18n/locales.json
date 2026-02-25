@@ -206,6 +206,7 @@
   "notification": {
     "skill.success": "Compétence exécutée avec succès",
     "skill.error": "Échec de l'exécution de la compétence"
+  },
   "de-DE": {
     "dialog.title": "Systemnachricht",
     "dialog.description": "Deine Unterstütung ist meine größte Motivation. Ich hoffe, dieses Tool kann dir helfen. Wenn es dir gefällt, bitte unterstütze mich. 💝",
