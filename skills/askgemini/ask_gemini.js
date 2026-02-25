@@ -142,9 +142,9 @@ function pasteAndSubmit(text) {
         result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 找到輸入框: " + inputElement.tagName + " class=" + inputElement.className);
 
         // 1.5. 等待輸入框完全初始化 (Gemini 可能需要時間初始化 UI)
-        result.logs.push("[+0ms] ⏳ 等待輸入框完全初始化 (2 秒)...");
+        result.logs.push("[+0ms] ⏳ 等待輸入框完全初始化 (4 秒)...");
         const initDelay = Date.now();
-        while (Date.now() - initDelay < 2000) {}
+        while (Date.now() - initDelay < 4000) {}
         result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 輸入框初始化完成");
 
         // 2. 聚焦並貼上文字
@@ -193,10 +193,10 @@ function pasteAndSubmit(text) {
         // 檢查輸入框是否真的有內容
         const contentLength = inputElement.textContent ? inputElement.textContent.trim().length : 0;
         result.logs.push("[+" + (Date.now() - startTime) + "ms] 📍 輸入框內容長度: " + contentLength);
-        // 3.5. 等待頁面完全載入和 UI 更新
-        result.logs.push("[+" + (Date.now() - startTime) + "ms] ⏱️ 等待頁面 UI 更新 (3 秒)...");
+        // 3.5. 等待頁面完全載入和 UI 更新 - 延長到 6 秒，因為 Gemini 的反機器人保護可能需要更長時間
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] ⏱️ 等待頁面 UI 更新 (6 秒，對抗反機器人)...");
         const uiDelay = Date.now();
-        while (Date.now() - uiDelay < 3000) {}
+        while (Date.now() - uiDelay < 6000) {}
         result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 頁面 UI 已更新");
 
         // 4. 立即尋找並點擊發送按鈕
@@ -266,12 +266,12 @@ function pasteAndSubmit(text) {
             try {
                 result.logs.push("[+" + (Date.now() - startTime) + "ms] 📍 按鈕狀態: disabled=" + sendButton.disabled + ", aria-disabled=" + sendButton.getAttribute('aria-disabled'));
                 
-                // 等待 aria-disabled 變成 false（最多 3 秒）
-                result.logs.push("[+" + (Date.now() - startTime) + "ms] ⏳ 等待按鈕變成可用 (aria-disabled=false)...");
+                // 等待 aria-disabled 變成 false（最多 5 秒）
+                result.logs.push("[+" + (Date.now() - startTime) + "ms] ⏳ 等待按鈕變成可用 (aria-disabled=false)，最多 5 秒...");
                 const buttonCheckStart = Date.now();
                 let isButtonReady = sendButton.getAttribute('aria-disabled') !== 'true';
                 
-                while (!isButtonReady && Date.now() - buttonCheckStart < 3000) {
+                while (!isButtonReady && Date.now() - buttonCheckStart < 5000) {
                     // 小 sleep 50ms 避免忙輪詢
                     const sleepStart = Date.now();
                     while (Date.now() - sleepStart < 50) {}
