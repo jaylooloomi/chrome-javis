@@ -343,3 +343,10 @@ document.getElementById('askGeminiBtn').addEventListener('click', async () => {
         document.getElementById('output').textContent = `❌ Summary Page 失敗：${error.message}`;
     }
 });
+
+// ======== 贊助按鈕點擊事件 ========
+document.getElementById('sponsorBtn').addEventListener('click', () => {
+    chrome.tabs.create({
+        url: 'https://buymeacoffee.com/arthurwang'
+    });
+});
