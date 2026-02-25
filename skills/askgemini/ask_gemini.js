@@ -114,20 +114,20 @@ function pasteAndSubmit(text) {
         result.logs.push("[+0ms] 文字長度: " + text.length);
         
         // 0.5. 首先檢查頁面整體狀態
-        result.logs.push("📍 檢查頁面狀態...");
-        result.logs.push("  document.readyState: " + document.readyState);
-        result.logs.push("  body 中的元素數: " + document.body.children.length);
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] 📍 檢查頁面狀態...");
+        result.logs.push("[+" + (Date.now() - startTime) + "ms]   document.readyState: " + document.readyState);
+        result.logs.push("[+" + (Date.now() - startTime) + "ms]   body 中的元素數: " + document.body.children.length);
         
         // 檢查是否找到 input-area 容器
         const inputAreaContainer = document.querySelector('input-area-v2, [data-node-type="input-area"]');
         if (inputAreaContainer) {
-            result.logs.push("✅ 找到 input-area 容器");
+            result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 找到 input-area 容器");
         } else {
-            result.logs.push("⚠️  未找到 input-area 容器 - 頁面可能未完全載入");
+            result.logs.push("[+" + (Date.now() - startTime) + "ms] ⚠️  未找到 input-area 容器 - 頁面可能未完全載入");
         }
         
         // 1. 尋找輸入框 - Gemini 使用 Quill 編輯器
-        result.logs.push("正在尋找輸入框...");
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] 正在尋找輸入框...");
         let inputElement = 
             document.querySelector('[contenteditable="true"]') ||  
             document.querySelector('[role="textbox"]') ||           
@@ -135,11 +135,11 @@ function pasteAndSubmit(text) {
 
         if (!inputElement) {
             result.error = "找不到聊天輸入框";
-            result.logs.push("❌ " + result.error);
+            result.logs.push("[+" + (Date.now() - startTime) + "ms] ❌ " + result.error);
             return result;
         }
 
-        result.logs.push("✅ 找到輸入框: " + inputElement.tagName + " class=" + inputElement.className);
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 找到輸入框: " + inputElement.tagName + " class=" + inputElement.className);
 
         // 1.5. 等待輸入框完全初始化 (Gemini 可能需要時間初始化 UI)
         result.logs.push("[+0ms] ⏳ 等待輸入框完全初始化 (2 秒)...");
@@ -149,7 +149,7 @@ function pasteAndSubmit(text) {
 
         // 2. 聚焦並貼上文字
         inputElement.focus();
-        result.logs.push("✅ 已 focus 到輸入框");
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 已 focus 到輸入框");
 
         // 對於 contenteditable 元素，設置文本內容
         if (inputElement.contentEditable === 'true') {
@@ -159,14 +159,14 @@ function pasteAndSubmit(text) {
             // 方法2: 也設置 innerText
             inputElement.innerText = text;
             
-            result.logs.push("✅ 文字已設置到 contenteditable");
+            result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 文字已設置到 contenteditable");
         } else if (inputElement.tagName === 'TEXTAREA') {
             inputElement.value = text;
-            result.logs.push("✅ 文字已設置到 textarea");
+            result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 文字已設置到 textarea");
         } else {
             inputElement.textContent = text;
             inputElement.innerText = text;
-            result.logs.push("✅ 文字已設置到 textbox");
+            result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 文字已設置到 textbox");
         }
 
         // 3. 觸發所有可能的事件，讓 Angular 和 Quill 檢測到變化
@@ -188,11 +188,11 @@ function pasteAndSubmit(text) {
         // 添加 Angular 友好的事件
         inputElement.dispatchEvent(new Event('ngModelChange', { bubbles: true }));
         
-        result.logs.push("✅ 已觸發多個事件確保 Angular 檢測到變化");
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 已觸發多個事件確保 Angular 檢測到變化");
         
         // 檢查輸入框是否真的有內容
         const contentLength = inputElement.textContent ? inputElement.textContent.trim().length : 0;
-        result.logs.push("📍 輸入框內容長度: " + contentLength);
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] 📍 輸入框內容長度: " + contentLength);
         // 3.5. 等待頁面完全載入和 UI 更新
         result.logs.push("[+" + (Date.now() - startTime) + "ms] ⏱️ 等待頁面 UI 更新 (3 秒)...");
         const uiDelay = Date.now();
@@ -200,18 +200,18 @@ function pasteAndSubmit(text) {
         result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 頁面 UI 已更新");
 
         // 4. 立即尋找並點擊發送按鈕
-        result.logs.push("正在尋找發送按鈕...");
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] 正在尋找發送按鈕...");
         
         // 方法1：直接用 class 名稱查找（最可靠）
         sendButton = document.querySelector('button.send-button');
         if (sendButton) {
-            result.logs.push("✅ 用 'button.send-button' 找到發送按鈕");
+            result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 用 'button.send-button' 找到發送按鈕");
         }
         
         // 方法2：如果方法1失敗，尋找所有按鈕並檢查特徵
         if (!sendButton) {
             const allButtons = document.querySelectorAll('button');
-            result.logs.push("📍 開始搜尋，頁面有 " + allButtons.length + " 個 button");
+            result.logs.push("[+" + (Date.now() - startTime) + "ms] 📍 開始搜尋，頁面有 " + allButtons.length + " 個 button");
             
             for (let btn of allButtons) {
                 const ariaLabel = btn.getAttribute('aria-label') || '';
@@ -222,16 +222,16 @@ function pasteAndSubmit(text) {
                 // 檢查 className 是否包含 send-button
                 if (className.includes('send-button')) {
                     sendButton = btn;
-                    result.logs.push("✅ 用 className 找到發送按鈕");
-                    result.logs.push("   className: " + className);
+                    result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 用 className 找到發送按鈕");
+                    result.logs.push("[+" + (Date.now() - startTime) + "ms]    className: " + className);
                     break;
                 }
                 
                 // 檢查是否包含 send-button-icon 圖標
                 if (innerHTML.includes('send-button-icon')) {
                     sendButton = btn;
-                    result.logs.push("✅ 用 send-button-icon 找到發送按鈕");
-                    result.logs.push("   className: " + className);
+                    result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 用 send-button-icon 找到發送按鈕");
+                    result.logs.push("[+" + (Date.now() - startTime) + "ms]    className: " + className);
                     break;
                 }
                 
@@ -239,9 +239,9 @@ function pasteAndSubmit(text) {
                 if (ariaLabel.toLowerCase().includes('send') ||
                     dataTestId.toLowerCase().includes('send')) {
                     sendButton = btn;
-                    result.logs.push("✅ 用 aria-label/data-testid 找到發送按鈕");
-                    result.logs.push("   aria-label: " + ariaLabel);
-                    result.logs.push("   data-testid: " + dataTestId);
+                    result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 用 aria-label/data-testid 找到發送按鈕");
+                    result.logs.push("[+" + (Date.now() - startTime) + "ms]    aria-label: " + ariaLabel);
+                    result.logs.push("[+" + (Date.now() - startTime) + "ms]    data-testid: " + dataTestId);
                     break;
                 }
             }
@@ -249,50 +249,50 @@ function pasteAndSubmit(text) {
         
         // 如果還是沒找到，列出所有 buttons 以供調試
         if (!sendButton) {
-            result.logs.push("❌ 未找到發送按鈕，列出所有 buttons 的詳細資訊:");
+            result.logs.push("[+" + (Date.now() - startTime) + "ms] ❌ 未找到發送按鈕，列出所有 buttons 的詳細資訊:");
             const allButtons = document.querySelectorAll('button');
             allButtons.forEach((btn, idx) => {
                 const label = btn.getAttribute('aria-label') || '(無)';
                 const testId = btn.getAttribute('data-testid') || '(無)';
                 const classes = btn.className || '(無)';
                 const isDisabled = btn.disabled ? '🔴 DISABLED' : '🟢 ENABLED';
-                result.logs.push("  [" + idx + "] " + isDisabled);
-                result.logs.push("        classes=" + classes);
-                result.logs.push("        aria-label=" + label + " | data-testid=" + testId);
+                result.logs.push("[+" + (Date.now() - startTime) + "ms]   [" + idx + "] " + isDisabled);
+                result.logs.push("[+" + (Date.now() - startTime) + "ms]         classes=" + classes);
+                result.logs.push("[+" + (Date.now() - startTime) + "ms]         aria-label=" + label + " | data-testid=" + testId);
             });
         }
         
         if (sendButton) {
             try {
-                result.logs.push("📍 按鈕狀態: disabled=" + sendButton.disabled + ", aria-disabled=" + sendButton.getAttribute('aria-disabled'));
+                result.logs.push("[+" + (Date.now() - startTime) + "ms] 📍 按鈕狀態: disabled=" + sendButton.disabled + ", aria-disabled=" + sendButton.getAttribute('aria-disabled'));
                 
                 // 唯一有效的方法：簡單的 click()
                 sendButton.click();
-                result.logs.push("✅ 已點擊發送按鈕");
+                result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 已點擊發送按鈕");
                 
             } catch (e) {
-                result.logs.push("❌ 點擊發送按鈕失敗: " + e);
+                result.logs.push("[+" + (Date.now() - startTime) + "ms] ❌ 點擊發送按鈕失敗: " + e);
                 throw new Error("無法點擊發送按鈕: " + e.message);
             }
         } else {
             // 詳細的調試信息
-            result.logs.push("❌ 找不到發送按鈕");
+            result.logs.push("[+" + (Date.now() - startTime) + "ms] ❌ 找不到發送按鈕");
             
             // 列出頁面所有 button
             const allButtons = document.querySelectorAll('button');
-            result.logs.push("📋 頁面中共有 " + allButtons.length + " 個 button：");
+            result.logs.push("[+" + (Date.now() - startTime) + "ms] 📋 頁面中共有 " + allButtons.length + " 個 button：");
             allButtons.forEach((btn, idx) => {
                 const label = btn.getAttribute('aria-label') || btn.textContent?.substring(0, 30) || '(無標籤)';
-                result.logs.push("  [" + idx + "] " + btn.className + " - " + label);
+                result.logs.push("[+" + (Date.now() - startTime) + "ms]   [" + idx + "] " + btn.className + " - " + label);
             });
             
             // 列出所有 mat-icon
             const allIcons = document.querySelectorAll('mat-icon');
-            result.logs.push("📋 頁面中共有 " + allIcons.length + " 個 mat-icon");
+            result.logs.push("[+" + (Date.now() - startTime) + "ms] 📋 頁面中共有 " + allIcons.length + " 個 mat-icon");
             if (allIcons.length > 0) {
                 allIcons.forEach((icon, idx) => {
                     const name = icon.getAttribute('data-mat-icon-name') || icon.textContent?.substring(0, 30) || '(無名稱)';
-                    result.logs.push("  [" + idx + "] data-mat-icon-name=" + name);
+                    result.logs.push("[+" + (Date.now() - startTime) + "ms]   [" + idx + "] data-mat-icon-name=" + name);
                 });
             }
             
@@ -300,12 +300,12 @@ function pasteAndSubmit(text) {
         }
 
         result.success = true;
-        result.logs.push("✅ 流程已完成");
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 流程已完成");
         return result;
 
     } catch (error) {
         result.error = error.toString();
-        result.logs.push("❌ 異常: " + error);
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] ❌ 異常: " + error);
         return result;
     }
 }
