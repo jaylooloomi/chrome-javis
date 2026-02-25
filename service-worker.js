@@ -92,7 +92,12 @@ async function loadSkillsDynamically() {
         }
     }
 
-    promptBuilder += "\n重要規則：\n1. 必須回傳純 JSON 格式\n2. JSON 結構必須遵循技能規範\n3. 如果無法完成任務，回傳 {\"error\": \"原因\"}\n";
+    promptBuilder += "\n=== 重要規則 ===\n"
+        + "1. 只回傳 JSON 格式，不要有任何其他文字\n"
+        + "2. JSON 必須包含 skill 和對應的參數\n"
+        + "3. 如果無法完成任務，回傳 {\"error\": \"原因\"}\n"
+        + "4. 不要返回空的 JSON 對象 {}\n"
+        + "5. 始終檢查用戶輸入是否匹配任何技能\n";
     dynamicSystemPrompt = promptBuilder;
     console.log("[Gateway] 技能庫已構建完成。已載入技能:", Object.keys(SKILL_REGISTRY));
 }
@@ -106,10 +111,21 @@ async function preloadServiceWorkerSkill(skillName, skillFolder) {
             SERVICE_WORKER_SKILLS[skillName] = async (args) => {
                 console.log("[Open Tab Skill] 啟動，接收到參數:", args);
                 try {
-                    const url = args.url;
-                    if (!url) {
-                        throw new Error("未提供 URL");
+                    let url = args.url;
+                    
+                    // 驗證和修復：如果 args 為空或 URL 缺失，進行診斷
+                    if (!url || Object.keys(args).length === 0) {
+                        console.error("[Open Tab Skill] ⚠️  接收到空參數:", JSON.stringify(args));
+                        console.error("[Open Tab Skill] 可用的 args 鍵:", Object.keys(args));
+                        throw new Error("未提供 URL - 接收到空參數");
                     }
+                    
+                    // 確保 URL 有有效的協議前綴
+                    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                        url = 'https://' + url;
+                        console.log("[Open Tab Skill] 修復 URL:", url);
+                    }
+                    
                     const tab = await chrome.tabs.create({ url: url });
                     console.log("[Open Tab Skill] 成功開啟分頁，ID:", tab.id);
                     return `成功開啟分頁 (ID: ${tab.id})：${url}`;
@@ -198,16 +214,26 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
             aiResponse = await callGeminiFlash(userPrompt, dynamicSystemPrompt, configData.gemini);
         }
         
-        console.log("[Gateway] AI 回應:", aiResponse);
+        console.log("[Gateway] AI 原始回應:", aiResponse);
         
         // 解析 AI 回應
         let command;
         try {
             const cleanJson = aiResponse.replace(/```json|```/g, '').trim();
             command = JSON.parse(cleanJson);
+            console.log("[Gateway] 解析後的命令:", command);
         } catch (e) {
             console.error("[Gateway] JSON 解析失敗:", e);
+            console.error("[Gateway] 原始回應:", aiResponse);
             sendResponse({ status: "error", text: `AI 回應格式錯誤: ${aiResponse}` });
+            return;
+        }
+
+        // 驗證和修復：檢查是否為空對象或缺少必要字段
+        if (!command.skill || Object.keys(command).length === 0) {
+            console.warn("[Gateway] ⚠️  檢測到空或無效的 AI 回應，嘗試進行故障排除...");
+            console.warn("[Gateway] 原始 AI 回應內容:", aiResponse);
+            sendResponse({ status: "error", text: `AI 未生成有效的命令。回應: ${aiResponse}` });
             return;
         }
 

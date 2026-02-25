@@ -1,34 +1,28 @@
 ﻿name: open_tab
 
-description: |
-  Open a URL in a new browser tab.
-  在浏覽器新分頁打開 URL。
+description: Open a URL in a new browser tab.
 
 intent_examples:
-  English:
-    - "open Google"
-    - "open https://github.com"
-    - "visit YouTube"
-  Chinese (Traditional):
-    - "打開 Google"
-    - "開啟 YouTube"
-    - "幫我打開 GitHub"
+  - "open Google"
+  - "open YouTube"
+  - "visit GitHub"
+  - "打開 Google"
+  - "開啟 YouTube"
 
-input:
-  required:
-    - url: (string) 完整 URL 或網站名稱 | Full URL or website name
-      example: "https://google.com" or "google" or "youtube.com"
+input: A website name or URL
 
 output:
-  json_format: |
-    {
-      "skill": "open_tab",
-      "url": "https://example.com"
-    }
+Always respond with THIS EXACT JSON format - no other text:
+{"skill": "open_tab", "url": "https://...", "args": {}}
 
-rules:
-  - Always convert website names to full URLs with https://
-  - 務必轉換網站名稱為完整 URL (https://)
-  - If user says "google", convert to "https://google.com"
-  - If user says "GitHub", convert to "https://github.com"
-  - Common websites: google.com, youtube.com, github.com, twitter.com, linkedin.com
+URL conversion rules:
+1. If user says "google" → "https://google.com"
+2. If user says "youtube" → "https://youtube.com"
+3. If user says "github" → "https://github.com"
+4. If user says "twitter" → "https://twitter.com"
+5. If user says "linkedin" → "https://linkedin.com"
+6. If user provides full URL, keep it as-is
+7. Always add https:// prefix if missing
+8. Never return empty URL
+
+IMPORTANT: Extract the website from user input and return it in the URL field.
