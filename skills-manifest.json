@@ -1,0 +1,9 @@
+{
+  "skills": [
+    {
+      "name": "open_tab",
+      "folder": "opentab",
+      "description": "打开新标签页的技能"
+    }
+  ]
+}

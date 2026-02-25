@@ -30,7 +30,8 @@
     {
       "resources": [
         "skills/*/*.md",
-        "config.json"
+        "config.json",
+        "skills-manifest.json"
       ],
       "matches": ["<all_urls>"]
     }

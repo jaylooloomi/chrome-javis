@@ -10,9 +10,8 @@ let dynamicSystemPrompt = "";
 let loadingPromise = null;
 
 // 技能對應表：{skillName: folderName}
-const SKILL_MAPPINGS = {
-    'open_tab': 'opentab'
-};
+// 此表將通過 loadSkillsDynamically() 動態填充
+const SKILL_MAPPINGS = {};
 
 // --- 階段 A：啟動與技能裝載（僅讀取 .md 文件） ---
 async function ensureSkillsLoaded() {
@@ -27,7 +26,29 @@ async function ensureSkillsLoaded() {
 }
 
 async function loadSkillsDynamically() {
-    console.log("[Gateway] 啟動技能加載器...");
+    console.log("[Gateway] 啟動動態技能加載器...");
+    
+    try {
+        // 1. 從 skills-manifest.json 讀取技能列表
+        const manifestUrl = chrome.runtime.getURL('skills-manifest.json');
+        console.log(`[Gateway] 讀取技能清單: ${manifestUrl}`);
+        const manifestResponse = await fetch(manifestUrl);
+        if (!manifestResponse.ok) {
+            throw new Error(`技能清單加載失敗: ${manifestResponse.status}`);
+        }
+        const manifestData = await manifestResponse.json();
+        
+        // 2. 動態構建技能映射表
+        for (const skill of manifestData.skills) {
+            SKILL_MAPPINGS[skill.name] = skill.folder;
+        }
+        
+        console.log(`[Gateway] 發現技能: ${Object.keys(SKILL_MAPPINGS).join(', ')}`);
+    } catch (e) {
+        console.error(`[Gateway] ❌ 技能清單讀取失敗:`, e);
+        console.error(`[Gateway] 詳細錯誤堆棧:`, e.stack);
+        return;
+    }
     
     let promptBuilder = "你是一個 AI 代理人。你擁有以下技能，根據用戶需求回傳 JSON 格式的指令。\n\n";
 
