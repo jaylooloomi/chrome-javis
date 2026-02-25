@@ -138,17 +138,8 @@ function pasteAndSubmit(text) {
         inputElement.dispatchEvent(new Event('change', { bubbles: true }));
         result.logs.push("✅ 事件已觸發");
 
-        // 4. 等待 2 秒後點擊發送按鈕
-        result.logs.push("⏱️ 等待 2 秒後尋找並點擊發送按鈕...");
-        
-        // 使用同步延遲（這樣函數會等待完成才返回）
-        const startTime = Date.now();
-        while (Date.now() - startTime < 2000) {
-            // 忙等待 2 秒
-        }
-        
-        // 2 秒後，嘗試點擊發送按鈕
-        result.logs.push("✅ 2 秒已過，正在尋找發送按鈕...");
+        // 4. 立即尋找並點擊發送按鈕
+        result.logs.push("正在尋找發送按鈕...");
         
         // 嘗試多個發送按鈕選擇器
         const sendButtonSelectors = [
