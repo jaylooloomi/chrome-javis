@@ -5,28 +5,45 @@ export async function ask_gemini(args) {
     console.log("[Ask Gemini Skill] 啟動，接收到參數:", args);
 
     try {
-        let text = args.text;
+        const sourceTabId = args.tabId;
+        const sourceUrl = args.url;
         
-        if (!text) {
-            throw new Error("未提供查詢文字");
+        if (!sourceTabId) {
+            throw new Error("未提供源標籤頁 tabId");
         }
 
-        // 1. 開啟 Gemini 分頁
+        // 1. 從源頁面抓取 HTML
+        console.log("[Ask Gemini Skill] 正在從 tabId", sourceTabId, "抓取頁面 HTML");
+        const htmlResult = await chrome.scripting.executeScript({
+            target: { tabId: sourceTabId },
+            function: () => {
+                return document.documentElement.outerHTML;
+            }
+        });
+
+        const pageHTML = htmlResult[0].result;
+        console.log("[Ask Gemini Skill] 抓取頁面 HTML，長度:", pageHTML.length);
+        
+        if (!pageHTML) {
+            throw new Error("無法抓取源頁面的 HTML");
+        }
+
+        // 2. 開啟 Gemini 分頁
         const tab = await chrome.tabs.create({ 
             url: 'https://gemini.google.com/' 
         });
         console.log("[Ask Gemini Skill] 已開啟 Gemini 分頁，ID:", tab.id);
 
-        // 2. 等待頁面加載（重試機制，最多等待 8 秒）
+        // 3. 等待頁面加載（重試機制，最多等待 8 秒）
         await waitForPageLoad(tab.id);
 
-        // 3. 在 Gemini 分頁中注入腳本，自動貼上文字並發送
+        // 4. 在 Gemini 分頁中注入腳本，自動貼上文字並發送
         console.log("[Ask Gemini Skill] 正在注入自動貼上腳本");
         try {
             const scriptResults = await chrome.scripting.executeScript({
                 target: { tabId: tab.id },
                 function: pasteAndSubmit,
-                args: [text]
+                args: [pageHTML]
             });
             
             // 詳細輸出結果
@@ -49,8 +66,8 @@ export async function ask_gemini(args) {
             console.warn("[Ask Gemini Skill] executeScript 失敗:", error);
         }
 
-        const preview = text.length > 100 ? text.substring(0, 100) + "..." : text;
-        return `✅ 已開啟 Gemini 分頁\n\n📝 待查詢內容：\n${preview}`;
+        const preview = pageHTML.length > 100 ? pageHTML.substring(0, 100) + "..." : pageHTML;
+        return `✅ 已開啟 Gemini 分頁\n\n📄 已貼上頁面內容 (${pageHTML.length} 字元)\n\n摘要：\n${preview}`;
         
     } catch (error) {
         console.error("[Ask Gemini Skill] 錯誤:", error);
