@@ -159,13 +159,6 @@ function showToast(type, title, message, duration = 10000) {
             bubbleContent.style.transform = 'scale(1)';
             bubbleContent.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
         });
-                width: 24px;
-                height: 24px;
-                padding: 0;
-                border-radius: 4px;
-                transition: background 0.2s;
-            "></button>
-        `;
         
         // 添加樣式表（如果尚未添加）
         if (!document.getElementById('toast-styles')) {
