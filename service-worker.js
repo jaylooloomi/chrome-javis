@@ -110,16 +110,20 @@ async function preloadServiceWorkerSkill(skillName, skillFolder) {
         // 根據技能名稱動態定義執行函數
         // 對於 open_tab 技能
         if (skillName === 'open_tab') {
-            SERVICE_WORKER_SKILLS[skillName] = async (args) => {
-                console.log("[Open Tab Skill] 啟動，接收到參數:", args);
+            SERVICE_WORKER_SKILLS[skillName] = async (command) => {
+                console.log("[Open Tab Skill] 啟動，接收到命令:", command);
                 try {
-                    let url = args.url;
+                    // URL 可能在 command.url 或 command.args.url
+                    let url = command.url || (command.args && command.args.url);
                     
-                    // 驗證和修復：如果 args 為空或 URL 缺失，進行診斷
-                    if (!url || Object.keys(args).length === 0) {
-                        console.error("[Open Tab Skill] ⚠️  接收到空參數:", JSON.stringify(args));
-                        console.error("[Open Tab Skill] 可用的 args 鍵:", Object.keys(args));
-                        throw new Error("未提供 URL - 接收到空參數");
+                    console.log("[Open Tab Skill] 提取的 URL:", url);
+                    console.log("[Open Tab Skill] 命令結構:", JSON.stringify(command));
+                    
+                    // 驗證和修復：如果 URL 缺失，進行診斷
+                    if (!url) {
+                        console.error("[Open Tab Skill] ⚠️  未找到 URL");
+                        console.error("[Open Tab Skill] 完整命令:", JSON.stringify(command));
+                        throw new Error("未提供 URL");
                     }
                     
                     // 確保 URL 有有效的協議前綴
@@ -294,14 +298,15 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
         }
 
         console.log(`[Gateway] 執行技能: ${command.skill}`);
+        console.log(`[Gateway] 傳遞給技能的完整命令:`, command);
         
         // 根據技能的執行環境選擇執行方式
         if (skillInfo.runInPageContext) {
             // 在網頁前端執行
-            await runSkillInTabContext(command.skill, skillInfo, command.args || {}, sendResponse);
+            await runSkillInTabContext(command.skill, skillInfo, command, sendResponse);
         } else {
             // 在 Service Worker 中直接執行
-            await runSkillInServiceWorker(command.skill, skillInfo, command.args || {}, sendResponse);
+            await runSkillInServiceWorker(command.skill, skillInfo, command, sendResponse);
         }
         
     } catch (error) {
