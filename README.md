@@ -82,7 +82,7 @@ chrome.runtime.sendMessage({
     target: 'SIDE_PANEL',
     type: 'EXECUTE_SKILL',
     skill: 'open_tab',
-    skillFolder: 'opentab',
+    skillFolder: 'open_tab',
     args: { url: 'https://www.google.com' }
 });
 ```
@@ -118,7 +118,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 **技能執行：**
 
 ```javascript
-// skills/opentab/open_tab.js
+// skills/open_tab/open_tab.js
 export async function open_tab(args) {
     const url = args.url.startsWith('http') 
         ? args.url 
@@ -139,7 +139,7 @@ export async function open_tab(args) {
 
 ```
 skills/
-├── opentab/
+├── open_tab/
 │   ├── open_tab.md          # AI 用的介面定義
 │   └── open_tab.js          # 實作檔（標準 ES Module）
 ├── summarize/
@@ -195,7 +195,7 @@ export async function open_tab(args) {
   "skills": [
     {
       "name": "open_tab",
-      "folder": "opentab",
+      "folder": "open_tab",
       "description": "打開新分頁",
       "runInPageContext": false
     }
@@ -247,7 +247,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     target: 'SIDE_PANEL',           // 目標模組
     type: 'EXECUTE_SKILL',          // 操作類型
     skill: 'open_tab',              // 技能名稱
-    skillFolder: 'opentab',         // 技能資料夾
+    skillFolder: 'open_tab',        // 技能資料夾
     args: {                         // AI 決定的參數
         url: 'https://www.google.com'
     }
