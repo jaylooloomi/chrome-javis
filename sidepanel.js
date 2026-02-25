@@ -22,10 +22,11 @@ if (SpeechRecognition) {
         isListening = true;
         document.getElementById('output').textContent = '🎤 正在聆聽...';
         
-        // 累計 onstart 次數，每 2 次才顯示一次 toast
+        // 累計 onstart 次數，每 5 次才顯示一次 toast
         speechStartCount++;
         if (speechStartCount % 2 === 0) {
-            showInfoToast('🎤 語音助手', '正在聆聽...', 0);  // 不自動關閉
+            // 暫時註解不要刪除
+            //showInfoToast('🎤 語音助手', '正在聆聽...');  // 不自動關閉
         }
         console.log(`[Speech] onstart 累計次數: ${speechStartCount}`);
         
