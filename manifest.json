@@ -40,7 +40,8 @@
       "resources": [
         "skills/*/*.md",
         "config.json",
-        "skills-manifest.json"
+        "skills-manifest.json",
+        "images/*.png"
       ],
       "matches": ["<all_urls>"]
     }

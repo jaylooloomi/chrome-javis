@@ -3,9 +3,8 @@
  * 支持成功、失败、信息三种类型
  */
 
-// 通知图标配置（保留 iconUrl 字段便于后续更换为贾维斯头像）
+// 通知图标配置
 const NOTIFICATION_CONFIG = {
-    iconUrl: '/images/icon-128.png',  // 可更换为贾维斯头像
     successBgColor: '#4CAF50',        // 绿色
     errorBgColor: '#F44336',          // 红色
     infoBgColor: '#2196F3'            // 蓝色
@@ -21,10 +20,14 @@ async function showNotification(type, skillName, message) {
     try {
         // 检查用户是否启用了通知
         const settings = await chrome.storage.sync.get('notificationsEnabled');
+        console.log('[Notifications] 讀取設定:', settings);
+        
         if (settings.notificationsEnabled === false) {
-            console.log('[Notifications] 用户已关闭通知');
+            console.log('[Notifications] ⚠️ 用户已关闭通知，跳過顯示');
             return;
         }
+        
+        console.log('[Notifications] ✅ 通知已啟用，繼續顯示');
 
         // 生成通知标题
         let titleEmoji = '';
@@ -45,24 +48,28 @@ async function showNotification(type, skillName, message) {
         const notificationId = `notification-${Date.now()}`;
         const title = `${titleEmoji} ${skillName}`;
 
-        // 创建通知
-        await chrome.notifications.create(notificationId, {
+        // 创建通知（使用 chrome.runtime.getURL 获取图标的正确路径）
+        const notificationOptions = {
             type: 'basic',
-            iconUrl: NOTIFICATION_CONFIG.iconUrl,
+            iconUrl: chrome.runtime.getURL('images/icon-128.ico'),
             title: title,
             message: message,
             priority: 2,
-            requireInteraction: false  // 不要求用户交互
-        });
+            requireInteraction: true
+        };
+        
+        console.log('[Notifications] 正在創建通知，iconUrl:', notificationOptions.iconUrl);
+        
+        await chrome.notifications.create(notificationId, notificationOptions);
 
-        console.log('[Notifications] 已显示通知:', { type, skillName, message });
+        console.log('[Notifications] ✅ 已显示通知:', { type, skillName, message, notificationId });
 
-        // 2秒后自动关闭通知
+        // 10秒后自动关闭通知（改長便於測試）
         setTimeout(() => {
             chrome.notifications.clear(notificationId, () => {
                 console.log('[Notifications] 通知已自动关闭');
             });
-        }, 2000);
+        }, 10000);  // 改为 10 秒
 
     } catch (error) {
         console.error('[Notifications] 显示通知失败:', error);
