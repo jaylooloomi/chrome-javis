@@ -200,7 +200,6 @@ function showToast(type, title, message, duration = 10000) {
         console.log('[Toast] ✅ 已顯示:', { type, title, toastId });
         
         // 關閉按鈕事件
-        const closeBtn = document.getElementById(`close-${toastId}`);
         closeBtn.addEventListener('click', () => {
             removeToast(toastId);
         });
