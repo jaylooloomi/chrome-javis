@@ -259,23 +259,29 @@ document.getElementById('askGeminiBtn').addEventListener('click', async () => {
     console.log("[SidePanel] Ask Gemini 按鈕被點擊");
     
     try {
-        // 1. 嘗試從剪貼板讀取文字
-        let selectedText = "";
-        try {
-            selectedText = await navigator.clipboard.readText();
-            console.log("[SidePanel] 從剪貼板讀取文字:", selectedText.substring(0, 50));
-        } catch (err) {
-            console.warn("[SidePanel] 無法讀取剪貼板:", err);
-            selectedText = "";
-        }
+        // 1. 獲取當前活動標籤頁
+        const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        console.log("[SidePanel] 當前活動標籤頁:", activeTab.id, activeTab.title);
         
-        // 2. 如果剪貼板為空，提示用戶
-        if (!selectedText) {
-            document.getElementById('output').textContent = "⚠️ 剪貼板為空。請先複製要查詢的文字。";
+        // 2. 從當前頁面抓取 HTML
+        document.getElementById('output').textContent = "⏳ 正在抓取頁面 HTML...";
+        
+        const htmlResult = await chrome.tabs.executeScript({
+            target: { tabId: activeTab.id },
+            function: () => {
+                return document.documentElement.outerHTML;
+            }
+        });
+        
+        const pageHTML = htmlResult[0].result;
+        console.log("[SidePanel] 抓取頁面 HTML，長度:", pageHTML.length);
+        
+        if (!pageHTML) {
+            document.getElementById('output').textContent = "❌ 無法抓取頁面 HTML";
             return;
         }
         
-        document.getElementById('output').textContent = `⏳ 正在開啟 Gemini，準備貼上：${selectedText.substring(0, 50)}...`;
+        document.getElementById('output').textContent = `⏳ 正在開啟 Gemini，準備貼上頁面內容...`;
         
         // 3. 直接在 SidePanel 中加載並執行 ask_gemini 技能（不經過 Service Worker）
         try {
@@ -288,7 +294,7 @@ document.getElementById('askGeminiBtn').addEventListener('click', async () => {
             }
             
             console.log("[SidePanel] 執行 ask_gemini 技能");
-            const result = await skillFunc({ text: selectedText });
+            const result = await skillFunc({ text: pageHTML });
             
             console.log("[SidePanel] ask_gemini 執行成功:", result);
             document.getElementById('output').textContent = result;
