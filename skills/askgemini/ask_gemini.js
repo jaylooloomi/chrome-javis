@@ -220,9 +220,9 @@ function pasteAndSubmit(text) {
             } else {
                 console.warn("[Ask Gemini Skill] [延遲點擊] ❌ 找不到發送按鈕");
             }
-        }, 2000);  // 2 秒後點擊
+        }, 500);  // 0.5 秒後點擊
         
-        result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 已安排 setTimeout 延遲點擊 (2000ms 後)");
+        result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 已安排 setTimeout 延遲點擊 (500ms 後)");
         result.logs.push("[+" + (Date.now() - startTime) + "ms] ✅ 流程已完成（腳本立即返回，讓 Gemini 解除按鈕禁用）");
 
     } catch (error) {
