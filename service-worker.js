@@ -104,23 +104,62 @@ async function loadSkillsDynamically() {
     console.log("[Gateway] 技能庫已構建完成。已載入技能:", Object.keys(SKILL_REGISTRY));
 }
 
-// 驗證 Service Worker 技能是否已加載
-// 注意：技能腳本由 manifest.json 中的 scripts 預加載
+// 預加載 Service Worker 技能
+// 使用 fetch 動態加載技能文件，技能在文件中會自己註冊
 async function preloadServiceWorkerSkill(skillName, skillFolder) {
     try {
-        console.log(`[Gateway] 驗證技能: ${skillName}`);
+        console.log(`[Gateway] 預加載技能: ${skillName}`);
         
-        // 檢查技能是否已由 manifest 預加載
+        // 先檢查是否已預加載
         if (SERVICE_WORKER_SKILLS[skillName]) {
             console.log(`[Gateway] ✅ 技能 ${skillName} 已預加載`);
             return true;
+        }
+        
+        // 如果未預加載，使用 fetch 動態加載
+        const skillPath = `skills/${skillFolder}/${skillName}.js`;
+        const fullUrl = chrome.runtime.getURL(skillPath);
+        console.log(`[Gateway] 動態加載技能文件: ${fullUrl}`);
+        
+        // 使用 import() 加載 ES Module 技能
+        try {
+            // 嘗試作為 ES Module 導入
+            await import(fullUrl);
+            console.log(`[Gateway] ✅ 以 ES Module 方式加載成功`);
+        } catch (importError) {
+            // 如果 import 失敗，嘗試 fetch + eval
+            console.warn(`[Gateway] ⚠️  ES Module 加載失敗，嘗試 fetch 方式`);
+            
+            const response = await fetch(fullUrl);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: 無法加載技能文件`);
+            }
+            
+            const scriptContent = await response.text();
+            console.log(`[Gateway] ✅ 已取得腳本 (${scriptContent.length} 字符)`);
+            
+            // 在全局上下文中執行腳本
+            const fn = new Function(scriptContent);
+            fn.call(globalThis);
+            console.log(`[Gateway] ✅ 腳本已執行`);
+        }
+        
+        // 等待一個事件循環，確保 SERVICE_WORKER_SKILLS 被填充
+        await new Promise(resolve => setTimeout(resolve, 10));
+        
+        // 驗證技能是否被成功註冊
+        if (SERVICE_WORKER_SKILLS[skillName]) {
+            console.log(`[Gateway] ✅ 技能 ${skillName} 已成功註冊`);
+            return true;
         } else {
-            console.warn(`[Gateway] ⚠️  技能 ${skillName} 未預加載`);
-            console.warn(`[Gateway] 已加載的技能:`, Object.keys(SERVICE_WORKER_SKILLS));
+            console.error(`[Gateway] ❌ 技能 ${skillName} 未成功註冊`);
+            console.error(`[Gateway] 已註冊的技能:`, Object.keys(SERVICE_WORKER_SKILLS));
             return false;
         }
     } catch (e) {
-        console.error(`[Gateway] 驗證失敗 [${skillName}]:`, e);
+        console.error(`[Gateway] 預加載失敗 [${skillName}]:`, e.message);
+        console.error(`[Gateway] 完整錯誤:`, e);
+        console.error(`[Gateway] 錯誤堆棧:`, e.stack);
         return false;
     }
 }

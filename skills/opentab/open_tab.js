@@ -1,10 +1,17 @@
 // open_tab.js - 在 Service Worker 中執行的技能
 // 全局註冊到 SERVICE_WORKER_SKILLS
+// 這個文件會被 service-worker.js 動態加載
 
-console.log("[Open Tab Skill] 技能文件已加載，正在註冊...");
+console.log("[Open Tab Skill] 文件已加載，準備註冊...");
 
-// 確保 SERVICE_WORKER_SKILLS 存在（由 service-worker.js 定義）
-if (typeof SERVICE_WORKER_SKILLS !== 'undefined') {
+// IIFE 確保代碼在正確的上下文中執行
+(function() {
+    // 確保 SERVICE_WORKER_SKILLS 存在（由 service-worker.js 定義）
+    if (typeof SERVICE_WORKER_SKILLS === 'undefined') {
+        console.error("[Open Tab Skill] ❌ SERVICE_WORKER_SKILLS 未定義！");
+        return;
+    }
+
     SERVICE_WORKER_SKILLS['open_tab'] = async (args) => {
         console.log("[Open Tab Skill] 啟動，接收到參數:", args);
 
@@ -47,7 +54,6 @@ if (typeof SERVICE_WORKER_SKILLS !== 'undefined') {
             throw new Error(`開啟分頁失敗：${error.message}`);
         }
     };
+    
     console.log("[Open Tab Skill] ✅ 已成功註冊到 SERVICE_WORKER_SKILLS");
-} else {
-    console.error("[Open Tab Skill] ❌ SERVICE_WORKER_SKILLS 未定義！");
-}
+})();
