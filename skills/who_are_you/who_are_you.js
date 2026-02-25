@@ -6,7 +6,7 @@ export async function who_are_you(args) {
 
     try {
         const introduction = `
-🤖 我是 Jarvis, 你的智能助手!
+🤖 我是 Jarvis, 你的智能助手! 模型: ${args.modelName}
         `.trim();
 
         console.log("[Who Are You Skill] 成功返回介紹");

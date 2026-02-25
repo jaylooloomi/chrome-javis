@@ -308,7 +308,7 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
             await runSkillInTabContext(command.skill, skillInfo, command.args, sendResponse);
         } else {
             // 在 Service Worker 中直接執行
-            await runSkillInServiceWorker(command.skill, skillInfo, command.args, sendResponse);
+            await runSkillInServiceWorker(command.skill, skillInfo, command.args, sendResponse, configData);
         }
         
     } catch (error) {
@@ -318,7 +318,7 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
 }
 
 // --- 在 SidePanel 中執行技能 ---
-async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse) {
+async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse, configData) {
     try {
         console.log(`[Gateway] 將技能轉發給 SidePanel 執行: ${skillName}`);
         console.log(`[Gateway] 傳遞的參數:`, args);
@@ -345,6 +345,19 @@ async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse)
                 args.url = activeTab.url;
                 console.log(`[Gateway] 替換 url: ${activeTab.url}`);
             }
+        }
+        
+        // 添加當前模型名稱到 args
+        if (!args.modelName && configData) {
+            // 根據 activeModel 獲取友好的模型名稱
+            const modelNames = {
+                'geminiFlash': 'Gemini 2.5 Flash',
+                'ollamaGemma2B': 'Ollama Gemma 2B',
+                'ollamaGemmaLarge': 'Ollama Gemma Large',
+                'ollamaMinimaxM2': 'Ollama Minimax M2'
+            };
+            args.modelName = modelNames[configData.activeModel] || configData.activeModel || 'Unknown Model';
+            console.log(`[Gateway] 添加 modelName: ${args.modelName}`);
         }
         
         // 改為調用 SidePanel 執行技能
