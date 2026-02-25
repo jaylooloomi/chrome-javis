@@ -3,10 +3,6 @@
 
 console.log("[Gateway] 🚀 Service Worker 已加載");
 
-// ======== 靜態導入 Service Worker 技能 ========
-// 技能的 IIFE 會在導入時自動執行並向 self.SERVICE_WORKER_SKILLS 註冊
-import './skills/opentab/open_tab.js';
-
 // ======== 技能註冊表和快取 ========
 const SKILL_REGISTRY = {};
 
@@ -18,22 +14,37 @@ let loadingPromise = null;
 // 此表將通過 loadSkillsDynamically() 動態填充
 const SKILL_MAPPINGS = {};
 
-// ======== Service Worker 技能執行函數映射 ========
-// 所有 Service Worker 技能在此定義（掛載到 self 全域上下文）
-self.SERVICE_WORKER_SKILLS = {};
-
-// --- 執行已加載的 Service Worker 技能 ---
-// 所有 Service Worker 技能通過靜態 import 在啟動時加載
-async function loadAndRunSkillInServiceWorker(skillName, skillFolder, args) {
+// --- 執行 SidePanel 技能 ---
+// 將技能執行請求轉發給 SidePanel，由 SidePanel 進行動態加載和執行
+async function executeSidePanelSkill(skillName, skillFolder, args) {
     try {
-        // 檢查技能是否已註冊
-        const skillFunc = self.SERVICE_WORKER_SKILLS[skillName];
-        if (typeof skillFunc === 'function') {
-            console.log(`[Gateway] 執行技能: ${skillName}`);
-            return await skillFunc(args);
-        } else {
-            throw new Error(`技能 ${skillName} 未加載或未註冊`);
-        }
+        console.log(`[Gateway] 正在轉發技能到 SidePanel: ${skillName}`);
+        
+        // 發送消息給 SidePanel 執行技能
+        return new Promise((resolve, reject) => {
+            chrome.runtime.sendMessage(
+                {
+                    target: 'SIDE_PANEL',
+                    type: 'EXECUTE_SKILL',
+                    skill: skillName,
+                    skillFolder: skillFolder,
+                    args: args
+                },
+                (response) => {
+                    if (chrome.runtime.lastError) {
+                        console.error(`[Gateway] SidePanel 通訊錯誤:`, chrome.runtime.lastError);
+                        reject(new Error(`無法連接到 SidePanel: ${chrome.runtime.lastError.message}`));
+                    } else if (response && response.status === 'success') {
+                        console.log(`[Gateway] 技能執行成功:`, response.result);
+                        resolve(response.result);
+                    } else {
+                        const error = response?.error || '未知錯誤';
+                        console.error(`[Gateway] 技能執行失敗:`, error);
+                        reject(new Error(error));
+                    }
+                }
+            );
+        });
     } catch (error) {
         console.error(`[Gateway] 執行技能失敗 [${skillName}]:`, error);
         throw error;
@@ -287,13 +298,13 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
     }
 }
 
-// --- 在 Service Worker 中直接執行技能 ---
+// --- 在 SidePanel 中執行技能 ---
 async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse) {
     try {
-        console.log(`[Gateway] 在 Service Worker 中執行技能: ${skillName}`);
+        console.log(`[Gateway] 將技能轉發給 SidePanel 執行: ${skillName}`);
         
-        // 按需加載並執行技能
-        const result = await loadAndRunSkillInServiceWorker(skillName, skillInfo.folder, args);
+        // 改為調用 SidePanel 執行技能
+        const result = await executeSidePanelSkill(skillName, skillInfo.folder, args);
         
         console.log(`[Gateway] 技能 ${skillName} 執行結果:`, result);
         sendResponse({ status: "success", text: result });
