@@ -9,7 +9,10 @@
     "storage",
     "activeTab",
     "scripting",
-    "contextMenus"
+    "contextMenus",
+    "clipboardRead",
+    "clipboardWrite",
+    "tabs"
   ],
   "host_permissions": [
     "http://localhost:11434/*",
