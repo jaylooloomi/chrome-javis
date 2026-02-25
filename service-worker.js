@@ -227,18 +227,18 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
         console.log("[Gateway] 可用技能:", Object.keys(SKILL_REGISTRY));
         
         let aiResponse;
-        if (configData.activeModel === 'ollama') {
-            console.log("[Gateway] ✅ 選擇使用 Ollama 模型 (gemma2:2b)");
-            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollama, null, 2));
-            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollama);
-        } else if (configData.activeModel === 'ollamaGemma') {
-            console.log("[Gateway] ✅ 選擇使用 Ollama Gemma 模型");
-            console.log("[Gateway] Ollama Gemma 配置:", JSON.stringify(configData.ollamaGemma, null, 2));
-            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaGemma);
+        if (configData.activeModel === 'ollamaGemma2B') {
+            console.log("[Gateway] ✅ 選擇使用 Ollama Gemma 2B 模型 (小模型)");
+            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemma2B, null, 2));
+            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaGemma2B);
+        } else if (configData.activeModel === 'ollamaGemmaLarge') {
+            console.log("[Gateway] ✅ 選擇使用 Ollama Gemma Large 模型 (大模型)");
+            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemmaLarge, null, 2));
+            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaGemmaLarge);
         } else {
-            console.log("[Gateway] ✅ 選擇使用 Gemini Flash 模型");
-            console.log("[Gateway] Gemini 配置:", JSON.stringify({...configData.gemini, apiKey: '***'}));
-            aiResponse = await callGeminiFlash(userPrompt, dynamicSystemPrompt, configData.gemini);
+            console.log("[Gateway] ✅ 選擇使用 Gemini 2.5 Flash 模型");
+            console.log("[Gateway] Gemini 配置:", JSON.stringify({...configData.geminiFlash, apiKey: '***'}));
+            aiResponse = await callGeminiFlash(userPrompt, dynamicSystemPrompt, configData.geminiFlash);
         }
         
         console.log("[Gateway] AI 原始回應 (長度:", aiResponse.length, "):", aiResponse);
