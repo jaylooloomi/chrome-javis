@@ -4,6 +4,7 @@ let recognition = null;
 let isListening = false;
 let final_transcript = '';
 let interim_transcript = '';
+let isAutoRunning = false;  // 標記是否在自動執行流程中
 
 if (SpeechRecognition) {
     recognition = new SpeechRecognition();
@@ -27,13 +28,26 @@ if (SpeechRecognition) {
         document.getElementById('micBtn').classList.remove('listening');
         document.getElementById('micBtn').textContent = '🎤';
         
-        // 識別結束後自動執行
+        // 識別結束後等待 0.5s，檢查是否有內容需要執行
         const text = final_transcript.trim();
-        if (text) {
-            console.log("[Speech] 自動執行文本:", text);
+        if (text && !isAutoRunning) {
+            console.log("[Speech] 停顿 0.5s 后自动执行:", text);
+            isAutoRunning = true;
             setTimeout(() => {
                 document.getElementById('runBtn').click();
-            }, 300); // 延遲 300ms 讓 UI 更新完成
+                // 执行后重新启动常驻麦克风
+                setTimeout(() => {
+                    console.log("[Speech] 重新启动常驻麦克风");
+                    recognition.start();
+                    isAutoRunning = false;
+                }, 500);
+            }, 500); // 停顿 0.5s
+        } else if (!text) {
+            // 没有识别到内容，继续监听
+            console.log("[Speech] 未识别到内容，继续监听");
+            setTimeout(() => {
+                recognition.start();
+            }, 300);
         }
     };
 
@@ -117,6 +131,14 @@ document.getElementById('micBtn').addEventListener('click', () => {
     } else {
         // 開始識別
         document.getElementById('userInput').focus();
+        recognition.start();
+    }
+});
+
+// ======== 頁面加載時自動啟動常駐麥克風 ========
+document.addEventListener('DOMContentLoaded', () => {
+    if (recognition) {
+        console.log("[Speech] 頁面載入，自動啟動常駐麥克風");
         recognition.start();
     }
 });
