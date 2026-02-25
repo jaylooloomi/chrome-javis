@@ -138,11 +138,16 @@ function pasteAndSubmit(text) {
         inputElement.dispatchEvent(new Event('change', { bubbles: true }));
         result.logs.push("✅ 事件已觸發");
         
-        // 3.5. 等待頁面完全載入和 UI 更新（500ms）
+        // 3. 觸發事件
+        inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+        inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+        result.logs.push("✅ 事件已觸發");
+        
+        // 3.5. 等待頁面完全載入和 UI 更新（1500ms）
         result.logs.push("⏱️ 等待頁面 UI 更新...");
         const startTime = Date.now();
-        while (Date.now() - startTime < 500) {
-            // 同步等待 500ms
+        while (Date.now() - startTime < 1500) {
+            // 同步等待 1500ms
         }
         result.logs.push("✅ 頁面 UI 已更新");
 
@@ -180,7 +185,6 @@ function pasteAndSubmit(text) {
                 'button[data-testid*="send"]',
                 'button[type="submit"]',
                 'div[role="button"][data-testid*="send"]',
-                // 查找所有 button，篩選出包含 mat-icon send 的
                 'button[type="button"]'
             ];
             
@@ -204,31 +208,11 @@ function pasteAndSubmit(text) {
                 result.logs.push("✅ 已點擊發送按鈕");
             } catch (e) {
                 result.logs.push("❌ 點擊發送按鈕失敗: " + e);
+                throw new Error("無法點擊發送按鈕: " + e.message);
             }
         } else {
-            result.logs.push("⚠️ 未找到發送按鈕，嘗試按 Enter 鍵...");
-            inputElement.focus();
-            
-            const enterEvent = new KeyboardEvent('keydown', {
-                key: 'Enter',
-                code: 'Enter',
-                keyCode: 13,
-                which: 13,
-                bubbles: true,
-                cancelable: true
-            });
-            inputElement.dispatchEvent(enterEvent);
-            
-            const enterUpEvent = new KeyboardEvent('keyup', {
-                key: 'Enter',
-                code: 'Enter',
-                keyCode: 13,
-                which: 13,
-                bubbles: true,
-                cancelable: true
-            });
-            inputElement.dispatchEvent(enterUpEvent);
-            result.logs.push("✅ 已按 Enter 鍵");
+            result.logs.push("❌ 找不到發送按鈕");
+            throw new Error("無法找到 Gemini 發送按鈕，頁面可能未完全載入或 UI 結構已改變");
         }
 
         result.success = true;
