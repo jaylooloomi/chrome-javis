@@ -39,6 +39,7 @@
     {
       "resources": [
         "skills/*/*.md",
+        "skills/*/*.js",
         "skills/skills-manifest.json",
         "config.json",
         "images/*.png",

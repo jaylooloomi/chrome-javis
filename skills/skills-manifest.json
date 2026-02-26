@@ -13,6 +13,18 @@
       "runInPageContext": false
     },
     {
+      "name": "page_control",
+      "folder": "page_control",
+      "description": "Navigate to the previous or next page using browser history. Only use this skill when the user explicitly asks to go back/forward or navigate to the previous/next page.",
+      "runInPageContext": true
+    },
+    {
+      "name": "page_scroll",
+      "folder": "page_scroll",
+      "description": "Scroll the current page up, down, or jump to top/bottom. Only use this skill when the user explicitly asks to scroll/page up/down/to top/to bottom.",
+      "runInPageContext": true
+    },
+    {
       "name": "summary_this_page",
       "folder": "summary_this_page",
       "description": "分析頁面、重點整理 - 使用 Google Gemini 進行頁面內容摘要與分析。僅在用戶明確要求分析/摘要/發送當前頁面至 Gemini 時使用。Summarize and analyze the current page content using Google Gemini. Only use this skill when the user explicitly asks to analyze/summarize/send the current page to Gemini.",
