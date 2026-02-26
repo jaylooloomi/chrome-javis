@@ -3,47 +3,39 @@
  * Executes in page context using window.history API
  */
 
-async function executePageControl(args) {
-  const { direction } = args;
+export async function page_control(args) {
+  console.log("[Page Control Skill] 啟動，接收到參數:", args);
 
   try {
-    // Validate direction parameter
-    if (!direction || !['previous', 'next'].includes(direction)) {
-      console.error('❌ page_control: Invalid direction. Must be "previous" or "next".');
-      return {
-        success: false,
-        error: 'Invalid direction parameter'
-      };
+    const direction = args.direction;
+
+    if (!direction) {
+      throw new Error("未提供導航方向 (direction)");
     }
 
-    // Execute navigation based on direction
-    if (direction === 'previous') {
-      window.history.back();
-      console.log('✅ page_control: Navigated to previous page');
-      return {
-        success: true,
-        message: 'Navigated to previous page',
-        direction: 'previous'
-      };
-    } else if (direction === 'next') {
-      window.history.forward();
-      console.log('✅ page_control: Navigated to next page');
-      return {
-        success: true,
-        message: 'Navigated to next page',
-        direction: 'next'
-      };
+    // 驗證方向值
+    const validDirections = ['previous', 'next'];
+    if (!validDirections.includes(direction.toLowerCase())) {
+      throw new Error(`無效的導航方向: ${direction}。必須是: ${validDirections.join(', ')}`);
+    }
+
+    // 根據方向執行導航
+    switch (direction.toLowerCase()) {
+      case 'previous':
+        console.log("[Page Control Skill] 導航到上一頁");
+        window.history.back();
+        return "✅ 已返回上一頁";
+
+      case 'next':
+        console.log("[Page Control Skill] 導航到下一頁");
+        window.history.forward();
+        return "✅ 已前進下一頁";
+
+      default:
+        throw new Error(`未知的導航方向: ${direction}`);
     }
   } catch (error) {
-    console.error('❌ page_control error:', error.message);
-    return {
-      success: false,
-      error: error.message
-    };
+    console.error("[Page Control Skill] 錯誤:", error);
+    throw new Error(`導航失敗：${error.message}`);
   }
 }
-
-// Execute the skill
-executePageControl(args).then(result => {
-  console.log('page_control result:', result);
-});
