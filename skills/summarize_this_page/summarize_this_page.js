@@ -1,7 +1,7 @@
-// summary_this_page.js - 在 SidePanel 中執行的技能
+// summarize_this_page.js - 在 SidePanel 中執行的技能
 // 快速將頁面內容總結並發送到 Google Gemini
 
-export async function summary_this_page(args) {
+export async function summarize_this_page(args) {
     console.log("[Summary Page Skill] 啟動，接收到參數:", args);
 
     try {

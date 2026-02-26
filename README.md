@@ -252,8 +252,8 @@ export async function open_tab(args) {
       "runInPageContext": false
     },
     {
-      "name": "summary_this_page",
-      "folder": "summary_this_page",
+      "name": "summarize_this_page",
+      "folder": "summarize_this_page",
       "description": "分析並總結當前頁面",
       "runInPageContext": false
     },
@@ -293,7 +293,7 @@ export async function open_tab(args) {
 
 **支持的網站**：Google, YouTube, YouTube Music, GitHub, Twitter, LinkedIn, Facebook, Instagram, Yahoo, Gmail, Setting
 
-### 2. summary_this_page - 分析並總結頁面
+### 2. summarize_this_page - 分析並總結頁面
 
 **功能**：將當前頁面發送到 Google Gemini 進行分析、摘要或評估
 
@@ -630,9 +630,9 @@ export async function myskill(args) {
 [Gateway] 🚀 Service Worker 已加載
 [Gateway] 啟動動態技能加載器...
 [Gateway] 讀取技能清單: chrome-extension://...
-[Gateway] 發現技能: open_tab, summary_this_page, who_are_you, close_this_page
+[Gateway] 發現技能: open_tab, summarize_this_page, who_are_you, close_this_page
 [Gateway] ✅ 技能 [open_tab] 已加載
-[Gateway] 可用技能:(4) ['open_tab', 'summary_this_page', 'who_are_you', 'close_this_page']
+[Gateway] 可用技能:(4) ['open_tab', 'summarize_this_page', 'who_are_you', 'close_this_page']
 ```
 
 ### 查看 SidePanel 日誌
@@ -659,7 +659,7 @@ export async function myskill(args) {
 [Gateway] - Service Worker 層
 [SidePanel] - SidePanel 主線程
 [Open Tab Skill] - open_tab 技能
-[Summary Page Skill] - summary_this_page 技能
+[Summary Page Skill] - summarize_this_page 技能
 [Close Page Skill] - close_this_page 技能
 [Who Are You Skill] - who_are_you 技能
 ```
@@ -714,7 +714,7 @@ export async function myskill(args) {
 ### 已實現的技能 ✅
 
 - ✅ **open_tab** - 打開新標籤頁
-- ✅ **summary_this_page** - 分析並總結頁面
+- ✅ **summarize_this_page** - 分析並總結頁面
 - ✅ **close_this_page** - 關閉當前標籤頁
 - ✅ **who_are_you** - 介紹助手功能
 
@@ -816,7 +816,7 @@ chrome-jarvis/
 ├── skills/
 │   ├── skills-manifest.json  # 自動生成（勿手動編輯）
 │   ├── open_tab/
-│   ├── summary_this_page/
+│   ├── summarize_this_page/
 │   ├── close_this_page/
 │   └── who_are_you/
 ├── service-worker.js
