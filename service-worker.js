@@ -43,21 +43,42 @@ const MAX_RECENT_CACHE = 10;
 /**
  * 在 Service Worker 啟動時從 session 存儲恢復快取
  * 解決 Service Worker 30秒無活動被系統殺掉的問題
+ * 同時恢復 aiResultCache 和 recentCacheList
  */
 async function initializeCacheFromSession() {
     try {
         const stored = await chrome.storage.session.get('aiCache');
-        if (stored.aiCache && Array.isArray(stored.aiCache)) {
-            // 將存儲的數組恢復到 Map
-            stored.aiCache.forEach(([key, value]) => {
-                aiResultCache.set(key, value);
-            });
-            console.log(`[Gateway] ✅ 從 session 恢復快取: ${stored.aiCache.length} 項`);
-            return stored.aiCache.length;
-        } else {
+        if (!stored.aiCache) {
             console.log(`[Gateway] 📦 session 中無快取數據`);
             return 0;
         }
+        
+        // 新格式：{cache: [...], recent: [...]}
+        if (stored.aiCache.cache && Array.isArray(stored.aiCache.cache)) {
+            // 恢復 aiResultCache
+            stored.aiCache.cache.forEach(([key, value]) => {
+                aiResultCache.set(key, value);
+            });
+            console.log(`[Gateway] ✅ 恢復 aiResultCache: ${stored.aiCache.cache.length} 項`);
+            
+            // 恢復 recentCacheList
+            if (stored.aiCache.recent && Array.isArray(stored.aiCache.recent)) {
+                recentCacheList.splice(0, 0, ...stored.aiCache.recent);
+                console.log(`[Gateway] ✅ 恢復 recentCacheList: ${stored.aiCache.recent.length} 項`);
+            }
+            
+            return aiResultCache.size;
+        }
+        // 舊格式：直接是數組（向后兼容）
+        else if (Array.isArray(stored.aiCache)) {
+            stored.aiCache.forEach(([key, value]) => {
+                aiResultCache.set(key, value);
+            });
+            console.log(`[Gateway] ⚠️ 檢測到舊格式快取，已恢復 ${stored.aiCache.length} 項`);
+            return stored.aiCache.length;
+        }
+        
+        return 0;
     } catch (error) {
         console.warn(`[Gateway] ⚠️ 從 session 恢復快取失敗:`, error);
         return 0;
@@ -66,13 +87,16 @@ async function initializeCacheFromSession() {
 
 /**
  * 異步將快取保存到 session 存儲（不阻塞主線程）
- * 在每次添加快取時調用
+ * 同時保存 aiResultCache 和 recentCacheList
  */
 async function saveCacheToSession() {
     try {
-        const cacheData = Array.from(aiResultCache.entries());
+        const cacheData = {
+            cache: Array.from(aiResultCache.entries()),
+            recent: recentCacheList
+        };
         await chrome.storage.session.set({ aiCache: cacheData });
-        console.log(`[Gateway] 💾 快取已保存到 session (${cacheData.length} 項)`);
+        console.log(`[Gateway] 💾 快取已保存到 session (${cacheData.cache.length} 項快取, ${cacheData.recent.length} 條記錄)`);
     } catch (error) {
         console.warn(`[Gateway] ⚠️ 快取保存到 session 失敗，但內存快取仍有效:`, error);
     }
