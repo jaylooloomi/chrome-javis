@@ -7,6 +7,10 @@
 
 console.log("[Gateway] 🚀 Service Worker 已加載");
 
+// ======== 模型名稱映射表 ========
+// 從 config.json 動態加載，避免硬編碼
+let MODEL_NAMES = {};
+
 // ======== 技能註冊表和快取 ========
 const SKILL_REGISTRY = {};
 
@@ -17,6 +21,36 @@ let loadingPromise = null;
 // 技能對應表：{skillName: folderName}
 // 此表將通過 loadSkillsDynamically() 動態填充
 const SKILL_MAPPINGS = {};
+
+// ======== AI 推理結果快取 (階段1：內存快取 + 精確匹配) ========
+// 用於存儲 userInput → AI 推理結果的映射
+// 相同的用戶輸入可直接返回快取結果，無需再次呼叫 AI 模型
+const aiResultCache = new Map();
+
+/**
+ * 從快取中獲取 AI 推理結果
+ * @param {string} userInput - 用戶的文本輸入
+ * @returns {object|null} - 快取的結果或 null（如果未找到）
+ */
+function getFromCache(userInput) {
+    const result = aiResultCache.get(userInput);
+    if (result) {
+        console.log(`[Gateway] 🚀 快取命中: "${userInput}"`);
+        console.log(`[Gateway] 快取結果:`, result);
+    }
+    return result;
+}
+
+/**
+ * 將 AI 推理結果存入快取
+ * @param {string} userInput - 用戶的文本輸入
+ * @param {object} result - AI 推理結果 {skill, args}
+ */
+function putInCache(userInput, result) {
+    aiResultCache.set(userInput, result);
+    console.log(`[Gateway] 📝 將結果快取: "${userInput}"`);
+    console.log(`[Gateway] 目前快取大小: ${aiResultCache.size} 個項目`);
+}
 
 // --- 執行 SidePanel 技能 ---
 // 將技能執行請求轉發給 SidePanel，由 SidePanel 進行動態加載和執行
@@ -43,9 +77,8 @@ async function executeSidePanelSkill(skillName, skillFolder, args, runInPageCont
                     type: 'EXECUTE_SKILL',
                     skill: skillName,
                     skillFolder: skillFolder,
-                    runInPageContext: runInPageContext,  // ← 新增：執行環境標誌
-                    tabId: tabId,                        // ← 新增：當前標籤頁 ID
-                    args: args
+                    runInPageContext: runInPageContext,  // ← 執行環境標誌
+                    args: args                           // ← tabId 已包含在 args 中
                 },
                 (response) => {
                     if (responded) return;
@@ -74,7 +107,7 @@ async function executeSidePanelSkill(skillName, skillFolder, args, runInPageCont
 
 // --- 階段 A：啟動與技能裝載（動態掃描） ---
 async function ensureSkillsLoaded() {
-    if (dynamicSystemPrompt) return;
+    if (dynamicSystemPrompt && Object.keys(MODEL_NAMES).length > 0) return;
     if (loadingPromise) {
         await loadingPromise;
         return;
@@ -86,6 +119,23 @@ async function ensureSkillsLoaded() {
 
 async function loadSkillsDynamically() {
     console.log("[Gateway] 啟動動態技能加載器...");
+    
+    // 加載模型名稱映射表
+    try {
+        const configUrl = chrome.runtime.getURL('config.json');
+        const configResponse = await fetch(configUrl);
+        const configData = await configResponse.json();
+        MODEL_NAMES = configData.modelNames || {};
+        console.log("[Gateway] ✅ 已加載模型名稱映射表:", MODEL_NAMES);
+    } catch (e) {
+        console.warn("[Gateway] ⚠️  無法加載模型名稱，使用默認值");
+        MODEL_NAMES = {
+            'geminiFlash': 'Gemini 2.5 Flash',
+            'ollamaGemma2B': 'Ollama Gemma 2B',
+            'ollamaGemmaLarge': 'Ollama Gemma Large',
+            'ollamaMinimaxM2': 'Ollama Minimax M2'
+        };
+    }
     
     try {
         // 1. 從 skills/skills-manifest.json 讀取技能列表
@@ -148,6 +198,7 @@ async function loadSkillsDynamically() {
         + "3. 如果無法完成任務，回傳 {\"error\": \"原因\"}\n"
         + "4. 不要返回空的 JSON 對象 {}\n"
         + "5. 始終檢查用戶輸入是否匹配任何技能\n";
+
     dynamicSystemPrompt = promptBuilder;
     console.log("[Gateway] 技能庫已構建完成。已載入技能:", Object.keys(SKILL_REGISTRY));
 }
@@ -221,34 +272,62 @@ async function handleRequest(userPrompt, sendResponse, configData = null, sender
 
         await ensureSkillsLoaded();
         
-        console.log("[Gateway] ═══ 階段 B：呼叫 AI 模型 ═══");
+        // ====== 阶段 B：检查快取 ======
+        console.log("[Gateway] ═══ 階段 B：檢查快取 ═══");
+        const cachedResult = getFromCache(userPrompt);
+        if (cachedResult) {
+            console.log("[Gateway] ✅ 快取命中！跳過 AI 推理");
+            console.log("[Gateway] 使用快取結果:", cachedResult);
+            
+            // 獲取技能信息
+            const skillInfo = SKILL_MAPPINGS[cachedResult.skill];
+            if (!skillInfo) {
+                console.error("[Gateway] ❌ 快取中的技能已不存在:", cachedResult.skill);
+                sendResponse({ status: "error", text: `技能已被移除: ${cachedResult.skill}` });
+                return;
+            }
+            
+            // 準備執行 - 需要重新獲取當前 tab 信息
+            let activeTab = null;
+            try {
+                const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+                if (tab) {
+                    activeTab = tab;
+                }
+            } catch (error) {
+                console.warn(`[Gateway] 無法查詢標籤頁:`, error);
+            }
+            
+            const tabId = activeTab?.id || null;
+            const skillArgs = cachedResult.args || {};
+            skillArgs.tabId = tabId;  // 確保 tabId 是最新的
+            
+            // 添加必要的 args
+            if (!skillArgs.modelName && configData) {
+                skillArgs.modelName = MODEL_NAMES[configData.activeModel] || configData.activeModel || 'Unknown Model';
+            }
+            
+            if (!skillArgs.language) {
+                try {
+                    const langSettings = await chrome.storage.sync.get('micLanguage');
+                    skillArgs.language = langSettings.micLanguage || 'zh-TW';
+                } catch (error) {
+                    skillArgs.language = 'zh-TW';
+                }
+            }
+            
+            // 轉發給 SidePanel 執行
+            await runSkillInSidePanel(cachedResult.skill, skillInfo, skillArgs, sendResponse, configData, tabId);
+            return;
+        }
+        
+        console.log("[Gateway] ═══ 階段 C：呼叫 AI 模型 ═══");
         console.log("[Gateway] 接收到的 config:", JSON.stringify(configData, null, 2));
         console.log("[Gateway] activeModel 值:", configData.activeModel);
         console.log("[Gateway] activeModel 類型:", typeof configData.activeModel);
         console.log("[Gateway] 可用技能:", Object.keys(SKILL_REGISTRY));
         
-        let aiResponse;
-        if (configData.activeModel === 'ollamaGemma2B') {
-            console.log("[Gateway] ✅ 選擇使用 Ollama Gemma 2B 模型 (小模型)");
-            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemma2B, null, 2));
-            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaGemma2B);
-        } else if (configData.activeModel === 'ollamaGemmaLarge') {
-            console.log("[Gateway] ✅ 選擇使用 Ollama Gemma Large 模型 (大模型)");
-            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemmaLarge, null, 2));
-            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaGemmaLarge);
-        } else if (configData.activeModel === 'ollamaMinimaxM2') {
-            console.log("[Gateway] ✅ 選擇使用 Ollama Minimax M2 模型");
-            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaMinimaxM2, null, 2));
-            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaMinimaxM2);
-        } else {
-            console.log("[Gateway] ✅ 選擇使用 Gemini 2.5 Flash 模型");
-            console.log("[Gateway] Gemini 配置:", JSON.stringify({...configData.geminiFlash, apiKey: '***'}));
-            aiResponse = await callGeminiFlash(userPrompt, dynamicSystemPrompt, configData.geminiFlash);
-        }
-        
-        console.log("[Gateway] AI 原始回應 (長度:", aiResponse.length, "):", aiResponse);
-        console.log("[Gateway] AI 回應前 200 字:", aiResponse.substring(0, 200));
-        console.log("[Gateway] AI 回應後 200 字:", aiResponse.substring(Math.max(0, aiResponse.length - 200)));
+        const aiResponse = await callAIModel(userPrompt, dynamicSystemPrompt, configData);
         
         // 解析 AI 回應
         let command;
@@ -299,6 +378,13 @@ async function handleRequest(userPrompt, sendResponse, configData = null, sender
 
         console.log(`[Gateway] 執行技能: ${command.skill}`);
         console.log(`[Gateway] 傳遞給技能的完整命令:`, command);
+        
+        // ====== 快取 AI 推理結果 ======
+        // 將用戶輸入和 AI 推理結果存入快取，以便下次使用相同輸入時可直接使用快取
+        putInCache(userPrompt, {
+            skill: command.skill,
+            args: command.args || {}
+        });
         
         // ===== 新的統一流程：所有技能都通過 SidePanel 執行 =====
         // 第一步：自動獲取當前活跃標籤頁的 tabId
@@ -357,14 +443,7 @@ async function runSkillInSidePanel(skillName, skillInfo, args, sendResponse, con
         
         // 添加當前模型名稱到 args
         if (!args.modelName && configData) {
-            // 根據 activeModel 獲取友好的模型名稱
-            const modelNames = {
-                'geminiFlash': 'Gemini 2.5 Flash',
-                'ollamaGemma2B': 'Ollama Gemma 2B',
-                'ollamaGemmaLarge': 'Ollama Gemma Large',
-                'ollamaMinimaxM2': 'Ollama Minimax M2'
-            };
-            args.modelName = modelNames[configData.activeModel] || configData.activeModel || 'Unknown Model';
+            args.modelName = MODEL_NAMES[configData.activeModel] || configData.activeModel || 'Unknown Model';
             console.log(`[Gateway] 添加 modelName: ${args.modelName}`);
         }
         
@@ -425,6 +504,47 @@ async function runSkillInSidePanel(skillName, skillInfo, args, sendResponse, con
     }
 }
 
+// --- 統一 AI 模型調用入口 ---
+/**
+ * 根據配置選擇合適的 AI 模型並調用
+ * @param {string} userPrompt - 用戶輸入
+ * @param {string} systemPrompt - 系統提示詞
+ * @param {object} configData - 配置數據（包含 activeModel 和各模型配置）
+ * @returns {Promise<string>} - AI 回應文本
+ */
+async function callAIModel(userPrompt, systemPrompt, configData) {
+    try {
+        let aiResponse;
+        
+        if (configData.activeModel === 'ollamaGemma2B') {
+            console.log("[Gateway] ✅ 選擇使用 Ollama Gemma 2B 模型 (小模型)");
+            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemma2B, null, 2));
+            aiResponse = await callOllama(userPrompt, systemPrompt, configData.ollamaGemma2B);
+        } else if (configData.activeModel === 'ollamaGemmaLarge') {
+            console.log("[Gateway] ✅ 選擇使用 Ollama Gemma Large 模型 (大模型)");
+            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemmaLarge, null, 2));
+            aiResponse = await callOllama(userPrompt, systemPrompt, configData.ollamaGemmaLarge);
+        } else if (configData.activeModel === 'ollamaMinimaxM2') {
+            console.log("[Gateway] ✅ 選擇使用 Ollama Minimax M2 模型");
+            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaMinimaxM2, null, 2));
+            aiResponse = await callOllama(userPrompt, systemPrompt, configData.ollamaMinimaxM2);
+        } else {
+            console.log("[Gateway] ✅ 選擇使用 Gemini 2.5 Flash 模型");
+            console.log("[Gateway] Gemini 配置:", JSON.stringify({...configData.geminiFlash, apiKey: '***'}));
+            aiResponse = await callGeminiFlash(userPrompt, systemPrompt, configData.geminiFlash);
+        }
+        
+        console.log("[Gateway] AI 原始回應 (長度:", aiResponse.length, "):", aiResponse);
+        console.log("[Gateway] AI 回應前 200 字:", aiResponse.substring(0, 200));
+        console.log("[Gateway] AI 回應後 200 字:", aiResponse.substring(Math.max(0, aiResponse.length - 200)));
+        
+        return aiResponse;
+    } catch (error) {
+        console.error("[Gateway] AI 模型調用失敗:", error);
+        throw error;
+    }
+}
+
 // --- 在網頁前端執行技能的輔助函數 ---
 // 這個函數會被注入到網頁中執行
 async function executeSkillInPage(skillName, skillFolder, args, skillUrl) {
@@ -456,69 +576,6 @@ async function executeSkillInPage(skillName, skillFolder, args, skillUrl) {
             status: "error",
             error: error.message
         };
-    }
-}
-
-// --- 在網頁前端執行技能 ---
-async function runSkillInTabContext(skillName, skillInfo, args, sendResponse, senderTab = null) {
-    try {
-        let tab = null;
-        
-        // 1. 優先使用 senderTab（來自消息發送者的標籤頁信息）
-        if (senderTab && senderTab.id) {
-            console.log(`[Gateway] 使用 senderTab，ID: ${senderTab.id}`);
-            tab = senderTab;
-        } else {
-            // 2. 否則嘗試查詢當前活動分頁
-            console.log(`[Gateway] senderTab 不存在，嘗試查詢活動分頁...`);
-            let [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (!activeTab) {
-                throw new Error("無法找到活動分頁，且未提供 senderTab");
-            }
-            tab = activeTab;
-        }
-
-        // 3. 檢查是否是 chrome:// 系統頁面，如果是則創建一個新分頁
-        if (tab.url.startsWith('chrome://')) {
-            console.log(`[Gateway] 當前分頁是 ${tab.url}，無法注入腳本，創建新分頁...`);
-            const newTab = await chrome.tabs.create({ url: "about:blank" });
-            tab = newTab;
-        }
-
-        console.log(`[Gateway] 在分頁 ID ${tab.id} 中執行技能: ${skillName}`);
-
-        // 4. 計算技能 URL (在 Service Worker 中，有 chrome.runtime 可用)
-        const skillUrl = chrome.runtime.getURL(`skills/${skillInfo.folder}/${skillName}.js`);
-        console.log(`[Gateway] 技能 URL: ${skillUrl}`);
-        
-        // 5. 注入並執行技能函數到網頁前端
-        console.log(`[Gateway] 注入技能函數: ${skillName}`);
-        
-        const results = await chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            func: executeSkillInPage,
-            args: [skillName, skillInfo.folder, args, skillUrl]  // ← 傳入完整 URL
-        });
-
-        console.log(`[Gateway] 技能執行完成，結果:`, results);
-
-        // 6. 檢查執行結果
-        if (!results || results.length === 0) {
-            throw new Error("技能執行沒有返回結果");
-        }
-
-        const callResult = results[0].result;
-        console.log(`[Gateway] 技能執行結果:`, callResult);
-        
-        if (callResult.status === "success") {
-            sendResponse({ status: "success", text: callResult.result });
-        } else {
-            sendResponse({ status: "error", text: callResult.error });
-        }
-
-    } catch (error) {
-        console.error(`[Gateway] 技能執行失敗:`, error);
-        sendResponse({ status: "error", text: `技能執行失敗: ${error.message}` });
     }
 }
 

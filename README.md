@@ -252,8 +252,8 @@ export async function open_tab(args) {
       "runInPageContext": false
     },
     {
-      "name": "summary_this_page",
-      "folder": "summary_this_page",
+      "name": "summarize_this_page",
+      "folder": "summarize_this_page",
       "description": "分析並總結當前頁面",
       "runInPageContext": false
     },
@@ -293,7 +293,7 @@ export async function open_tab(args) {
 
 **支持的網站**：Google, YouTube, YouTube Music, GitHub, Twitter, LinkedIn, Facebook, Instagram, Yahoo, Gmail, Setting
 
-### 2. summary_this_page - 分析並總結頁面
+### 2. summarize_this_page - 分析並總結頁面
 
 **功能**：將當前頁面發送到 Google Gemini 進行分析、摘要或評估
 
@@ -454,6 +454,23 @@ OmniAssistant 支持 **12 種語言**：
 
 ## 📖 開發指南 (Development Guide)
 
+### 🚀 快速建立新技能 (Quick Skill Creation)
+
+給 AI 建立新技能的提示詞：
+
+```
+📄 参考 SKILL_DEVELOPMENT.md
+📁 创建 skills/skill_name/ 文件夹
+📝 写 .md 定义和 .js 实现
+✨ 完成！Pre-commit hook 自动注册
+```
+
+**工作流程：**
+1. 閱讀 [SKILL_DEVELOPMENT.md](SKILL_DEVELOPMENT.md) 了解統一的技能開發架構
+2. 在 `skills/` 下建立新的技能資料夾：`skills/your_skill_name/`
+3. 編寫 `.md` 文件（AI 介面定義）和 `.js` 文件（實現代碼）
+4. 完成！Pre-commit hook 會自動將您的技能註冊到清單中
+
 ### 添加新技能的完整步驟
 
 #### 第 1 步：建立檔案結構
@@ -613,9 +630,9 @@ export async function myskill(args) {
 [Gateway] 🚀 Service Worker 已加載
 [Gateway] 啟動動態技能加載器...
 [Gateway] 讀取技能清單: chrome-extension://...
-[Gateway] 發現技能: open_tab, summary_this_page, who_are_you, close_this_page
+[Gateway] 發現技能: open_tab, summarize_this_page, who_are_you, close_this_page
 [Gateway] ✅ 技能 [open_tab] 已加載
-[Gateway] 可用技能:(4) ['open_tab', 'summary_this_page', 'who_are_you', 'close_this_page']
+[Gateway] 可用技能:(4) ['open_tab', 'summarize_this_page', 'who_are_you', 'close_this_page']
 ```
 
 ### 查看 SidePanel 日誌
@@ -642,7 +659,7 @@ export async function myskill(args) {
 [Gateway] - Service Worker 層
 [SidePanel] - SidePanel 主線程
 [Open Tab Skill] - open_tab 技能
-[Summary Page Skill] - summary_this_page 技能
+[Summary Page Skill] - summarize_this_page 技能
 [Close Page Skill] - close_this_page 技能
 [Who Are You Skill] - who_are_you 技能
 ```
@@ -697,7 +714,7 @@ export async function myskill(args) {
 ### 已實現的技能 ✅
 
 - ✅ **open_tab** - 打開新標籤頁
-- ✅ **summary_this_page** - 分析並總結頁面
+- ✅ **summarize_this_page** - 分析並總結頁面
 - ✅ **close_this_page** - 關閉當前標籤頁
 - ✅ **who_are_you** - 介紹助手功能
 
@@ -799,7 +816,7 @@ chrome-jarvis/
 ├── skills/
 │   ├── skills-manifest.json  # 自動生成（勿手動編輯）
 │   ├── open_tab/
-│   ├── summary_this_page/
+│   ├── summarize_this_page/
 │   ├── close_this_page/
 │   └── who_are_you/
 ├── service-worker.js

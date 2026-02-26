@@ -1,4 +1,4 @@
-name: summary_this_page
+name: summarize_this_page
 
 description: 分析頁面、重點整理 - 使用 Google Gemini 進行頁面內容摘要與分析。僅在用戶明確要求分析/摘要/發送當前頁面至 Gemini 時使用。Summarize and analyze the current page content using Google Gemini. Only use this skill when the user explicitly asks to analyze/summarize/send the current page to Gemini.
 
@@ -56,7 +56,7 @@ when_NOT_to_use:
 
 intent_examples:
   CORRECT - call this skill (HAS verb + page):
-    - "ask Gemini" → Call summary_this_page (implicit current page)
+    - "ask Gemini" → Call summarize_this_page (implicit current page)
     - "send this page to Gemini" → Call with current page
     - "analyze the current page" → Call with current page
     - "summary page" → Call with current page
@@ -78,7 +78,7 @@ input: User must explicitly ask to analyze/summarize the current page using Gemi
 
 output:
 Only respond with THIS EXACT JSON format when user explicitly asks to analyze/send current page to Gemini:
-{"skill": "summary_this_page", "args": {"tabId": "ACTIVE_TAB", "url": "ACTIVE_TAB_URL", "prompt": ""}}
+{"skill": "summarize_this_page", "args": {"tabId": "ACTIVE_TAB", "url": "ACTIVE_TAB_URL", "prompt": ""}}
 
 If user is NOT asking to analyze the page, respond with:
 {"error": "This request is not asking to analyze the page with Gemini"}
@@ -94,7 +94,7 @@ IMPORTANT - Placeholder handling:
 
 Example flow:
 1. User says "給我分析頁面" on https://example.com (tabId=123)
-2. AI returns: {"skill": "summary_this_page", "args": {"tabId": "ACTIVE_TAB", "url": "ACTIVE_TAB_URL"}}
+2. AI returns: {"skill": "summarize_this_page", "args": {"tabId": "ACTIVE_TAB", "url": "ACTIVE_TAB_URL"}}
 3. Service Worker replaces: {"args": {"tabId": 123, "url": "https://example.com"}}
 4. Skill receives the actual values
 

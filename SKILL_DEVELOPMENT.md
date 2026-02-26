@@ -79,7 +79,7 @@ SidePanel 根據 runInPageContext 標志分支執行：
 **已有示例**：
 - `open_tab` - 打開新標籤頁
 - `close_this_page` - 關閉標籤頁
-- `summary_this_page` - 提取頁面內容並發送到 Gemini
+- `summarize_this_page` - 提取頁面內容並發送到 Gemini
 - `who_are_you` - 返回身份信息
 
 ---
