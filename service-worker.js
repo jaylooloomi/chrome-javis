@@ -158,11 +158,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log("[Gateway] ✉️  收到訊息:", request.action);
     console.log("[Gateway] 完整訊息內容:", JSON.stringify(request, null, 2));
     console.log("[Gateway] 訊息中的 config:", request.config ? '存在' : '❌ 不存在');
+    console.log("[Gateway] sender.tab:", sender.tab ? `ID: ${sender.tab.id}, URL: ${sender.tab.url}` : '❌ 不存在');
     
     try {
         if (request.action === "ask_ai") {
             console.log("[Gateway] 轉發給 handleRequest，config 類型:", typeof request.config);
-            handleRequest(request.prompt, sendResponse, request.config);
+            handleRequest(request.prompt, sendResponse, request.config, sender.tab);
             return true; 
         }
         
@@ -201,12 +202,13 @@ async function handleChromeApiCall(request, sendResponse) {
 }
 
 // --- 階段 B & C：接收指令、思考與調度 ---
-async function handleRequest(userPrompt, sendResponse, configData = null) {
+async function handleRequest(userPrompt, sendResponse, configData = null, senderTab = null) {
     try {
         console.log("[Gateway] ╔════════════════════════════════════════╗");
         console.log("[Gateway] ║  新請求開始處理                        ║");
         console.log("[Gateway] ╚════════════════════════════════════════╝");
         console.log("[Gateway] 用戶提示詞:", userPrompt);
+        console.log("[Gateway] senderTab:", senderTab ? `ID: ${senderTab.id}` : '❌ 不存在');
         console.log("[Gateway] 配置對象是否存在:", !!configData);
         
         if (!configData) {
@@ -299,7 +301,7 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
         // 根據技能的執行環境選擇執行方式
         if (skillInfo.runInPageContext) {
             // 在網頁前端執行
-            await runSkillInTabContext(command.skill, skillInfo, command.args, sendResponse);
+            await runSkillInTabContext(command.skill, skillInfo, command.args, sendResponse, senderTab);
         } else {
             // 在 Service Worker 中直接執行
             await runSkillInServiceWorker(command.skill, skillInfo, command.args, sendResponse, configData);
@@ -439,15 +441,25 @@ async function executeSkillInPage(skillName, skillFolder, args) {
 }
 
 // --- 在網頁前端執行技能 ---
-async function runSkillInTabContext(skillName, skillInfo, args, sendResponse) {
+async function runSkillInTabContext(skillName, skillInfo, args, sendResponse, senderTab = null) {
     try {
-        // 1. 取得當前活動分頁
-        let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (!tab) {
-            throw new Error("無法找到活動分頁");
+        let tab = null;
+        
+        // 1. 優先使用 senderTab（來自消息發送者的標籤頁信息）
+        if (senderTab && senderTab.id) {
+            console.log(`[Gateway] 使用 senderTab，ID: ${senderTab.id}`);
+            tab = senderTab;
+        } else {
+            // 2. 否則嘗試查詢當前活動分頁
+            console.log(`[Gateway] senderTab 不存在，嘗試查詢活動分頁...`);
+            let [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (!activeTab) {
+                throw new Error("無法找到活動分頁，且未提供 senderTab");
+            }
+            tab = activeTab;
         }
 
-        // 2. 檢查是否是 chrome:// 系統頁面，如果是則創建一個新分頁
+        // 3. 檢查是否是 chrome:// 系統頁面，如果是則創建一個新分頁
         if (tab.url.startsWith('chrome://')) {
             console.log(`[Gateway] 當前分頁是 ${tab.url}，無法注入腳本，創建新分頁...`);
             const newTab = await chrome.tabs.create({ url: "about:blank" });
@@ -456,7 +468,7 @@ async function runSkillInTabContext(skillName, skillInfo, args, sendResponse) {
 
         console.log(`[Gateway] 在分頁 ID ${tab.id} 中執行技能: ${skillName}`);
 
-        // 3. 注入並執行技能函數到網頁前端
+        // 4. 注入並執行技能函數到網頁前端
         console.log(`[Gateway] 注入技能函數: ${skillName}`);
         
         const results = await chrome.scripting.executeScript({
@@ -467,7 +479,7 @@ async function runSkillInTabContext(skillName, skillInfo, args, sendResponse) {
 
         console.log(`[Gateway] 技能執行完成，結果:`, results);
 
-        // 4. 檢查執行結果
+        // 5. 檢查執行結果
         if (!results || results.length === 0) {
             throw new Error("技能執行沒有返回結果");
         }
