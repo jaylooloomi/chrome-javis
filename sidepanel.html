@@ -43,6 +43,20 @@
         margin: 0 auto;
       }
 
+      .bottom-up-panel-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: transparent;
+      }
+
+      .bottom-down-panel-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: transparent;
+      }
+
       .top-panel-container {
         flex: 0;
         background: transparent;
@@ -507,37 +521,43 @@
     <div class="middle-panel-container"></div>
 
     <div class="bottom-panel-container">
-      <!-- 輸出區域 -->
-      <div id="output" data-i18n="output.ready">準備就緒...</div>
-      
-      <!-- 配置狀態顯示 -->
-      <div class="config-status" data-i18n="config.status">
-        麥克風已常駐 • 停頓 0.5s 自動執行 • AI 模型 已載入
-      </div>
-      
-      <!-- 語音監聽區塊 -->
-      <div class="voice-container">
-        <div class="listening-text">
-          <span class="listening-indicator"></span>
-          <span id="listeningStatus" data-i18n="status.listening">待命中...</span>
+      <!-- Bottom Up Panel -->
+      <div class="bottom-up-panel-container">
+        <!-- 輸出區域 -->
+        <div id="output" data-i18n="output.ready">準備就緒...</div>
+        
+        <!-- 配置狀態顯示 -->
+        <div class="config-status" data-i18n="config.status">
+          麥克風已常駐 • 停頓 0.5s 自動執行 • AI 模型 已載入
+        </div>
+        
+        <!-- 語音監聽區塊 -->
+        <div class="voice-container">
+          <div class="listening-text">
+            <span class="listening-indicator"></span>
+            <span id="listeningStatus" data-i18n="status.listening">待命中...</span>
+          </div>
         </div>
       </div>
 
-      <!-- 輸入框 -->
-      <textarea id="userInput" placeholder="輸入指令 (如：幫我開啟 Google)..." data-i18n-placeholder="placeholder.input"></textarea>
-      
-      <!-- 按鈕容器 1 -->
-      <div class="input-container">
-        <div class="switch-container">
-          <button class="switch on" id="micSwitch" title="開啟/關閉語音" data-i18n-title="title.micToggle"></button>
-          <span class="switch-label" id="micStatus" data-i18n="button.mic">開啟</span>
+      <!-- Bottom Down Panel -->
+      <div class="bottom-down-panel-container">
+        <!-- 輸入框 -->
+        <textarea id="userInput" placeholder="輸入指令 (如：幫我開啟 Google)..." data-i18n-placeholder="placeholder.input"></textarea>
+        
+        <!-- 按鈕容器 1 -->
+        <div class="input-container">
+          <div class="switch-container">
+            <button class="switch on" id="micSwitch" title="開啟/關閉語音" data-i18n-title="title.micToggle"></button>
+            <span class="switch-label" id="micStatus" data-i18n="button.mic">開啟</span>
+          </div>
+          <button id="runBtn" class="btn-primary" data-i18n="button.run">執行</button>
         </div>
-        <button id="runBtn" class="btn-primary" data-i18n="button.run">執行</button>
-      </div>
-      
-      <!-- 按鈕容器 2 -->
-      <div class="input-container">
-        <button id="settingBtn" class="btn-setting" data-i18n="button.setting">⚙️ Setting</button>
+        
+        <!-- 按鈕容器 2 -->
+        <div class="input-container">
+          <button id="settingBtn" class="btn-setting" data-i18n="button.setting">⚙️ Setting</button>
+        </div>
       </div>
     </div>
     <script type="module" src="sidepanel.js"></script>
