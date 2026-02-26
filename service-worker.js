@@ -405,6 +405,39 @@ async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse,
     }
 }
 
+// --- 在網頁前端執行技能的輔助函數 ---
+// 這個函數會被注入到網頁中執行
+async function executeSkillInPage(skillName, skillFolder, args) {
+    try {
+        console.log(`[PageContext] 開始執行技能: ${skillName}`);
+        
+        // 動態 import skill 模組
+        const skillModule = await import(`${chrome.runtime.getURL(`skills/${skillFolder}/${skillName}.js`)}`);
+        
+        // 獲取 skill 函數
+        const skillFunc = skillModule[skillName];
+        if (typeof skillFunc !== 'function') {
+            throw new Error(`技能模組中未找到函數: ${skillName}`);
+        }
+        
+        // 執行 skill 函數
+        console.log(`[PageContext] 執行 ${skillName}，參數:`, args);
+        const result = await skillFunc(args);
+        
+        console.log(`[PageContext] ${skillName} 執行成功:`, result);
+        return {
+            status: "success",
+            result: result
+        };
+    } catch (error) {
+        console.error(`[PageContext] ${skillName} 執行失敗:`, error);
+        return {
+            status: "error",
+            error: error.message
+        };
+    }
+}
+
 // --- 在網頁前端執行技能 ---
 async function runSkillInTabContext(skillName, skillInfo, args, sendResponse) {
     try {
@@ -421,26 +454,25 @@ async function runSkillInTabContext(skillName, skillInfo, args, sendResponse) {
             tab = newTab;
         }
 
-        console.log(`[Gateway] 在分頁 ID ${tab.id} 注入技能: ${skillName}`);
+        console.log(`[Gateway] 在分頁 ID ${tab.id} 中執行技能: ${skillName}`);
 
-        // 3. 注入技能腳本到網頁前端
-        const skillFilePath = `skills/${skillInfo.folder}/${skillName}.js`;
-        console.log(`[Gateway] 注入文件: ${skillFilePath}`);
+        // 3. 注入並執行技能函數到網頁前端
+        console.log(`[Gateway] 注入技能函數: ${skillName}`);
         
         const results = await chrome.scripting.executeScript({
             target: { tabId: tab.id },
-            files: [skillFilePath]
+            func: executeSkillInPage,
+            args: [skillName, skillInfo.folder, args]
         });
 
-        console.log(`[Gateway] 技能腳本已注入`);
+        console.log(`[Gateway] 技能執行完成，結果:`, results);
 
-        // 4. 在網頁前端調用技能
-        const callResult = await chrome.tabs.sendMessage(tab.id, {
-            action: "run_skill",
-            skillName: skillName,
-            args: args
-        });
+        // 4. 檢查執行結果
+        if (!results || results.length === 0) {
+            throw new Error("技能執行沒有返回結果");
+        }
 
+        const callResult = results[0].result;
         console.log(`[Gateway] 技能執行結果:`, callResult);
         
         if (callResult.status === "success") {
