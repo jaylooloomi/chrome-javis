@@ -319,6 +319,18 @@ async function handleRequest(userPrompt, sendResponse, configData = null, sender
         const skillArgs = command.args || {};
         const tabId = activeTab?.id || null;
         
+        // 如果需要 tabId，將其注入到 args 中（某些技能如 close_this_page 需要）
+        if (tabId && !skillArgs.tabId) {
+            skillArgs.tabId = tabId;
+            console.log(`[Gateway] 將 tabId 注入到 args: ${tabId}`);
+        }
+        
+        // 如果需要 url，將其注入到 args 中
+        if (activeTab && activeTab.url && !skillArgs.url) {
+            skillArgs.url = activeTab.url;
+            console.log(`[Gateway] 將 url 注入到 args: ${activeTab.url}`);
+        }
+        
         // 第三步：轉發給 SidePanel（統一入口）
         await runSkillInSidePanel(command.skill, skillInfo, skillArgs, sendResponse, configData, tabId);
         
