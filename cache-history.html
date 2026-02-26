@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>缓存历史 - OmniAssistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body { 
+            font-family: 'Microsoft JhengHei', 'Inter', sans-serif; 
+            padding: 20px; 
+            max-width: 900px; 
+            margin: 0 auto;
+            background: #f5f5f5;
+        }
+
+        .container { 
+            border: 1px solid #ddd; 
+            padding: 20px; 
+            border-radius: 8px; 
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        h1 { 
+            color: #333; 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 15px;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-card.total {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .stat-card.recent {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stat-card.max {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .section { 
+            margin: 20px 0; 
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #28a745;
+            border-radius: 4px;
+        }
+
+        .section h2 {
+            margin-top: 0;
+            color: #28a745;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .cache-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .cache-item {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border-left: 4px solid #28a745;
+        }
+
+        .cache-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-left-color: #218838;
+        }
+
+        .cache-item-input {
+            font-weight: bold;
+            color: #333;
+            font-size: 16px;
+            word-break: break-all;
+            margin-bottom: 8px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+
+        .cache-item-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .detail-row {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            color: #333;
+            font-size: 14px;
+            word-break: break-all;
+            padding: 6px;
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+
+        .cache-item-time {
+            font-size: 12px;
+            color: #999;
+            margin-top: 10px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        button { 
+            padding: 12px 24px; 
+            background: #28a745; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+            margin-top: 20px;
+        }
+
+        button:hover { 
+            background: #218838; 
+        }
+
+        button.secondary {
+            background: #6c757d;
+            margin-left: 10px;
+        }
+
+        button.secondary:hover {
+            background: #5a6268;
+        }
+
+        .status { 
+            margin-top: 15px; 
+            padding: 12px; 
+            border-radius: 4px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .status.success { 
+            background: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .status.error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .status.pending { 
+            background: #cce5ff; 
+            color: #004085; 
+            border: 1px solid #b8daff;
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #28a745;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .controls input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .controls button {
+            margin: 0;
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <span>📊</span>
+            缓存历史
+        </h1>
+
+        <!-- 统计卡片 -->
+        <div class="stats-container">
+            <div class="stat-card total">
+                <div class="stat-value" id="totalCacheCount">0</div>
+                <div class="stat-label">总缓存数</div>
+            </div>
+            <div class="stat-card recent">
+                <div class="stat-value" id="recentCount">0</div>
+                <div class="stat-label">最近记录</div>
+            </div>
+            <div class="stat-card max">
+                <div class="stat-value" id="maxCache">10</div>
+                <div class="stat-label">最大容量</div>
+            </div>
+        </div>
+
+        <!-- 刷新控制 -->
+        <div class="controls">
+            <button id="refreshBtn">🔄 刷新数据</button>
+            <button id="clearBtn" class="secondary">🗑️ 清空缓存</button>
+        </div>
+
+        <div id="statusMessage" class="status"></div>
+
+        <!-- 缓存列表 -->
+        <div class="section">
+            <h2>📋 最近 10 条缓存</h2>
+            <div id="loadingIndicator" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+            <ul id="cacheList" class="cache-list"></ul>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">📭</div>
+                <p>还没有缓存记录</p>
+                <small>当你使用 AI 助手时，缓存将显示在这里</small>
+            </div>
+        </div>
+
+        <!-- 信息提示 -->
+        <div class="section">
+            <h2>💡 说明</h2>
+            <ul style="line-height: 1.8;">
+                <li>显示最近 10 条缓存记录（按创建时间倒序）</li>
+                <li>每条缓存包含：用户输入、识别的技能、执行参数、创建时间</li>
+                <li>缓存在当前会话中有效，刷新页面后会清空</li>
+                <li>用户输入相同时，直接使用缓存结果，加快执行速度</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="cache-history.js"></script>
+</body>
+</html>

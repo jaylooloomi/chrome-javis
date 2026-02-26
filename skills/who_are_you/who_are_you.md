@@ -10,6 +10,7 @@ when_to_use:
   - User asks about capabilities
   - User asks "介紹一下自己" (introduce yourself)
   - User asks "你是誰?" (who are you?)
+  - User asks "你是誰?" (who you are?)
   - User asks "你能做什麼?" (what can you do?)
   - User asks "你在幹嘛?" (what are you doing?)
 

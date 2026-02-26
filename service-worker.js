@@ -272,6 +272,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true;
         }
         
+        // ====== 快取查詢 API ======
+        if (request.action === "get_cache_stats") {
+            console.log("[Gateway] 快取查詢: 獲取統計數據");
+            const stats = getCacheStats();
+            sendResponse({ status: "success", data: stats });
+            return true;
+        }
+        
+        // ====== 快取清空 API ======
+        if (request.action === "clear_cache") {
+            console.log("[Gateway] 執行快取清空操作");
+            aiResultCache.clear();
+            recentCacheList.length = 0;
+            console.log("[Gateway] ✅ 快取已清空");
+            sendResponse({ status: "success", message: "快取已清空" });
+            return true;
+        }
+        
         console.warn("[Gateway] 未知的訊息類型:", request.action);
         sendResponse({ status: "error", text: "未知訊息類型" });
         return true;
