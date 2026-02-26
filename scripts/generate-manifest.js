@@ -54,6 +54,29 @@ function extractDescription(mdFile) {
 }
 
 /**
+ * Extract runInPageContext flag from .md file
+ * Looks for lines like:
+ * - runInPageContext: true/false (in YAML-style frontmatter)
+ * Defaults to false if not specified
+ */
+function extractRunInPageContext(mdFile) {
+    try {
+        const content = fs.readFileSync(mdFile, 'utf-8');
+        
+        // Try to find "runInPageContext:" line
+        const flagMatch = content.match(/^runInPageContext:\s*(true|false)$/im);
+        if (flagMatch && flagMatch[1]) {
+            return flagMatch[1].toLowerCase() === 'true';
+        }
+        
+        return false; // Default to false
+    } catch (error) {
+        console.error(`Error reading ${mdFile}:`, error.message);
+        return false;
+    }
+}
+
+/**
  * Main function: scan skills directory and generate manifest
  */
 function generateManifest() {
@@ -89,12 +112,15 @@ function generateManifest() {
         // Extract description from .md file
         const description = extractDescription(mdFile);
         
+        // Extract runInPageContext flag from .md file
+        const runInPageContext = extractRunInPageContext(mdFile);
+        
         // Add to skills list
         skills.push({
             name: skillName,
             folder: skillName,
             description: description,
-            runInPageContext: false
+            runInPageContext: runInPageContext
         });
         
         console.log(`✅ Found skill: ${skillName}`);

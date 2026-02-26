@@ -1,4 +1,5 @@
 name: page_scroll
+runInPageContext: true
 
 description: Scroll the current page up, down, or jump to top/bottom. Only use this skill when the user explicitly asks to scroll/page up/down/to top/to bottom.
 
