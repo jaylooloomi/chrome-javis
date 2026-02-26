@@ -7,6 +7,10 @@
 
 console.log("[Gateway] 🚀 Service Worker 已加載");
 
+// ======== 緩存初始化標誌 ========
+// 確保 get_cache_stats 時初始化已完成
+let cacheInitialized = false;
+
 // ======== 模型名稱映射表 ========
 // 從 config.json 動態加載，避免硬編碼
 let MODEL_NAMES = {};
@@ -33,6 +37,46 @@ const aiResultCache = new Map();
 // 用途：查看歷史快取，未來可用於 UI 展示
 const recentCacheList = [];
 const MAX_RECENT_CACHE = 10;
+
+// ======== Session 存儲持久化（Service Worker 重啟保護） ========
+
+/**
+ * 在 Service Worker 啟動時從 session 存儲恢復快取
+ * 解決 Service Worker 30秒無活動被系統殺掉的問題
+ */
+async function initializeCacheFromSession() {
+    try {
+        const stored = await chrome.storage.session.get('aiCache');
+        if (stored.aiCache && Array.isArray(stored.aiCache)) {
+            // 將存儲的數組恢復到 Map
+            stored.aiCache.forEach(([key, value]) => {
+                aiResultCache.set(key, value);
+            });
+            console.log(`[Gateway] ✅ 從 session 恢復快取: ${stored.aiCache.length} 項`);
+            return stored.aiCache.length;
+        } else {
+            console.log(`[Gateway] 📦 session 中無快取數據`);
+            return 0;
+        }
+    } catch (error) {
+        console.warn(`[Gateway] ⚠️ 從 session 恢復快取失敗:`, error);
+        return 0;
+    }
+}
+
+/**
+ * 異步將快取保存到 session 存儲（不阻塞主線程）
+ * 在每次添加快取時調用
+ */
+async function saveCacheToSession() {
+    try {
+        const cacheData = Array.from(aiResultCache.entries());
+        await chrome.storage.session.set({ aiCache: cacheData });
+        console.log(`[Gateway] 💾 快取已保存到 session (${cacheData.length} 項)`);
+    } catch (error) {
+        console.warn(`[Gateway] ⚠️ 快取保存到 session 失敗，但內存快取仍有效:`, error);
+    }
+}
 
 /**
  * 從快取中獲取 AI 推理結果
@@ -69,6 +113,11 @@ function putInCache(userInput, result) {
     if (recentCacheList.length > MAX_RECENT_CACHE) {
         recentCacheList.pop();
     }
+    
+    // 4. ✨ 異步保存到 session（不阻塞）
+    saveCacheToSession().catch(err => 
+        console.warn(`[Gateway] 快取 session 保存失敗（非致命）:`, err)
+    );
     
     console.log(`[Gateway] 📝 將結果快取: "${userInput}"`);
     console.log(`[Gateway] 目前快取大小: ${aiResultCache.size} 個項目`);
@@ -249,6 +298,16 @@ async function loadSkillsDynamically() {
     console.log("[Gateway] 技能庫已構建完成。已載入技能:", Object.keys(SKILL_REGISTRY));
 }
 
+// ======== Service Worker 啟動時立即初始化緩存 ========
+// 不等 onInstalled，立即恢復會話緩存
+(async () => {
+    console.log("[Gateway] 正在初始化緩存...");
+    await loadSkillsDynamically();
+    await initializeCacheFromSession();
+    cacheInitialized = true;
+    console.log("[Gateway] ✅ 緩存初始化完成");
+})();
+
 chrome.runtime.onInstalled.addListener(loadSkillsDynamically);
 
 // --- 訊息監聽 ---
@@ -275,8 +334,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // ====== 快取查詢 API ======
         if (request.action === "get_cache_stats") {
             console.log("[Gateway] 快取查詢: 獲取統計數據");
-            const stats = getCacheStats();
-            sendResponse({ status: "success", data: stats });
+            
+            // 等待初始化完成（最多等 3 秒）
+            (async () => {
+                let waitCount = 0;
+                while (!cacheInitialized && waitCount < 60) {
+                    await new Promise(r => setTimeout(r, 50));
+                    waitCount++;
+                }
+                
+                if (!cacheInitialized) {
+                    console.warn("[Gateway] ⚠️ 初始化超時，但仍返回當前緩存");
+                }
+                
+                const stats = getCacheStats();
+                console.log("[Gateway] 快取統計:", stats);
+                sendResponse({ status: "success", data: stats });
+            })();
             return true;
         }
         
@@ -285,7 +359,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             console.log("[Gateway] 執行快取清空操作");
             aiResultCache.clear();
             recentCacheList.length = 0;
-            console.log("[Gateway] ✅ 快取已清空");
+            
+            // ✨ 同時清空 session 中的快取
+            chrome.storage.session.remove('aiCache').catch(err => {
+                console.warn("[Gateway] ⚠️ 清空 session 快取失敗（非致命）:", err);
+            });
+            
+            console.log("[Gateway] ✅ 快取已清空（內存 + Session）");
             sendResponse({ status: "success", message: "快取已清空" });
             return true;
         }
