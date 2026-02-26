@@ -454,6 +454,23 @@ OmniAssistant 支持 **12 種語言**：
 
 ## 📖 開發指南 (Development Guide)
 
+### 🚀 快速建立新技能 (Quick Skill Creation)
+
+給 AI 建立新技能的提示詞：
+
+```
+📄 参考 SKILL_DEVELOPMENT.md
+📁 创建 skills/skill_name/ 文件夹
+📝 写 .md 定义和 .js 实现
+✨ 完成！Pre-commit hook 自动注册
+```
+
+**工作流程：**
+1. 閱讀 [SKILL_DEVELOPMENT.md](SKILL_DEVELOPMENT.md) 了解統一的技能開發架構
+2. 在 `skills/` 下建立新的技能資料夾：`skills/your_skill_name/`
+3. 編寫 `.md` 文件（AI 介面定義）和 `.js` 文件（實現代碼）
+4. 完成！Pre-commit hook 會自動將您的技能註冊到清單中
+
 ### 添加新技能的完整步驟
 
 #### 第 1 步：建立檔案結構
