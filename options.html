@@ -2,260 +2,171 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <title>設定 - OmniAssistant</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body { 
-            font-family: 'Microsoft JhengHei', sans-serif; 
-            padding: 20px; 
-            max-width: 600px; 
-            margin: 0 auto;
+            font-family: 'Microsoft JhengHei', 'Inter', sans-serif; 
+            padding: 0; 
             background: #f5f5f5;
         }
+
         .container { 
+            max-width: 100%;
+            margin: 0;
             border: 1px solid #ddd; 
-            padding: 20px; 
-            border-radius: 8px; 
+            border-radius: 0;
             background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: none;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
+
+        .header {
+            padding: 20px;
+            border-bottom: 2px solid #28a745;
+            background: white;
+        }
+
         h1 { 
             color: #333; 
             display: flex;
             align-items: center;
             gap: 10px;
+            margin: 0;
         }
-        .section { 
-            margin: 20px 0; 
-            padding: 15px;
-            background: #f9f9f9;
-            border-left: 4px solid #28a745;
-            border-radius: 4px;
+
+        /* ===== 頁籤樣式 ===== */
+        .tabs-wrapper {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            background: white;
+            overflow-x: auto;
+            flex-shrink: 0;
         }
-        .section h2 {
-            margin-top: 0;
-            color: #28a745;
-            font-size: 18px;
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            flex: 1;
+            padding: 0;
+            margin: 0;
+            list-style: none;
         }
-        button { 
-            padding: 12px 24px; 
-            background: #28a745; 
-            color: white; 
-            border: none; 
-            border-radius: 4px; 
+
+        .tab-button {
+            padding: 15px 24px;
+            border: none;
+            background: transparent;
             cursor: pointer;
             font-size: 16px;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-        button:hover { 
-            background: #218838; 
-        }
-        .status { 
-            margin-top: 15px; 
-            padding: 12px; 
-            border-radius: 4px;
-            font-weight: bold;
-            display: none;
-        }
-        .status.success { 
-            background: #d4edda; 
-            color: #155724; 
-            border: 1px solid #c3e6cb;
-            display: block;
-        }
-        .status.error { 
-            background: #f8d7da; 
-            color: #721c24; 
-            border: 1px solid #f5c6cb;
-            display: block;
-        }
-        .status.pending { 
-            background: #cce5ff; 
-            color: #004085; 
-            border: 1px solid #b8daff;
-            display: block;
-        }
-        .warning {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 15px 0;
-        }
-        .warning strong {
-            color: #856404;
-        }
-        ul {
-            line-height: 1.8;
-        }
-        .step {
-            background: #e7f3ff;
-            border-left: 4px solid #2196F3;
-            padding: 12px;
-            margin: 10px 0;
-            border-radius: 4px;
-        }
-        code {
-            background: #f0f0f0;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: monospace;
-            color: #d63384;
-        }
-        .switch-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin: 15px 0;
-        }
-        .toggle-switch {
-            position: relative;
-            width: 50px;
-            height: 28px;
-            background-color: #ccc;
-            border-radius: 14px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .toggle-switch.active {
-            background-color: #4CAF50;
-        }
-        .toggle-slider {
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 24px;
-            height: 24px;
-            background-color: white;
-            border-radius: 50%;
-            transition: left 0.3s;
-        }
-        .toggle-switch.active .toggle-slider {
-            left: 24px;
-        }
-        .notification-status {
-            font-size: 14px;
+            font-weight: 500;
             color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            position: relative;
         }
-        select {
-            background: white;
+
+        .tab-button:hover {
+            background: #f9f9f9;
             color: #333;
-            cursor: pointer;
-            transition: border-color 0.3s;
         }
-        select:hover {
-            border-color: #28a745 !important;
+
+        .tab-button.active {
+            color: #28a745;
+            border-bottom-color: #28a745;
+            background: #f9f9f9;
         }
-        select:focus {
-            outline: none;
-            border-color: #28a745 !important;
-            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+
+        /* ===== 內容區域 ===== */
+        .content-wrapper {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .tab-content {
+            display: none;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== iframe 樣式 ===== */
+        iframe {
+            border: none;
+            width: 100%;
+            height: 100%;
+            background: white;
+        }
+
+        /* ===== 響應式設計 ===== */
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px;
+            }
+
+            .tab-button {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎤 OmniAssistant 語音識別設定</h1>
-        
-        <div class="warning">
-            <strong>⚠️ 重要：</strong> 必須先在此頁面授予麥克風權限，Side Panel 中的語音功能才能正常工作！
+        <!-- 標題 -->
+        <div class="header">
+            <h1>⚙️ OmniAssistant 設定</h1>
         </div>
 
-        <div class="section">
-            <h2>🌍 麥克風語言設定</h2>
-            <p>選擇語音識別的語言：</p>
-            <div class="switch-container" style="align-items: flex-start; flex-direction: column;">
-                <select id="micLanguage" style="padding: 10px; font-size: 14px; border-radius: 4px; border: 1px solid #ddd; width: 100%; max-width: 300px;">
-                    <option value="zh-TW">繁體中文 (台灣)</option>
-                    <option value="zh-CN">简体中文 (中国)</option>
-                    <option value="en-US">English (US)</option>
-                    <option value="en-GB">English (UK)</option>
-                    <option value="ja-JP">日本語</option>
-                    <option value="ko-KR">한국어</option>
-                    <option value="fr-FR">Français</option>
-                    <option value="de-DE">Deutsch</option>
-                    <option value="es-ES">Español</option>
-                    <option value="it-IT">Italiano</option>
-                    <option value="pt-BR">Português (Brasil)</option>
-                    <option value="ru-RU">Русский</option>
-                </select>
-                <p style="font-size: 12px; color: #666; margin-top: 8px;">✅ 設定會自動保存</p>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>🤖 AI 模型選擇</h2>
-            <p>選擇要使用的 AI 模型：</p>
-            <div class="switch-container" style="align-items: flex-start; flex-direction: column;">
-                <select id="activeModel" style="padding: 10px; font-size: 14px; border-radius: 4px; border: 1px solid #ddd; width: 100%; max-width: 300px;">
-                    <option value="geminiFlash">🌐 Gemini 2.5 Flash (Cloud)</option>
-                    <option value="ollamaGemma2B">🖥️ Ollama Gemma 2B (Local)</option>
-                    <option value="ollamaGemmaLarge">🖥️ Ollama Gemma Large (Local)</option>
-                    <option value="ollamaMinimaxM2">🖥️ Ollama Minimax M2 (Local)</option>
-                </select>
-                <div class="warning" style="margin-top: 10px; border-left: 4px solid #ffc107;">
-                    <strong>⚠️ 重要提醒：</strong> 變更模型後必須 <strong>重新啟動此擴展程式</strong> 才能生效。<br/>
-                    <small style="display: block; margin-top: 5px;">
-                        右鍵點擊擴展程式圖標 → 管理擴展程式 → 關閉再開啟，或訪問 <code>chrome://extensions</code> 重新加載。
-                    </small>
-                </div>
-                <p style="font-size: 12px; color: #666; margin-top: 8px;">✅ 設定會自動保存</p>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>🔔 通知設定</h2>
-            <p>控制技能執行完成時是否顯示通知提醒。</p>
-            <div class="switch-container">
-                <div id="notificationToggle" class="toggle-switch active">
-                    <div class="toggle-slider"></div>
-                </div>
-                <label style="cursor: pointer; margin: 0;">
-                    <strong id="notificationLabel">通知已啟用</strong><br/>
-                    <span class="notification-status">技能執行時將顯示右下角通知</span>
-                </label>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>第 1 步：授予麥克風權限</h2>
-            <p>點擊下方按鈕，在彈出的 Chrome 權限對話框中選擇 <strong>「允許」</strong>。</p>
-            <button id="requestMicBtn">🔐 授予麥克風權限</button>
-            <div id="status"></div>
-        </div>
-
-        <div class="section">
-            <h2>第 2 步：驗證權限</h2>
-            <p>權限授予成功後，會出現綠色的成功訊息。</p>
-            <div class="step">✅ 收到成功信息 → 可以關閉此頁面</div>
-            <div class="step">❌ 收到錯誤信息 → 請檢查麥克風設備或重試</div>
-        </div>
-
-        <div class="section">
-            <h2>第 3 步：使用語音功能</h2>
-            <p>返回 Side Panel 使用語音識別：</p>
-            <ol>
-                <li>打開 OmniAssistant Side Panel</li>
-                <li>點擊麥克風按鈕 🎤</li>
-                <li>開始說話，看到實時轉錄文本</li>
-                <li>停止說話或點擊按鈕結束</li>
-            </ol>
-        </div>
-
-        <div class="section">
-            <h2>🔧 故障排除</h2>
-            <ul>
-                <li><strong>提示「權限被拒絕」？</strong><br/>
-                    → 前往 <code>chrome://settings/content/microphone</code> 檢查此擴展是否被阻止<br/>
-                    → 找到 OmniAssistant，改為「允許」
-                </li>
-                <li><strong>未找到麥克風？</strong><br/>
-                    → 確認電腦已連接麥克風設備<br/>
-                    → 檢查麥克風在系統設定中是否啟用
-                </li>
-                <li><strong>網路錯誤？</strong><br/>
-                    → 檢查網路連接是否正常
-                </li>
+        <!-- 頁籤導航 -->
+        <div class="tabs-wrapper">
+            <ul class="tabs">
+                <li><button class="tab-button active" data-tab="settings">📋 設定選項</button></li>
+                <li><button class="tab-button" data-tab="cache">📊 缓存历史</button></li>
             </ul>
+        </div>
+
+        <!-- 內容區域 -->
+        <div class="content-wrapper">
+            <!-- 設定選項頁籤 - 嵌入 settings.html -->
+            <div id="settings" class="tab-content active">
+                <iframe src="settings.html"></iframe>
+            </div>
+
+            <!-- 缓存历史頁籤 - 嵌入 cache-history.html -->
+            <div id="cache" class="tab-content">
+                <iframe src="cache-history.html"></iframe>
+            </div>
         </div>
     </div>
 

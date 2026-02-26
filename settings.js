@@ -1,473 +1,282 @@
-// settings.js - 設定頁面的交互邏輯
-
-console.log('[Settings] 設定頁面已加載');
-
-// ========== 頁籤切換邏輯 ==========
-
-// 綁定頁籤按鈕點擊事件
-document.querySelectorAll('.tab-button').forEach(button => {
-    button.addEventListener('click', (e) => {
-        const tabName = e.target.getAttribute('data-tab');
-        switchTab(tabName);
-    });
+// ========= 頁面區域 - 麥克風權限控制 =========
+document.getElementById('requestMicBtn').addEventListener('click', async () => {
+    const statusDiv = document.getElementById('status');
+    statusDiv.textContent = '';
+    statusDiv.className = '';
+    
+    try {
+        console.log("[Options] 正在請求麥克風權限...");
+        statusDiv.textContent = '正在請求麥克風權限...';
+        statusDiv.className = 'status pending';
+        
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        console.log("[Options] 麥克風權限已授予");
+        statusDiv.textContent = '✅ 麥克風權限已成功授予！您現在可以在 Side Panel 中使用語音輸入功能。';
+        statusDiv.className = 'status success';
+        
+        stream.getTracks().forEach(track => track.stop());
+        
+    } catch (error) {
+        console.error("[Options] 麥克風權限被拒絕:", error);
+        
+        let errorMsg = error.name;
+        if (error.name === 'NotAllowedError') {
+            errorMsg = '您拒絕了麥克風許可權限';
+        } else if (error.name === 'NotFoundError') {
+            errorMsg = '未找到麥克風設備';
+        } else if (error.name === 'NotReadableError') {
+            errorMsg = '麥克風被其他程式佔用';
+        }
+        
+        statusDiv.textContent = `❌ 麥克風權限授予失敗: ${errorMsg}`;
+        statusDiv.className = 'status error';
+    }
 });
 
-/**
- * 切換頁籤
- */
-function switchTab(tabName) {
-    console.log(`[Settings] 切換到頁籤: ${tabName}`);
-    
-    // 隱藏所有內容
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
+// ========= 通知設定 =========
+const notificationToggle = document.getElementById('notificationToggle');
+const notificationLabel = document.getElementById('notificationLabel');
+
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // 通知設定不敏感，維持 storage.local（不需要 sync）
+        const settings = await chrome.storage.local.get('notificationsEnabled');
+        const isEnabled = settings.notificationsEnabled !== false;
+        updateNotificationUI(isEnabled);
+    } catch (error) {
+        console.error('[Options] 讀取通知設定失敗:', error);
+    }
+});
+
+notificationToggle.addEventListener('click', async () => {
+    try {
+        const isCurrentlyActive = notificationToggle.classList.contains('active');
+        const newState = !isCurrentlyActive;
+        await chrome.storage.local.set({ notificationsEnabled: newState });
+        updateNotificationUI(newState);
+        console.log('[Options] 通知設定已更新:', newState);
+    } catch (error) {
+        console.error('[Options] 保存通知設定失敗:', error);
+    }
+});
+
+function updateNotificationUI(isEnabled) {
+    if (isEnabled) {
+        notificationToggle.classList.add('active');
+        notificationLabel.textContent = '通知已啟用';
+    } else {
+        notificationToggle.classList.remove('active');
+        notificationLabel.textContent = '通知已停用';
+    }
+}
+
+// ========= API Key 設定區域（加密版） =========
+// 只在 options.html 中執行（settings.html 中不存在這些元素）
+const apiKeyInput = document.getElementById('apiKey');
+const saveBtn = document.getElementById('saveApiKeyBtn');
+const statusDiv = document.getElementById('apiKeyStatus');
+const toggleVisibilityBtn = document.getElementById('toggleApiKeyVisibility');
+
+// 只在 options.html 中綁定事件（有這些元素時）
+if (apiKeyInput && toggleVisibilityBtn && saveBtn) {
+    // 頁面加載時檢查 API Key 狀態
+    document.addEventListener('DOMContentLoaded', updateConfigStatus);
+
+    // 顯示/隱藏 API Key 切換
+    toggleVisibilityBtn.addEventListener('click', () => {
+        if (apiKeyInput.type === 'password') {
+            apiKeyInput.type = 'text';
+            toggleVisibilityBtn.textContent = '🙈 隱藏';
+        } else {
+            apiKeyInput.type = 'password';
+            toggleVisibilityBtn.textContent = '👁 顯示';
+        }
     });
-    
-    // 移除所有按鈕的 active 類
-    document.querySelectorAll('.tab-button').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // 顯示選中的頁籤內容
-    const contentElement = document.getElementById(tabName);
-    if (contentElement) {
-        contentElement.classList.add('active');
-    }
-    
-    // 設定選中的按鈕
-    const activeButton = document.querySelector(`[data-tab="${tabName}"]`);
-    if (activeButton) {
-        activeButton.classList.add('active');
-    }
-    
-    // 如果切換到緩存頁籤，自動加載數據
-    if (tabName === 'cache') {
-        loadCacheHistory();
-    }
-}
 
-// ========== 設定選項邏輯 ==========
+    // 儲存按鈕 - 加密後存入 storage.local
+    saveBtn.addEventListener('click', async () => {
+        const apiKey = apiKeyInput.value.trim();
+        
+        if (!apiKey) {
+            statusDiv.textContent = '❌ 請輸入有效的 API Key';
+            statusDiv.className = 'status error';
+            return;
+        }
 
-/**
- * 保存設定
- */
-async function saveSettings() {
-    try {
-        const settings = {
-            aiModel: document.getElementById('aiModel')?.value || 'gemini',
-            apiKey: document.getElementById('apiKey')?.value || '',
-            apiBase: document.getElementById('apiBase')?.value || '',
-            theme: document.getElementById('theme')?.value || 'light',
-            language: document.getElementById('language')?.value || 'zh-TW',
-            cacheSize: document.getElementById('cacheSize')?.value || '100',
-            timeout: document.getElementById('timeout')?.value || '30'
-        };
-        
-        console.log('[Settings] 正在保存設定:', settings);
-        
-        // 保存到 Chrome storage
-        await chrome.storage.sync.set(settings);
-        
-        console.log('[Settings] 設定已保存');
-        showStatus('settingsStatus', '✅ 設定已保存', 'success');
-        
-        // 3 秒後隱藏消息
-        setTimeout(() => {
-            const statusEl = document.getElementById('settingsStatus');
-            if (statusEl) {
-                statusEl.style.display = 'none';
-            }
-        }, 3000);
-        
-    } catch (error) {
-        console.error('[Settings] 保存設定失敗:', error);
-        showStatus('settingsStatus', '❌ 保存失敗: ' + error.message, 'error');
-    }
-}
-
-/**
- * 加載保存的設定
- */
-async function loadSettings() {
-    try {
-        console.log('[Settings] 加載保存的設定');
-        
-        const settings = await chrome.storage.sync.get([
-            'aiModel',
-            'apiKey',
-            'apiBase',
-            'theme',
-            'language',
-            'cacheSize',
-            'timeout'
-        ]);
-        
-        // 填充表單
-        if (document.getElementById('aiModel')) {
-            document.getElementById('aiModel').value = settings.aiModel || 'gemini';
-        }
-        if (document.getElementById('apiKey')) {
-            document.getElementById('apiKey').value = settings.apiKey || '';
-        }
-        if (document.getElementById('apiBase')) {
-            document.getElementById('apiBase').value = settings.apiBase || '';
-        }
-        if (document.getElementById('theme')) {
-            document.getElementById('theme').value = settings.theme || 'light';
-        }
-        if (document.getElementById('language')) {
-            document.getElementById('language').value = settings.language || 'zh-TW';
-        }
-        if (document.getElementById('cacheSize')) {
-            document.getElementById('cacheSize').value = settings.cacheSize || '100';
-        }
-        if (document.getElementById('timeout')) {
-            document.getElementById('timeout').value = settings.timeout || '30';
+        // 基本格式驗證（Google API Key 以 AIzaSy 開頭）
+        if (!apiKey.startsWith('AIzaSy') || apiKey.length < 35) {
+            statusDiv.textContent = '❌ API Key 格式不正確，請確認是否為有效的 Gemini API Key';
+            statusDiv.className = 'status error';
+            return;
         }
         
-        console.log('[Settings] 設定已加載:', settings);
-    } catch (error) {
-        console.error('[Settings] 加載設定失敗:', error);
-    }
-}
-
-/**
- * 重置為預設值
- */
-async function resetSettings() {
-    if (!confirm('確定要重置所有設定為預設值嗎？')) {
-        return;
-    }
-    
-    try {
-        console.log('[Settings] 重置設定為預設值');
-        
-        const defaultSettings = {
-            aiModel: 'gemini',
-            apiKey: '',
-            apiBase: 'http://localhost:11434',
-            theme: 'light',
-            language: 'zh-TW',
-            cacheSize: '100',
-            timeout: '30'
-        };
-        
-        await chrome.storage.sync.set(defaultSettings);
-        
-        // 重新加載設定
-        await loadSettings();
-        
-        console.log('[Settings] 已重置為預設值');
-        showStatus('settingsStatus', '✅ 已重置為預設值', 'success');
-        
-        setTimeout(() => {
-            const statusEl = document.getElementById('settingsStatus');
-            if (statusEl) {
-                statusEl.style.display = 'none';
-            }
-        }, 3000);
-        
-    } catch (error) {
-        console.error('[Settings] 重置失敗:', error);
-        showStatus('settingsStatus', '❌ 重置失敗: ' + error.message, 'error');
-    }
-}
-
-/**
- * 匯出設定為 JSON
- */
-async function exportSettings() {
-    try {
-        console.log('[Settings] 匯出設定');
-        
-        const settings = await chrome.storage.sync.get(null);
-        
-        const dataStr = JSON.stringify(settings, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `omnassistant-settings-${new Date().toISOString().slice(0, 10)}.json`;
-        link.click();
-        
-        URL.revokeObjectURL(url);
-        
-        console.log('[Settings] 設定已匯出');
-        showStatus('settingsStatus', '✅ 設定已匯出', 'success');
-        
-    } catch (error) {
-        console.error('[Settings] 匯出失敗:', error);
-        showStatus('settingsStatus', '❌ 匯出失敗: ' + error.message, 'error');
-    }
-}
-
-/**
- * 匯入設定
- */
-function importSettings() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    
-    input.addEventListener('change', async (e) => {
         try {
-            const file = e.target.files[0];
-            if (!file) return;
+            // 加密後存入 chrome.storage.local（不 sync 到其他裝置）
+            const encrypted = await encryptApiKey(apiKey);
+            await chrome.storage.local.set({ geminiApiKeyEncrypted: encrypted });
+
+            // 確保舊的明文 sync key 被清除
+            await chrome.storage.sync.remove('geminiApiKey');
             
-            console.log('[Settings] 正在匯入設定:', file.name);
+            statusDiv.textContent = '✅ API Key 已加密儲存於本機！';
+            statusDiv.className = 'status success';
             
-            const text = await file.text();
-            const settings = JSON.parse(text);
+            apiKeyInput.value = '';
+            apiKeyInput.type = 'password';
+            toggleVisibilityBtn.textContent = '👁 顯示';
             
-            // 驗證設定格式
-            if (typeof settings !== 'object') {
-                throw new Error('無效的設定格式');
-            }
-            
-            // 保存導入的設定
-            await chrome.storage.sync.set(settings);
-            
-            // 重新加載設定
-            await loadSettings();
-            
-            console.log('[Settings] 設定已匯入');
-            showStatus('settingsStatus', '✅ 設定已匯入', 'success');
-            
-            setTimeout(() => {
-                const statusEl = document.getElementById('settingsStatus');
-                if (statusEl) {
-                    statusEl.style.display = 'none';
-                }
-            }, 3000);
-            
+            updateConfigStatus();
         } catch (error) {
-            console.error('[Settings] 匯入失敗:', error);
-            showStatus('settingsStatus', '❌ 匯入失敗: ' + error.message, 'error');
+            console.error('[Options] 儲存 API Key 時出錯:', error);
+            statusDiv.textContent = '❌ 儲存失敗，請稍後再試';
+            statusDiv.className = 'status error';
         }
     });
-    
-    input.click();
-}
 
-// ========== 緩存歷史邏輯 ==========
-
-/**
- * 從 Service Worker 獲取緩存統計數據
- */
-async function loadCacheHistory() {
-    try {
-        showCacheLoading(true);
-        clearCacheStatus();
-        
-        console.log('[Settings] 請求緩存統計數據');
-        
-        const response = await chrome.runtime.sendMessage({
-            action: 'get_cache_stats'
-        });
-        
-        console.log('[Settings] 收到響應:', response);
-        
-        if (response && response.status === 'success') {
-            const stats = response.data;
-            
-            // 更新統計卡片
-            updateCacheStats(stats);
-            
-            // 更新緩存列表
-            if (stats.recentEntries && stats.recentEntries.length > 0) {
-                renderCacheList(stats.recentEntries);
-                document.getElementById('emptyState').style.display = 'none';
-            } else {
-                document.getElementById('cacheList').innerHTML = '';
-                document.getElementById('emptyState').style.display = 'block';
-            }
-            
-            showCacheStatus('✅ 緩存數據已更新', 'success');
-        } else {
-            showCacheStatus('❌ 獲取緩存失敗: ' + (response?.error || '未知錯誤'), 'error');
+    // 刪除 API Key
+    document.getElementById('deleteApiKeyBtn').addEventListener('click', async () => {
+        if (!confirm('確定要刪除已儲存的 API Key 嗎？')) return;
+        try {
+            await chrome.storage.local.remove(['geminiApiKeyEncrypted', 'javis_enc_key']);
+            await chrome.storage.sync.remove('geminiApiKey'); // 清除舊版明文
+            updateConfigStatus();
+            statusDiv.textContent = '✅ API Key 已刪除';
+            statusDiv.className = 'status success';
+        } catch (error) {
+            console.error('[Options] 刪除 API Key 失敗:', error);
         }
-    } catch (error) {
-        console.error('[Settings] 錯誤:', error);
-        showCacheStatus('❌ 錯誤: ' + error.message, 'error');
-    } finally {
-        showCacheLoading(false);
-    }
-}
-
-/**
- * 更新緩存統計卡片
- */
-function updateCacheStats(stats) {
-    document.getElementById('totalCacheCount').textContent = stats.totalCacheSize || 0;
-    document.getElementById('recentCount').textContent = stats.recentCount || 0;
-    document.getElementById('maxCache').textContent = stats.maxRecent || 10;
-}
-
-/**
- * 渲染緩存列表
- */
-function renderCacheList(entries) {
-    const cacheList = document.getElementById('cacheList');
-    cacheList.innerHTML = '';
-    
-    entries.forEach((entry, index) => {
-        const li = document.createElement('li');
-        li.className = 'cache-item';
-        
-        const timeStr = formatTime(entry.timestamp);
-        const argsStr = JSON.stringify(entry.args, null, 2).substring(0, 200);
-        
-        li.innerHTML = `
-            <div class="cache-item-input">
-                #${index + 1} "${entry.userInput}"
-            </div>
-            <div class="cache-item-details">
-                <div class="detail-row">
-                    <span class="detail-label">技能</span>
-                    <span class="detail-value">${escapeHtml(entry.skill)}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">參數</span>
-                    <span class="detail-value"><code>${escapeHtml(argsStr)}</code></span>
-                </div>
-            </div>
-            <div class="cache-item-time">
-                ⏱️ ${timeStr}
-            </div>
-        `;
-        
-        cacheList.appendChild(li);
     });
 }
 
-/**
- * 格式化時間戳為相對時間
- */
-function formatTime(timestamp) {
-    if (!timestamp) return '未知時間';
-    
-    const now = Date.now();
-    const diff = now - timestamp;
-    
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-    
-    if (days > 0) return `${days} 天前`;
-    if (hours > 0) return `${hours} 小時前`;
-    if (minutes > 0) return `${minutes} 分鐘前`;
-    if (seconds > 0) return `${seconds} 秒前`;
-    return '剛剛';
-}
-
-/**
- * 清空緩存
- */
-async function clearCache() {
-    if (!confirm('確定要清空所有緩存嗎？這個操作不可撤銷。')) {
+// 更新 API Key 配置狀態顯示
+async function updateConfigStatus() {
+    // 只在有 configStatus 元素時執行（即 options.html 中）
+    const configStatus = document.getElementById('configStatus');
+    if (!configStatus) {
+        console.log('[Settings] configStatus 元素不存在，跳過更新');
         return;
     }
     
     try {
-        showCacheLoading(true);
-        clearCacheStatus();
+        const result = await chrome.storage.local.get('geminiApiKeyEncrypted');
         
-        console.log('[Settings] 請求清空緩存');
-        
-        const response = await chrome.runtime.sendMessage({
-            action: 'clear_cache'
-        });
-        
-        if (response && response.status === 'success') {
-            document.getElementById('cacheList').innerHTML = '';
-            document.getElementById('emptyState').style.display = 'block';
-            updateCacheStats({ totalCacheSize: 0, recentCount: 0, maxRecent: 10 });
-            showCacheStatus('✅ 緩存已清空', 'success');
+        if (!result.geminiApiKeyEncrypted) {
+            // 檢查是否有舊版明文 key，提示遷移
+            const oldResult = await chrome.storage.sync.get('geminiApiKey');
+            if (oldResult.geminiApiKey) {
+                configStatus.innerHTML = `
+                    ⚠️ 偵測到舊版未加密的 API Key<br>
+                    <small style="color: #856404;">請重新輸入您的 API Key 以升級為加密儲存</small>
+                `;
+                configStatus.className = 'status warning';
+            } else {
+                configStatus.innerHTML = `
+                    ❌ 尚未設定 API Key<br>
+                    <small style="color: #666;">請在下方輸入您的 Gemini API Key</small>
+                `;
+                configStatus.className = 'status error';
+            }
         } else {
-            showCacheStatus('❌ 清空緩存失敗', 'error');
+            // 解密後只顯示遮罩（前4碼 + 後4碼）
+            try {
+                const decrypted = await decryptApiKey(result.geminiApiKeyEncrypted);
+                const masked = maskApiKey(decrypted);
+                configStatus.innerHTML = `
+                    ✅ 已設定 API Key（加密儲存於本機）<br>
+                    <small style="color: #666; font-family: monospace;">金鑰: ${masked}</small>
+                `;
+            } catch {
+                configStatus.innerHTML = `✅ 已設定 API Key（加密儲存於本機）`;
+            }
+            configStatus.className = 'status success';
         }
     } catch (error) {
-        console.error('[Settings] 清空錯誤:', error);
-        showCacheStatus('❌ 錯誤: ' + error.message, 'error');
-    } finally {
-        showCacheLoading(false);
+        console.error('[Settings] 檢查配置時出錯:', error);
     }
 }
 
-/**
- * 顯示或隱藏加載指示器
- */
-function showCacheLoading(show) {
-    document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
-}
+// ========= 麥克風語言設定 =========
+let micLangSelect;
+let activeModelSelect;
 
-/**
- * 顯示緩存狀態消息
- */
-function showCacheStatus(message, type) {
-    const statusEl = document.getElementById('cacheStatus');
-    statusEl.textContent = message;
-    statusEl.className = `status ${type}`;
-    statusEl.style.display = 'block';
-    
-    if (type === 'success') {
-        setTimeout(() => {
-            statusEl.style.display = 'none';
-        }, 3000);
+document.addEventListener('DOMContentLoaded', async () => {
+    // 麥克風語言選擇器
+    micLangSelect = document.getElementById('micLanguage');
+    if (!micLangSelect) {
+        console.error('[Settings] 找不到麥克風語言選擇器');
+    } else {
+        try {
+            const result = await chrome.storage.local.get('micLanguage');
+            const language = result.micLanguage || 'zh-TW';
+            micLangSelect.value = language;
+            console.log('[Settings] 麥克風語言設定已載入:', language);
+        } catch (error) {
+            console.error('[Settings] 讀取麥克風語言設定失敗:', error);
+        }
+        
+        // 綁定改動事件
+        micLangSelect.addEventListener('change', async () => {
+            try {
+                const language = micLangSelect.value;
+                await chrome.storage.local.set({ micLanguage: language });
+                console.log('[Settings] 麥克風語言設定已更新:', language);
+                // ✅ 存儲改變會觸發 sidepanel.js 中的 chrome.storage.onChanged 監聽器
+                
+                const langStatus = document.getElementById('langStatus') || document.createElement('div');
+                langStatus.id = 'langStatus';
+                langStatus.textContent = '✅ 語言設定已儲存';
+                langStatus.className = 'status success';
+                langStatus.style.marginTop = '10px';
+                langStatus.style.display = 'block';
+                
+                if (!document.getElementById('langStatus')) {
+                    micLangSelect.parentElement.appendChild(langStatus);
+                }
+                
+                setTimeout(() => { langStatus.style.display = 'none'; }, 3000);
+            } catch (error) {
+                console.error('[Settings] 保存麥克風語言設定失敗:', error);
+            }
+        });
     }
-}
 
-/**
- * 清除狀態消息
- */
-function clearCacheStatus() {
-    const statusEl = document.getElementById('cacheStatus');
-    statusEl.style.display = 'none';
-    statusEl.className = 'status';
-}
-
-/**
- * HTML 轉義函數
- */
-function escapeHtml(text) {
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return text.replace(/[&<>"']/g, m => map[m]);
-}
-
-/**
- * 顯示設定狀態消息
- */
-function showStatus(elementId, message, type) {
-    const statusEl = document.getElementById(elementId);
-    statusEl.textContent = message;
-    statusEl.className = `status ${type}`;
-    statusEl.style.display = 'block';
-}
-
-// ========== 初始化 ==========
-
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('[Settings] 初始化設定頁面');
-    
-    // 加載保存的設定
-    loadSettings();
-    
-    // 綁定控制按鈕
-    const refreshBtn = document.getElementById('refreshBtn');
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', loadCacheHistory);
-    }
-    
-    const clearBtn = document.getElementById('clearBtn');
-    if (clearBtn) {
-        clearBtn.addEventListener('click', clearCache);
+    // ========= AI 模型選擇 =========
+    activeModelSelect = document.getElementById('activeModel');
+    if (!activeModelSelect) {
+        console.error('[Settings] 找不到 AI 模型選擇器');
+    } else {
+        try {
+            const result = await chrome.storage.local.get('activeModel');
+            const model = result.activeModel || 'geminiFlash';
+            activeModelSelect.value = model;
+            console.log('[Settings] AI 模型設定已載入:', model);
+        } catch (error) {
+            console.error('[Settings] 讀取 AI 模型設定失敗:', error);
+        }
+        
+        // 綁定改動事件
+        activeModelSelect.addEventListener('change', async () => {
+            try {
+                const model = activeModelSelect.value;
+                await chrome.storage.local.set({ activeModel: model });
+                console.log('[Settings] AI 模型設定已更新:', model);
+                
+                const modelStatus = document.getElementById('modelStatus') || document.createElement('div');
+                modelStatus.id = 'modelStatus';
+                modelStatus.textContent = '✅ 模型設定已儲存（需重新啟動擴展程式才能生效）';
+                modelStatus.className = 'status success';
+                modelStatus.style.marginTop = '10px';
+                modelStatus.style.display = 'block';
+                
+                if (!document.getElementById('modelStatus')) {
+                    activeModelSelect.parentElement.appendChild(modelStatus);
+                }
+                
+                setTimeout(() => { modelStatus.style.display = 'none'; }, 5000);
+            } catch (error) {
+                console.error('[Settings] 保存 AI 模型設定失敗:', error);
+            }
+        });
     }
 });

@@ -59,7 +59,7 @@ if (SpeechRecognition) {
     recognition.interimResults = true;  // 顯示實時轉錄文本
     
     // 從 storage 加載語言設定
-    chrome.storage.sync.get('micLanguage', (result) => {
+    chrome.storage.local.get('micLanguage', (result) => {
         const language = result.micLanguage || 'zh-TW';
         currentMicLanguage = language;
         recognition.lang = language;
@@ -186,15 +186,35 @@ if (SpeechRecognition) {
     document.getElementById('micSwitch').title = '您的浏览器不支持语音识别';
 }
 
-// ======== 監聽語言設定變更 ========
+// ======== 監聽設定變更 ========
+// ======== 監聽設定變更 ========
+// 監聽 storage 變化並即時更新 UI
 chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName === 'sync' && changes.micLanguage) {
+    console.log('[SidePanel] Storage 變化偵測:', { areaName, changes });
+    
+    // 麥克風語言改動
+    if (areaName === 'local' && changes.micLanguage) {
         const newLanguage = changes.micLanguage.newValue;
+        console.log('[SidePanel] 麥克風語言改變:', newLanguage);
+        
         currentMicLanguage = newLanguage;
         if (recognition) {
             recognition.lang = newLanguage;
-            console.log('[SidePanel] 麥克風語言已更新:', newLanguage);
         }
+        
+        // ✅ 立即更新 i18n 並觸發翻譯
+        i18n.currentLanguage = newLanguage;
+        console.log('[SidePanel] i18n 語言已更新:', newLanguage);
+        applyTranslations();
+        updateMicSwitchUI();
+        updateConfigStatus();
+    }
+    
+    // AI 模型改動
+    if (areaName === 'local' && changes.activeModel) {
+        const newModel = changes.activeModel.newValue;
+        console.log('[SidePanel] AI 模型改變:', newModel);
+        updateConfigStatus();
     }
 });
 
@@ -283,8 +303,8 @@ document.getElementById('runBtn').addEventListener('click', async () => {
         const configResponse = await fetch(chrome.runtime.getURL('config.json'));
         const config = await configResponse.json();
         
-        // 從 chrome.storage.sync 讀取用戶選擇的模型
-        const storageSettings = await chrome.storage.sync.get('activeModel');
+        // 從 chrome.storage.local 讀取用戶選擇的模型
+        const storageSettings = await chrome.storage.local.get('activeModel');
         if (storageSettings.activeModel) {
             config.activeModel = storageSettings.activeModel;
             console.log("[SidePanel] 從 storage 加載的 activeModel:", storageSettings.activeModel);
@@ -332,7 +352,7 @@ document.getElementById('runBtn').addEventListener('click', async () => {
 // ======== 檢查通知是否啟用 ========
 async function shouldShowNotification() {
     return new Promise((resolve) => {
-        chrome.storage.sync.get(['notificationsEnabled'], (result) => {
+        chrome.storage.local.get(['notificationsEnabled'], (result) => {
             // 默認為 true (如果未設置)
             const notificationsEnabled = result.notificationsEnabled !== false;
             resolve(notificationsEnabled);

@@ -26,7 +26,7 @@ class I18n {
     // 從 storage 加載語言設定
     async loadLanguageFromStorage() {
         return new Promise((resolve) => {
-            chrome.storage.sync.get('micLanguage', (result) => {
+            chrome.storage.local.get('micLanguage', (result) => {
                 const language = result.micLanguage || 'zh-TW';
                 this.setLanguage(language);
                 resolve(language);
@@ -74,7 +74,7 @@ class I18n {
     // 監聽語言變更
     onLanguageChange(callback) {
         chrome.storage.onChanged.addListener((changes, areaName) => {
-            if (areaName === 'sync' && changes.micLanguage) {
+            if (areaName === 'local' && changes.micLanguage) {
                 const newLanguage = changes.micLanguage.newValue;
                 this.setLanguage(newLanguage);
                 console.log('[i18n] 語言已更新:', newLanguage);
