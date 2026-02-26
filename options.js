@@ -1,4 +1,4 @@
-// ======== 選項頁面 - 麥克風權限授予 ========
+// ========= 頁面區域 - 麥克風權限控制 =========
 document.getElementById('requestMicBtn').addEventListener('click', async () => {
     const statusDiv = document.getElementById('status');
     statusDiv.textContent = '';
@@ -9,14 +9,12 @@ document.getElementById('requestMicBtn').addEventListener('click', async () => {
         statusDiv.textContent = '正在請求麥克風權限...';
         statusDiv.className = 'status pending';
         
-        // 請求麥克風訪問
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         
         console.log("[Options] 麥克風權限已授予");
         statusDiv.textContent = '✅ 麥克風權限已成功授予！您現在可以在 Side Panel 中使用語音輸入功能。';
         statusDiv.className = 'status success';
         
-        // 停止音頻流
         stream.getTracks().forEach(track => track.stop());
         
     } catch (error) {
@@ -24,11 +22,11 @@ document.getElementById('requestMicBtn').addEventListener('click', async () => {
         
         let errorMsg = error.name;
         if (error.name === 'NotAllowedError') {
-            errorMsg = '您拒絕了麥克風訪問權限';
+            errorMsg = '您拒絕了麥克風許可權限';
         } else if (error.name === 'NotFoundError') {
             errorMsg = '未找到麥克風設備';
         } else if (error.name === 'NotReadableError') {
-            errorMsg = '麥克風被其他應用程式佔用';
+            errorMsg = '麥克風被其他程式佔用';
         }
         
         statusDiv.textContent = `❌ 麥克風權限授予失敗: ${errorMsg}`;
@@ -36,31 +34,26 @@ document.getElementById('requestMicBtn').addEventListener('click', async () => {
     }
 });
 
-// ======== 通知設定 ========
+// ========= 通知設定 =========
 const notificationToggle = document.getElementById('notificationToggle');
 const notificationLabel = document.getElementById('notificationLabel');
 
-// 頁面加載時讀取通知設定
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const settings = await chrome.storage.sync.get('notificationsEnabled');
-        const isEnabled = settings.notificationsEnabled !== false;  // 默認啟用
-        
+        // 通知設定不敏感，維持 storage.local（不需要 sync）
+        const settings = await chrome.storage.local.get('notificationsEnabled');
+        const isEnabled = settings.notificationsEnabled !== false;
         updateNotificationUI(isEnabled);
     } catch (error) {
         console.error('[Options] 讀取通知設定失敗:', error);
     }
 });
 
-// 通知開關點擊事件
 notificationToggle.addEventListener('click', async () => {
     try {
         const isCurrentlyActive = notificationToggle.classList.contains('active');
         const newState = !isCurrentlyActive;
-        
-        // 保存到 chrome.storage.sync
-        await chrome.storage.sync.set({ notificationsEnabled: newState });
-        
+        await chrome.storage.local.set({ notificationsEnabled: newState });
         updateNotificationUI(newState);
         console.log('[Options] 通知設定已更新:', newState);
     } catch (error) {
@@ -74,79 +67,158 @@ function updateNotificationUI(isEnabled) {
         notificationLabel.textContent = '通知已啟用';
     } else {
         notificationToggle.classList.remove('active');
-        notificationLabel.textContent = '通知已關閉';
+        notificationLabel.textContent = '通知已停用';
     }
 }
 
-// ======== 麥克風語言設定 ========
-const micLanguageSelect = document.getElementById('micLanguage');
-const activeModelSelect = document.getElementById('activeModel');
+// ========= API Key 設定區域（加密版） =========
+const apiKeyInput = document.getElementById('apiKey');
+const saveBtn = document.getElementById('saveApiKeyBtn');
+const statusDiv = document.getElementById('apiKeyStatus');
+const toggleVisibilityBtn = document.getElementById('toggleApiKeyVisibility');
 
-// 頁面加載時讀取麥克風語言設定和模型選擇
+// 頁面加載時檢查 API Key 狀態
+document.addEventListener('DOMContentLoaded', updateConfigStatus);
+
+// 顯示/隱藏 API Key 切換
+toggleVisibilityBtn.addEventListener('click', () => {
+    if (apiKeyInput.type === 'password') {
+        apiKeyInput.type = 'text';
+        toggleVisibilityBtn.textContent = '🙈 隱藏';
+    } else {
+        apiKeyInput.type = 'password';
+        toggleVisibilityBtn.textContent = '👁 顯示';
+    }
+});
+
+// 儲存按鈕 - 加密後存入 storage.local
+saveBtn.addEventListener('click', async () => {
+    const apiKey = apiKeyInput.value.trim();
+    
+    if (!apiKey) {
+        statusDiv.textContent = '❌ 請輸入有效的 API Key';
+        statusDiv.className = 'status error';
+        return;
+    }
+
+    // 基本格式驗證（Google API Key 以 AIzaSy 開頭）
+    if (!apiKey.startsWith('AIzaSy') || apiKey.length < 35) {
+        statusDiv.textContent = '❌ API Key 格式不正確，請確認是否為有效的 Gemini API Key';
+        statusDiv.className = 'status error';
+        return;
+    }
+    
+    try {
+        // 加密後存入 chrome.storage.local（不 sync 到其他裝置）
+        const encrypted = await encryptApiKey(apiKey);
+        await chrome.storage.local.set({ geminiApiKeyEncrypted: encrypted });
+
+        // 確保舊的明文 sync key 被清除
+        await chrome.storage.sync.remove('geminiApiKey');
+        
+        statusDiv.textContent = '✅ API Key 已加密儲存於本機！';
+        statusDiv.className = 'status success';
+        
+        apiKeyInput.value = '';
+        apiKeyInput.type = 'password';
+        toggleVisibilityBtn.textContent = '👁 顯示';
+        
+        updateConfigStatus();
+    } catch (error) {
+        console.error('[Options] 儲存 API Key 時出錯:', error);
+        statusDiv.textContent = '❌ 儲存失敗，請稍後再試';
+        statusDiv.className = 'status error';
+    }
+});
+
+// 刪除 API Key
+document.getElementById('deleteApiKeyBtn').addEventListener('click', async () => {
+    if (!confirm('確定要刪除已儲存的 API Key 嗎？')) return;
+    try {
+        await chrome.storage.local.remove(['geminiApiKeyEncrypted', 'javis_enc_key']);
+        await chrome.storage.sync.remove('geminiApiKey'); // 清除舊版明文
+        updateConfigStatus();
+        statusDiv.textContent = '✅ API Key 已刪除';
+        statusDiv.className = 'status success';
+    } catch (error) {
+        console.error('[Options] 刪除 API Key 失敗:', error);
+    }
+});
+
+// 更新 API Key 配置狀態顯示
+async function updateConfigStatus() {
+    try {
+        const result = await chrome.storage.local.get('geminiApiKeyEncrypted');
+        const configStatus = document.getElementById('configStatus');
+        
+        if (!result.geminiApiKeyEncrypted) {
+            // 檢查是否有舊版明文 key，提示遷移
+            const oldResult = await chrome.storage.sync.get('geminiApiKey');
+            if (oldResult.geminiApiKey) {
+                configStatus.innerHTML = `
+                    ⚠️ 偵測到舊版未加密的 API Key<br>
+                    <small style="color: #856404;">請重新輸入您的 API Key 以升級為加密儲存</small>
+                `;
+                configStatus.className = 'status warning';
+            } else {
+                configStatus.innerHTML = `
+                    ❌ 尚未設定 API Key<br>
+                    <small style="color: #666;">請在下方輸入您的 Gemini API Key</small>
+                `;
+                configStatus.className = 'status error';
+            }
+        } else {
+            // 解密後只顯示遮罩（前4碼 + 後4碼）
+            try {
+                const decrypted = await decryptApiKey(result.geminiApiKeyEncrypted);
+                const masked = maskApiKey(decrypted);
+                configStatus.innerHTML = `
+                    ✅ 已設定 API Key（加密儲存於本機）<br>
+                    <small style="color: #666; font-family: monospace;">金鑰: ${masked}</small>
+                `;
+            } catch {
+                configStatus.innerHTML = `✅ 已設定 API Key（加密儲存於本機）`;
+            }
+            configStatus.className = 'status success';
+        }
+    } catch (error) {
+        console.error('[Options] 檢查配置時出錯:', error);
+    }
+}
+
+// ========= 麥克風語言設定 =========
+const micLangSelect = document.getElementById('micLangSelect');
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const settings = await chrome.storage.sync.get('notificationsEnabled');
-        const isEnabled = settings.notificationsEnabled !== false;  // 默認啟用
-        
-        updateNotificationUI(isEnabled);
-        
-        // 讀取麥克風語言設定
-        const langSettings = await chrome.storage.sync.get('micLanguage');
-        const selectedLanguage = langSettings.micLanguage || 'zh-TW';  // 默認繁體中文
-        micLanguageSelect.value = selectedLanguage;
-        console.log('[Options] 麥克風語言已加載:', selectedLanguage);
-        
-        // 讀取模型選擇
-        const modelSettings = await chrome.storage.sync.get('activeModel');
-        const selectedModel = modelSettings.activeModel || 'ollamaMinimaxM2';  // 默認 Minimax M2
-        activeModelSelect.value = selectedModel;
-        console.log('[Options] AI 模型已加載:', selectedModel);
+        const result = await chrome.storage.local.get('micLanguage');
+        const language = result.micLanguage || 'zh-TW';
+        micLangSelect.value = language;
+        console.log('[Options] 麥克風語言設定已載入:', language);
     } catch (error) {
-        console.error('[Options] 讀取設定失敗:', error);
+        console.error('[Options] 讀取麥克風語言設定失敗:', error);
     }
 });
 
-// 語言下拉菜單變更事件
-micLanguageSelect.addEventListener('change', async (e) => {
-    const selectedLanguage = e.target.value;
+micLangSelect.addEventListener('change', async () => {
     try {
-        await chrome.storage.sync.set({ micLanguage: selectedLanguage });
-        console.log('[Options] 麥克風語言已更新:', selectedLanguage);
-    } catch (error) {
-        console.error('[Options] 保存麥克風語言失敗:', error);
-    }
-});
-
-// AI 模型下拉菜單變更事件
-activeModelSelect.addEventListener('change', async (e) => {
-    const selectedModel = e.target.value;
-    try {
-        await chrome.storage.sync.set({ activeModel: selectedModel });
-        console.log('[Options] AI 模型已更新:', selectedModel);
+        const language = micLangSelect.value;
+        await chrome.storage.local.set({ micLanguage: language });
+        console.log('[Options] 麥克風語言設定已更新:', language);
         
-        // 顯示重啟提醒
-        showRestartReminder();
+        const langStatus = document.getElementById('langStatus') || document.createElement('div');
+        langStatus.id = 'langStatus';
+        langStatus.textContent = '✅ 語言設定已儲存';
+        langStatus.className = 'status success';
+        langStatus.style.marginTop = '10px';
+        langStatus.style.display = 'block';
+        
+        if (!document.getElementById('langStatus')) {
+            micLangSelect.parentElement.appendChild(langStatus);
+        }
+        
+        setTimeout(() => { langStatus.style.display = 'none'; }, 3000);
     } catch (error) {
-        console.error('[Options] 保存 AI 模型選擇失敗:', error);
+        console.error('[Options] 保存麥克風語言設定失敗:', error);
     }
 });
-
-// 顯示重啟提醒
-function showRestartReminder() {
-    // 創建臨時提醒
-    const reminder = document.createElement('div');
-    reminder.className = 'status success';
-    reminder.style.position = 'fixed';
-    reminder.style.top = '20px';
-    reminder.style.right = '20px';
-    reminder.style.zIndex = '9999';
-    reminder.style.maxWidth = '300px';
-    reminder.textContent = '✅ 模型選擇已保存。請重新啟動擴展程式以應用更改。';
-    
-    document.body.appendChild(reminder);
-    
-    // 3 秒後移除提醒
-    setTimeout(() => {
-        reminder.remove();
-    }, 3000);
-}
