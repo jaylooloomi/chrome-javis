@@ -409,12 +409,13 @@ async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse,
 
 // --- 在網頁前端執行技能的輔助函數 ---
 // 這個函數會被注入到網頁中執行
-async function executeSkillInPage(skillName, skillFolder, args) {
+async function executeSkillInPage(skillName, skillFolder, args, skillUrl) {
     try {
         console.log(`[PageContext] 開始執行技能: ${skillName}`);
+        console.log(`[PageContext] 技能 URL: ${skillUrl}`);
         
-        // 動態 import skill 模組
-        const skillModule = await import(`${chrome.runtime.getURL(`skills/${skillFolder}/${skillName}.js`)}`);
+        // 動態 import skill 模組 (使用傳入的完整 URL)
+        const skillModule = await import(skillUrl);
         
         // 獲取 skill 函數
         const skillFunc = skillModule[skillName];
@@ -468,18 +469,22 @@ async function runSkillInTabContext(skillName, skillInfo, args, sendResponse, se
 
         console.log(`[Gateway] 在分頁 ID ${tab.id} 中執行技能: ${skillName}`);
 
-        // 4. 注入並執行技能函數到網頁前端
+        // 4. 計算技能 URL (在 Service Worker 中，有 chrome.runtime 可用)
+        const skillUrl = chrome.runtime.getURL(`skills/${skillInfo.folder}/${skillName}.js`);
+        console.log(`[Gateway] 技能 URL: ${skillUrl}`);
+        
+        // 5. 注入並執行技能函數到網頁前端
         console.log(`[Gateway] 注入技能函數: ${skillName}`);
         
         const results = await chrome.scripting.executeScript({
             target: { tabId: tab.id },
             func: executeSkillInPage,
-            args: [skillName, skillInfo.folder, args]
+            args: [skillName, skillInfo.folder, args, skillUrl]  // ← 傳入完整 URL
         });
 
         console.log(`[Gateway] 技能執行完成，結果:`, results);
 
-        // 5. 檢查執行結果
+        // 6. 檢查執行結果
         if (!results || results.length === 0) {
             throw new Error("技能執行沒有返回結果");
         }
