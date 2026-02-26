@@ -172,12 +172,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true;
         }
         
-        // 語音識別消息由 Offscreen Document 處理，Service Worker 忽略
-        if (request.action === "START_RECOGNITION" || request.action === "STOP_RECOGNITION") {
-            console.log("[Gateway] 語音識別消息，轉發給 Offscreen Document");
-            return true; // 不回應，由 offscreen 處理
-        }
-        
         console.warn("[Gateway] 未知的訊息類型:", request.action);
         sendResponse({ status: "error", text: "未知訊息類型" });
         return true;
