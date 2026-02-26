@@ -166,7 +166,7 @@ function getCacheStats() {
         totalCacheSize: aiResultCache.size,
         recentCount: recentCacheList.length,
         maxRecent: MAX_RECENT_CACHE,
-        recentEntries: recentCacheList.slice(0, 5),  // 最新 5 條用於顯示
+        recentEntries: recentCacheList,  // 返回全部最近記錄
         oldestEntry: recentCacheList[recentCacheList.length - 1] || null
     };
 }
