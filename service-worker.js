@@ -327,28 +327,7 @@ async function handleRequest(userPrompt, sendResponse, configData = null, sender
         console.log("[Gateway] activeModel 類型:", typeof configData.activeModel);
         console.log("[Gateway] 可用技能:", Object.keys(SKILL_REGISTRY));
         
-        let aiResponse;
-        if (configData.activeModel === 'ollamaGemma2B') {
-            console.log("[Gateway] ✅ 選擇使用 Ollama Gemma 2B 模型 (小模型)");
-            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemma2B, null, 2));
-            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaGemma2B);
-        } else if (configData.activeModel === 'ollamaGemmaLarge') {
-            console.log("[Gateway] ✅ 選擇使用 Ollama Gemma Large 模型 (大模型)");
-            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemmaLarge, null, 2));
-            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaGemmaLarge);
-        } else if (configData.activeModel === 'ollamaMinimaxM2') {
-            console.log("[Gateway] ✅ 選擇使用 Ollama Minimax M2 模型");
-            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaMinimaxM2, null, 2));
-            aiResponse = await callOllama(userPrompt, dynamicSystemPrompt, configData.ollamaMinimaxM2);
-        } else {
-            console.log("[Gateway] ✅ 選擇使用 Gemini 2.5 Flash 模型");
-            console.log("[Gateway] Gemini 配置:", JSON.stringify({...configData.geminiFlash, apiKey: '***'}));
-            aiResponse = await callGeminiFlash(userPrompt, dynamicSystemPrompt, configData.geminiFlash);
-        }
-        
-        console.log("[Gateway] AI 原始回應 (長度:", aiResponse.length, "):", aiResponse);
-        console.log("[Gateway] AI 回應前 200 字:", aiResponse.substring(0, 200));
-        console.log("[Gateway] AI 回應後 200 字:", aiResponse.substring(Math.max(0, aiResponse.length - 200)));
+        const aiResponse = await callAIModel(userPrompt, dynamicSystemPrompt, configData);
         
         // 解析 AI 回應
         let command;
@@ -522,6 +501,47 @@ async function runSkillInSidePanel(skillName, skillInfo, args, sendResponse, con
         }
         
         sendResponse({ status: "error", text: `技能執行失敗: ${error.message}` });
+    }
+}
+
+// --- 統一 AI 模型調用入口 ---
+/**
+ * 根據配置選擇合適的 AI 模型並調用
+ * @param {string} userPrompt - 用戶輸入
+ * @param {string} systemPrompt - 系統提示詞
+ * @param {object} configData - 配置數據（包含 activeModel 和各模型配置）
+ * @returns {Promise<string>} - AI 回應文本
+ */
+async function callAIModel(userPrompt, systemPrompt, configData) {
+    try {
+        let aiResponse;
+        
+        if (configData.activeModel === 'ollamaGemma2B') {
+            console.log("[Gateway] ✅ 選擇使用 Ollama Gemma 2B 模型 (小模型)");
+            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemma2B, null, 2));
+            aiResponse = await callOllama(userPrompt, systemPrompt, configData.ollamaGemma2B);
+        } else if (configData.activeModel === 'ollamaGemmaLarge') {
+            console.log("[Gateway] ✅ 選擇使用 Ollama Gemma Large 模型 (大模型)");
+            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaGemmaLarge, null, 2));
+            aiResponse = await callOllama(userPrompt, systemPrompt, configData.ollamaGemmaLarge);
+        } else if (configData.activeModel === 'ollamaMinimaxM2') {
+            console.log("[Gateway] ✅ 選擇使用 Ollama Minimax M2 模型");
+            console.log("[Gateway] Ollama 配置:", JSON.stringify(configData.ollamaMinimaxM2, null, 2));
+            aiResponse = await callOllama(userPrompt, systemPrompt, configData.ollamaMinimaxM2);
+        } else {
+            console.log("[Gateway] ✅ 選擇使用 Gemini 2.5 Flash 模型");
+            console.log("[Gateway] Gemini 配置:", JSON.stringify({...configData.geminiFlash, apiKey: '***'}));
+            aiResponse = await callGeminiFlash(userPrompt, systemPrompt, configData.geminiFlash);
+        }
+        
+        console.log("[Gateway] AI 原始回應 (長度:", aiResponse.length, "):", aiResponse);
+        console.log("[Gateway] AI 回應前 200 字:", aiResponse.substring(0, 200));
+        console.log("[Gateway] AI 回應後 200 字:", aiResponse.substring(Math.max(0, aiResponse.length - 200)));
+        
+        return aiResponse;
+    } catch (error) {
+        console.error("[Gateway] AI 模型調用失敗:", error);
+        throw error;
     }
 }
 
