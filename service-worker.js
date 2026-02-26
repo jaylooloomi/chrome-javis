@@ -27,6 +27,13 @@ const SKILL_MAPPINGS = {};
 // 相同的用戶輸入可直接返回快取結果，無需再次呼叫 AI 模型
 const aiResultCache = new Map();
 
+// ======== 最近使用的快取列表 (LRU - 策略 A：寫入時更新順序) ========
+// 結構: [{userInput, skill, args, timestamp}, ...]
+// 只保留最近 10 條記錄，便於監控和調試
+// 用途：查看歷史快取，未來可用於 UI 展示
+const recentCacheList = [];
+const MAX_RECENT_CACHE = 10;
+
 /**
  * 從快取中獲取 AI 推理結果
  * @param {string} userInput - 用戶的文本輸入
@@ -47,9 +54,48 @@ function getFromCache(userInput) {
  * @param {object} result - AI 推理結果 {skill, args}
  */
 function putInCache(userInput, result) {
+    // 1. 存入主快取 Map
     aiResultCache.set(userInput, result);
+    
+    // 2. 更新最近使用列表（策略 A：寫入時更新）
+    recentCacheList.unshift({
+        userInput,
+        skill: result.skill,
+        args: result.args,
+        timestamp: Date.now()
+    });
+    
+    // 3. 限制列表大小（只保留最近 10 條）
+    if (recentCacheList.length > MAX_RECENT_CACHE) {
+        recentCacheList.pop();
+    }
+    
     console.log(`[Gateway] 📝 將結果快取: "${userInput}"`);
     console.log(`[Gateway] 目前快取大小: ${aiResultCache.size} 個項目`);
+    console.log(`[Gateway] 最近使用快取: ${recentCacheList.length} 條`);
+}
+
+/**
+ * 獲取最近使用的 N 條快取記錄
+ * @param {number} n - 要獲取的記錄數，默認 2
+ * @returns {array} - 最近 N 條快取 [{userInput, skill, args, timestamp}, ...]
+ */
+function getLatestCacheEntries(n = 2) {
+    return recentCacheList.slice(0, n);
+}
+
+/**
+ * 獲取快取統計信息（用於監控面板和調試）
+ * @returns {object} - {totalCacheSize, recentCount, recentEntries, etc.}
+ */
+function getCacheStats() {
+    return {
+        totalCacheSize: aiResultCache.size,
+        recentCount: recentCacheList.length,
+        maxRecent: MAX_RECENT_CACHE,
+        recentEntries: recentCacheList.slice(0, 5),  // 最新 5 條用於顯示
+        oldestEntry: recentCacheList[recentCacheList.length - 1] || null
+    };
 }
 
 // --- 執行 SidePanel 技能 ---
