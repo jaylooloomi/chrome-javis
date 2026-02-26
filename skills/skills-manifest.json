@@ -1,0 +1,28 @@
+{
+  "skills": [
+    {
+      "name": "close_this_page",
+      "folder": "close_this_page",
+      "description": "關閉當前頁面 - 關閉用戶當前所在的瀏覽器標籤頁。僅在用戶明確要求關閉/退出當前頁面時使用。Close the current browser tab when user explicitly asks to close/exit the current page.",
+      "runInPageContext": false
+    },
+    {
+      "name": "open_tab",
+      "folder": "open_tab",
+      "description": "Open a website URL in a new browser tab. Only use this skill when the user explicitly asks to open/visit a specific website.",
+      "runInPageContext": false
+    },
+    {
+      "name": "summary_this_page",
+      "folder": "summary_this_page",
+      "description": "分析頁面、重點整理 - 使用 Google Gemini 進行頁面內容摘要與分析。僅在用戶明確要求分析/摘要/發送當前頁面至 Gemini 時使用。Summarize and analyze the current page content using Google Gemini. Only use this skill when the user explicitly asks to analyze/summarize/send the current page to Gemini.",
+      "runInPageContext": false
+    },
+    {
+      "name": "who_are_you",
+      "folder": "who_are_you",
+      "description": "Introduce yourself and provide information about the OmniAssistant. Use this skill when the user asks about your identity, capabilities, or what you can do.",
+      "runInPageContext": false
+    }
+  ]
+}

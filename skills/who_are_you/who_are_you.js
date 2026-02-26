@@ -3,10 +3,11 @@
 
 export async function who_are_you(args) {
     console.log("[Who Are You Skill] 啟動");
-
     try {
         const introduction = `
 🤖 我是 Jarvis, 你的智能助手!
+🤖 模型: ${args.modelName || 'Unknown'}
+🌍 語言: ${args.language || 'Unknown'}
         `.trim();
 
         console.log("[Who Are You Skill] 成功返回介紹");

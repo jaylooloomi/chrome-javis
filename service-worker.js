@@ -86,8 +86,8 @@ async function loadSkillsDynamically() {
     console.log("[Gateway] 啟動動態技能加載器...");
     
     try {
-        // 1. 從 skills-manifest.json 讀取技能列表
-        const manifestUrl = chrome.runtime.getURL('skills-manifest.json');
+        // 1. 從 skills/skills-manifest.json 讀取技能列表
+        const manifestUrl = chrome.runtime.getURL('skills/skills-manifest.json');
         console.log(`[Gateway] 讀取技能清單: ${manifestUrl}`);
         const manifestResponse = await fetch(manifestUrl);
         if (!manifestResponse.ok) {
@@ -170,12 +170,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.action === "execute_chrome_api") {
             handleChromeApiCall(request, sendResponse);
             return true;
-        }
-        
-        // 語音識別消息由 Offscreen Document 處理，Service Worker 忽略
-        if (request.action === "START_RECOGNITION" || request.action === "STOP_RECOGNITION") {
-            console.log("[Gateway] 語音識別消息，轉發給 Offscreen Document");
-            return true; // 不回應，由 offscreen 處理
         }
         
         console.warn("[Gateway] 未知的訊息類型:", request.action);
@@ -308,7 +302,7 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
             await runSkillInTabContext(command.skill, skillInfo, command.args, sendResponse);
         } else {
             // 在 Service Worker 中直接執行
-            await runSkillInServiceWorker(command.skill, skillInfo, command.args, sendResponse);
+            await runSkillInServiceWorker(command.skill, skillInfo, command.args, sendResponse, configData);
         }
         
     } catch (error) {
@@ -318,7 +312,7 @@ async function handleRequest(userPrompt, sendResponse, configData = null) {
 }
 
 // --- 在 SidePanel 中執行技能 ---
-async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse) {
+async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse, configData) {
     try {
         console.log(`[Gateway] 將技能轉發給 SidePanel 執行: ${skillName}`);
         console.log(`[Gateway] 傳遞的參數:`, args);
@@ -344,6 +338,31 @@ async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse)
             if (args.url === "ACTIVE_TAB_URL") {
                 args.url = activeTab.url;
                 console.log(`[Gateway] 替換 url: ${activeTab.url}`);
+            }
+        }
+        
+        // 添加當前模型名稱到 args
+        if (!args.modelName && configData) {
+            // 根據 activeModel 獲取友好的模型名稱
+            const modelNames = {
+                'geminiFlash': 'Gemini 2.5 Flash',
+                'ollamaGemma2B': 'Ollama Gemma 2B',
+                'ollamaGemmaLarge': 'Ollama Gemma Large',
+                'ollamaMinimaxM2': 'Ollama Minimax M2'
+            };
+            args.modelName = modelNames[configData.activeModel] || configData.activeModel || 'Unknown Model';
+            console.log(`[Gateway] 添加 modelName: ${args.modelName}`);
+        }
+        
+        // 添加當前語言到 args
+        if (!args.language) {
+            try {
+                const langSettings = await chrome.storage.sync.get('micLanguage');
+                args.language = langSettings.micLanguage || 'zh-TW';
+                console.log(`[Gateway] 添加 language: ${args.language}`);
+            } catch (error) {
+                console.warn(`[Gateway] 無法獲取語言設定:`, error);
+                args.language = 'zh-TW';  // 默認繁體中文
             }
         }
         
