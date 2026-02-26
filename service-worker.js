@@ -319,16 +319,16 @@ async function handleRequest(userPrompt, sendResponse, configData = null, sender
         const skillArgs = command.args || {};
         const tabId = activeTab?.id || null;
         
-        // 如果需要 tabId，將其注入到 args 中（某些技能如 close_this_page 需要）
-        if (tabId && !skillArgs.tabId) {
+        // 如果 tabId 是占位符或不存在，用實際的 tabId 替換
+        if (tabId && (skillArgs.tabId === "ACTIVE_TAB" || !skillArgs.tabId)) {
             skillArgs.tabId = tabId;
-            console.log(`[Gateway] 將 tabId 注入到 args: ${tabId}`);
+            console.log(`[Gateway] 將 tabId 注入/替換到 args: ${tabId}`);
         }
         
-        // 如果需要 url，將其注入到 args 中
-        if (activeTab && activeTab.url && !skillArgs.url) {
+        // 如果 url 是占位符或不存在，用實際的 url 替換
+        if (activeTab && activeTab.url && (skillArgs.url === "ACTIVE_TAB_URL" || !skillArgs.url)) {
             skillArgs.url = activeTab.url;
-            console.log(`[Gateway] 將 url 注入到 args: ${activeTab.url}`);
+            console.log(`[Gateway] 將 url 注入/替換到 args: ${activeTab.url}`);
         }
         
         // 第三步：轉發給 SidePanel（統一入口）
