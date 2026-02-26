@@ -459,69 +459,6 @@ async function executeSkillInPage(skillName, skillFolder, args, skillUrl) {
     }
 }
 
-// --- 在網頁前端執行技能 ---
-async function runSkillInTabContext(skillName, skillInfo, args, sendResponse, senderTab = null) {
-    try {
-        let tab = null;
-        
-        // 1. 優先使用 senderTab（來自消息發送者的標籤頁信息）
-        if (senderTab && senderTab.id) {
-            console.log(`[Gateway] 使用 senderTab，ID: ${senderTab.id}`);
-            tab = senderTab;
-        } else {
-            // 2. 否則嘗試查詢當前活動分頁
-            console.log(`[Gateway] senderTab 不存在，嘗試查詢活動分頁...`);
-            let [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (!activeTab) {
-                throw new Error("無法找到活動分頁，且未提供 senderTab");
-            }
-            tab = activeTab;
-        }
-
-        // 3. 檢查是否是 chrome:// 系統頁面，如果是則創建一個新分頁
-        if (tab.url.startsWith('chrome://')) {
-            console.log(`[Gateway] 當前分頁是 ${tab.url}，無法注入腳本，創建新分頁...`);
-            const newTab = await chrome.tabs.create({ url: "about:blank" });
-            tab = newTab;
-        }
-
-        console.log(`[Gateway] 在分頁 ID ${tab.id} 中執行技能: ${skillName}`);
-
-        // 4. 計算技能 URL (在 Service Worker 中，有 chrome.runtime 可用)
-        const skillUrl = chrome.runtime.getURL(`skills/${skillInfo.folder}/${skillName}.js`);
-        console.log(`[Gateway] 技能 URL: ${skillUrl}`);
-        
-        // 5. 注入並執行技能函數到網頁前端
-        console.log(`[Gateway] 注入技能函數: ${skillName}`);
-        
-        const results = await chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            func: executeSkillInPage,
-            args: [skillName, skillInfo.folder, args, skillUrl]  // ← 傳入完整 URL
-        });
-
-        console.log(`[Gateway] 技能執行完成，結果:`, results);
-
-        // 6. 檢查執行結果
-        if (!results || results.length === 0) {
-            throw new Error("技能執行沒有返回結果");
-        }
-
-        const callResult = results[0].result;
-        console.log(`[Gateway] 技能執行結果:`, callResult);
-        
-        if (callResult.status === "success") {
-            sendResponse({ status: "success", text: callResult.result });
-        } else {
-            sendResponse({ status: "error", text: callResult.error });
-        }
-
-    } catch (error) {
-        console.error(`[Gateway] 技能執行失敗:`, error);
-        sendResponse({ status: "error", text: `技能執行失敗: ${error.message}` });
-    }
-}
-
 // --- Gemini Flash API 呼叫 ---
 async function callGeminiFlash(prompt, systemPrompt, geminiConfig) {
     try {
