@@ -77,9 +77,8 @@ async function executeSidePanelSkill(skillName, skillFolder, args, runInPageCont
                     type: 'EXECUTE_SKILL',
                     skill: skillName,
                     skillFolder: skillFolder,
-                    runInPageContext: runInPageContext,  // ← 新增：執行環境標誌
-                    tabId: tabId,                        // ← 新增：當前標籤頁 ID
-                    args: args
+                    runInPageContext: runInPageContext,  // ← 執行環境標誌
+                    args: args                           // ← tabId 已包含在 args 中
                 },
                 (response) => {
                     if (responded) return;
@@ -301,6 +300,7 @@ async function handleRequest(userPrompt, sendResponse, configData = null, sender
             
             const tabId = activeTab?.id || null;
             const skillArgs = cachedResult.args || {};
+            skillArgs.tabId = tabId;  // 確保 tabId 是最新的
             
             // 添加必要的 args
             if (!skillArgs.modelName && configData) {

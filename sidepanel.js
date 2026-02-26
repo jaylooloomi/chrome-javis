@@ -378,7 +378,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.target === 'SIDE_PANEL' && message.type === 'EXECUTE_SKILL') {
         console.log("[SidePanel] 收到技能執行請求:", message.skill);
         console.log("[SidePanel] runInPageContext:", message.runInPageContext);
-        console.log("[SidePanel] tabId:", message.tabId);
+        console.log("[SidePanel] tabId:", message.args.tabId);
         console.log("[SidePanel] args:", message.args);
         
         // 異步處理技能執行
@@ -388,7 +388,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 if (message.runInPageContext) {
                     console.log(`[SidePanel] 技能 ${message.skill} 需要在網頁前端執行，使用 chrome.scripting.executeScript`);
                     
-                    if (!message.tabId) {
+                    if (!message.args.tabId) {
                         throw new Error("runInPageContext === true 但沒有提供 tabId");
                     }
                     
@@ -431,7 +431,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     
                     // 注入並執行技能函數到網頁前端
                     const results = await chrome.scripting.executeScript({
-                        target: { tabId: message.tabId },
+                        target: { tabId: message.args.tabId },
                         func: executeSkillInPage,
                         args: [message.skill, message.skillFolder, message.args, skillUrl]
                     });
