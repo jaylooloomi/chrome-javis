@@ -7,6 +7,10 @@
 
 console.log("[Gateway] 🚀 Service Worker 已加載");
 
+// ======== 模型名稱映射表 ========
+// 從 config.json 動態加載，避免硬編碼
+let MODEL_NAMES = {};
+
 // ======== 技能註冊表和快取 ========
 const SKILL_REGISTRY = {};
 
@@ -104,7 +108,7 @@ async function executeSidePanelSkill(skillName, skillFolder, args, runInPageCont
 
 // --- 階段 A：啟動與技能裝載（動態掃描） ---
 async function ensureSkillsLoaded() {
-    if (dynamicSystemPrompt) return;
+    if (dynamicSystemPrompt && Object.keys(MODEL_NAMES).length > 0) return;
     if (loadingPromise) {
         await loadingPromise;
         return;
@@ -116,6 +120,23 @@ async function ensureSkillsLoaded() {
 
 async function loadSkillsDynamically() {
     console.log("[Gateway] 啟動動態技能加載器...");
+    
+    // 加載模型名稱映射表
+    try {
+        const configUrl = chrome.runtime.getURL('config.json');
+        const configResponse = await fetch(configUrl);
+        const configData = await configResponse.json();
+        MODEL_NAMES = configData.modelNames || {};
+        console.log("[Gateway] ✅ 已加載模型名稱映射表:", MODEL_NAMES);
+    } catch (e) {
+        console.warn("[Gateway] ⚠️  無法加載模型名稱，使用默認值");
+        MODEL_NAMES = {
+            'geminiFlash': 'Gemini 2.5 Flash',
+            'ollamaGemma2B': 'Ollama Gemma 2B',
+            'ollamaGemmaLarge': 'Ollama Gemma Large',
+            'ollamaMinimaxM2': 'Ollama Minimax M2'
+        };
+    }
     
     try {
         // 1. 從 skills/skills-manifest.json 讀取技能列表
@@ -178,6 +199,7 @@ async function loadSkillsDynamically() {
         + "3. 如果無法完成任務，回傳 {\"error\": \"原因\"}\n"
         + "4. 不要返回空的 JSON 對象 {}\n"
         + "5. 始終檢查用戶輸入是否匹配任何技能\n";
+
     dynamicSystemPrompt = promptBuilder;
     console.log("[Gateway] 技能庫已構建完成。已載入技能:", Object.keys(SKILL_REGISTRY));
 }
@@ -282,13 +304,7 @@ async function handleRequest(userPrompt, sendResponse, configData = null, sender
             
             // 添加必要的 args
             if (!skillArgs.modelName && configData) {
-                const modelNames = {
-                    'geminiFlash': 'Gemini 2.5 Flash',
-                    'ollamaGemma2B': 'Ollama Gemma 2B',
-                    'ollamaGemmaLarge': 'Ollama Gemma Large',
-                    'ollamaMinimaxM2': 'Ollama Minimax M2'
-                };
-                skillArgs.modelName = modelNames[configData.activeModel] || configData.activeModel || 'Unknown Model';
+                skillArgs.modelName = MODEL_NAMES[configData.activeModel] || configData.activeModel || 'Unknown Model';
             }
             
             if (!skillArgs.language) {
@@ -448,14 +464,7 @@ async function runSkillInSidePanel(skillName, skillInfo, args, sendResponse, con
         
         // 添加當前模型名稱到 args
         if (!args.modelName && configData) {
-            // 根據 activeModel 獲取友好的模型名稱
-            const modelNames = {
-                'geminiFlash': 'Gemini 2.5 Flash',
-                'ollamaGemma2B': 'Ollama Gemma 2B',
-                'ollamaGemmaLarge': 'Ollama Gemma Large',
-                'ollamaMinimaxM2': 'Ollama Minimax M2'
-            };
-            args.modelName = modelNames[configData.activeModel] || configData.activeModel || 'Unknown Model';
+            args.modelName = MODEL_NAMES[configData.activeModel] || configData.activeModel || 'Unknown Model';
             console.log(`[Gateway] 添加 modelName: ${args.modelName}`);
         }
         
