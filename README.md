@@ -45,14 +45,14 @@
 - ✅ 職責清晰，易於維護和測試
 - ✅ 可輕鬆擴展新功能
 
-### 🎯 設計哲學：二層分離模式
+### 🎯 設計哲學：大腦-手腳分離模式
 
-**Service Worker 當純轉發器，SidePanel 當執行大腦**
+**Service Worker 當大腦（AI 推理和決策），SidePanel 當手腳（動態執行技能）**
 
-這是解決 Service Worker ES Module 限制的優雅方案：
-- Service Worker **無法使用動態 `import()`**（HTML 規範限制）
-- SidePanel 是完整網頁環境，**完全支援動態 `import()`** 和 DOM 操作
-- 結果：架構更乾淨，技能加載更靈活
+Service Worker 負責思考決策，SidePanel 負責行動執行：
+- Service Worker **大腦**：調用 Gemini API，進行 AI 推理，決定執行哪個技能
+- SidePanel **手腳**：動態加載技能，執行業務邏輯，與 Chrome APIs 和 DOM 互動
+- 結果：職責清晰，易於維護，模組化程度高
 
 ```
 用戶指令 (SidePanel UI)
@@ -88,7 +88,7 @@
    - 拼接成完整的 System Prompt
    - 存在 `dynamicSystemPrompt` 變數中
 
-### 階段 B：指令接收與 AI 推理 (Input & Reasoning)
+### 階段 B：指令接收、AI 推理與路由 (Input, Reasoning & Routing)
 
 **用戶在 SidePanel 說「打開 Google」：**
 
@@ -97,7 +97,7 @@ SidePanel (用戶說話)
     ↓
 Service Worker 收到訊息
     ↓
-[Gateway Phase]
+[Gateway Phase - 大腦思考和決策]
 - 提取用戶的自然語言輸入
 - 組合 System Prompt + User Prompt
 - 發送到 Gemini 2.0 Flash API
@@ -108,11 +108,20 @@ Gemini 回應 (JSON)
   "url": "https://www.google.com"
 }
     ↓
-Service Worker 解析 JSON
+Service Worker 解析 JSON，查詢技能清單
     ↓
-決定技能執行環境
-  ├─ 需要 DOM？ → 轉發到 SidePanel
-  └─ 純 API？ → 直接轉發到 SidePanel
+檢索 runInPageContext 標誌
+{
+  skill: "open_tab",
+  runInPageContext: false
+}
+    ↓
+轉發給 SidePanel（包含執行環境指示）
+{
+  skill: "open_tab",
+  runInPageContext: false,
+  args: { url: "https://www.google.com" }
+}
 ```
 
 ### 階段 C：動態加載與執行 (Execution)
