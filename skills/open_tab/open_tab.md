@@ -9,7 +9,7 @@ when_to_use:
      Chinese: "打開", "開啟", "訪問", "查看", "進入"
   
   2. **WEBSITE NAME** (必須有網站名稱):
-     Supported: Google, YouTube, YouTube Music, GitHub, Twitter, LinkedIn, Facebook, Instagram, Yahoo, Gmail, Gemini, Setting
+     Supported: Google, YouTube, YouTube Music, GitHub, Twitter, LinkedIn, Facebook, Instagram, Yahoo, Gmail, Gemini, Nebula, Setting
   
   ** DECISION RULE: Check for BOTH verb + website name **
   - If sentence has ACTION VERB + website name → CALL open_tab
@@ -26,6 +26,7 @@ examples_CORRECT_verb_plus_website:
   - "visit Yahoo" ✓ (verb: visit, site: Yahoo)
   - "open Gmail" ✓ (verb: open, site: Gmail)
   - "open Gemini" ✓ (verb: open, site: Gemini)
+  - "open Nebula" ✓ (verb: open, site: Nebula)
 
 examples_INCORRECT_missing_verb:
   - "Google" ✗ (no verb, just website name)
@@ -58,6 +59,7 @@ intent_examples:
     - "visit Yahoo" → Call open_tab with Yahoo
     - "open Gemini" → Call open_tab with Gemini
     - "open Gmail" → Call open_tab with Gmail
+    - "open Nebula" → Call open_tab with Nebula
     - "open setting" → Call open_tab with Setting
 
   INCORRECT - do NOT call this skill (MISSING verb OR website):
@@ -96,8 +98,8 @@ URL conversion rules:
 8. If user says "instagram" → "https://instagram.com"
 9. If user says "yahoo" → "https://yahoo.com"
 10. If user says "gemini" → "https://gemini.google.com"
+11. If user says "nebula" → "https://www.nebula.gg/"
 12. If user says "setting" → "chrome-extension://llffkjaidimijhnkgpacebjkiicccaaj/options.html"
-13. If user provides full URL, keep it as-is
 14. Always add https:// prefix if missing (unless chrome-extension URL)
 15. Always add https:// prefix if missing (unless chrome-extension URL)
 14. Never return empty URL
@@ -110,6 +112,7 @@ Examples of correct output:
 - User says "visit Yahoo" → {"skill": "open_tab", "args": {"url": "https://yahoo.com"}}
 - User says "open Gemini" → {"skill": "open_tab", "args": {"url": "https://gemini.google.com"}}
 - User says "open Gmail" → {"skill": "open_tab", "args": {"url": "https://mail.google.com"}}
+- User says "open Nebula" → {"skill": "open_tab", "args": {"url": "https://www.nebula.gg/"}}
 - User says "open setting" → {"skill": "open_tab", "args": {"url": "chrome-extension://llffkjaidimijhnkgpacebjkiicccaaj/options.html"}}
 
 CRITICAL RULE - VERB + WEBSITE REQUIREMENT:
