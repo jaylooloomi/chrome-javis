@@ -5,8 +5,8 @@ description: 關閉當前頁面 - 關閉用戶當前所在的瀏覽器標籤頁�
 when_to_use:
   MUST HAVE BOTH:
   1. **ACTION VERB** (必須有動詞):
-     English: "close", "shut", "quit", "exit", "close tab", "close page"
-     Chinese: "關閉", "關掉", "退出", "離開", "結束"
+     English: "close", "shut", "quit", "close tab", "close page"
+     Chinese: "關閉", "關掉", "離開", "結束"
   
   2. **CONTEXT/OBJECT** (必須有對象):
      Can be: "this page", "current page", "this tab", "this window", "the page"
@@ -23,10 +23,8 @@ examples_CORRECT_verb_plus_page:
   - "close this page" ✓ (verb: close, object: this page)
   - "close current tab" ✓ (verb: close, object: current tab)
   - "shut this window" ✓ (verb: shut, object: window)
-  - "exit page" ✓ (verb: exit, object: page)
   - "關閉頁面" ✓ (verb: 關閉, object: 頁面)
   - "關掉這個分頁" ✓ (verb: 關掉, object: 分頁)
-  - "退出" ✓ (verb: 退出, implicit: current page)
   - "關掉" ✓ (verb: 關掉, implicit: current page)
 
 examples_INCORRECT_missing_verb:
@@ -57,7 +55,6 @@ intent_examples:
     - "close current tab" → Call close_this_page with current tab
     - "關閉頁面" → Call close_this_page with current page
     - "關掉分頁" → Call close_this_page
-    - "exit" → Call close_this_page (implicit current page)
     - "quit" → Call close_this_page (implicit current page)
 
   INCORRECT - do NOT call this skill (MISSING verb OR page):
