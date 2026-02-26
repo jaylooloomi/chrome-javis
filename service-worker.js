@@ -18,6 +18,36 @@ let loadingPromise = null;
 // 此表將通過 loadSkillsDynamically() 動態填充
 const SKILL_MAPPINGS = {};
 
+// ======== AI 推理結果快取 (階段1：內存快取 + 精確匹配) ========
+// 用於存儲 userInput → AI 推理結果的映射
+// 相同的用戶輸入可直接返回快取結果，無需再次呼叫 AI 模型
+const aiResultCache = new Map();
+
+/**
+ * 從快取中獲取 AI 推理結果
+ * @param {string} userInput - 用戶的文本輸入
+ * @returns {object|null} - 快取的結果或 null（如果未找到）
+ */
+function getFromCache(userInput) {
+    const result = aiResultCache.get(userInput);
+    if (result) {
+        console.log(`[Gateway] 🚀 快取命中: "${userInput}"`);
+        console.log(`[Gateway] 快取結果:`, result);
+    }
+    return result;
+}
+
+/**
+ * 將 AI 推理結果存入快取
+ * @param {string} userInput - 用戶的文本輸入
+ * @param {object} result - AI 推理結果 {skill, args}
+ */
+function putInCache(userInput, result) {
+    aiResultCache.set(userInput, result);
+    console.log(`[Gateway] 📝 將結果快取: "${userInput}"`);
+    console.log(`[Gateway] 目前快取大小: ${aiResultCache.size} 個項目`);
+}
+
 // --- 執行 SidePanel 技能 ---
 // 將技能執行請求轉發給 SidePanel，由 SidePanel 進行動態加載和執行
 async function executeSidePanelSkill(skillName, skillFolder, args, runInPageContext, tabId) {
@@ -221,7 +251,61 @@ async function handleRequest(userPrompt, sendResponse, configData = null, sender
 
         await ensureSkillsLoaded();
         
-        console.log("[Gateway] ═══ 階段 B：呼叫 AI 模型 ═══");
+        // ====== 阶段 B：检查快取 ======
+        console.log("[Gateway] ═══ 階段 B：檢查快取 ═══");
+        const cachedResult = getFromCache(userPrompt);
+        if (cachedResult) {
+            console.log("[Gateway] ✅ 快取命中！跳過 AI 推理");
+            console.log("[Gateway] 使用快取結果:", cachedResult);
+            
+            // 獲取技能信息
+            const skillInfo = SKILL_MAPPINGS[cachedResult.skill];
+            if (!skillInfo) {
+                console.error("[Gateway] ❌ 快取中的技能已不存在:", cachedResult.skill);
+                sendResponse({ status: "error", text: `技能已被移除: ${cachedResult.skill}` });
+                return;
+            }
+            
+            // 準備執行 - 需要重新獲取當前 tab 信息
+            let activeTab = null;
+            try {
+                const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+                if (tab) {
+                    activeTab = tab;
+                }
+            } catch (error) {
+                console.warn(`[Gateway] 無法查詢標籤頁:`, error);
+            }
+            
+            const tabId = activeTab?.id || null;
+            const skillArgs = cachedResult.args || {};
+            
+            // 添加必要的 args
+            if (!skillArgs.modelName && configData) {
+                const modelNames = {
+                    'geminiFlash': 'Gemini 2.5 Flash',
+                    'ollamaGemma2B': 'Ollama Gemma 2B',
+                    'ollamaGemmaLarge': 'Ollama Gemma Large',
+                    'ollamaMinimaxM2': 'Ollama Minimax M2'
+                };
+                skillArgs.modelName = modelNames[configData.activeModel] || configData.activeModel || 'Unknown Model';
+            }
+            
+            if (!skillArgs.language) {
+                try {
+                    const langSettings = await chrome.storage.sync.get('micLanguage');
+                    skillArgs.language = langSettings.micLanguage || 'zh-TW';
+                } catch (error) {
+                    skillArgs.language = 'zh-TW';
+                }
+            }
+            
+            // 轉發給 SidePanel 執行
+            await runSkillInSidePanel(cachedResult.skill, skillInfo, skillArgs, sendResponse, configData, tabId);
+            return;
+        }
+        
+        console.log("[Gateway] ═══ 階段 C：呼叫 AI 模型 ═══");
         console.log("[Gateway] 接收到的 config:", JSON.stringify(configData, null, 2));
         console.log("[Gateway] activeModel 值:", configData.activeModel);
         console.log("[Gateway] activeModel 類型:", typeof configData.activeModel);
@@ -299,6 +383,13 @@ async function handleRequest(userPrompt, sendResponse, configData = null, sender
 
         console.log(`[Gateway] 執行技能: ${command.skill}`);
         console.log(`[Gateway] 傳遞給技能的完整命令:`, command);
+        
+        // ====== 快取 AI 推理結果 ======
+        // 將用戶輸入和 AI 推理結果存入快取，以便下次使用相同輸入時可直接使用快取
+        putInCache(userPrompt, {
+            skill: command.skill,
+            args: command.args || {}
+        });
         
         // ===== 新的統一流程：所有技能都通過 SidePanel 執行 =====
         // 第一步：自動獲取當前活跃標籤頁的 tabId
