@@ -1,12 +1,6 @@
 {
   "skills": [
     {
-      "name": "chrome_mode",
-      "folder": "chrome_mode",
-      "description": "Control webpage theme mode (dark/light). Detects and applies dark or light color scheme to the current website. Only use this skill when the user explicitly asks to change the theme or enable dark/light mode.",
-      "runInPageContext": true
-    },
-    {
       "name": "close_this_page",
       "folder": "close_this_page",
       "description": "關閉當前頁面 - 關閉用戶當前所在的瀏覽器標籤頁。僅在用戶明確要求關閉/退出當前頁面時使用。Close the current browser tab when user explicitly asks to close/exit the current page.",
