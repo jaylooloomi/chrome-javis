@@ -29,6 +29,7 @@ examples_CORRECT_verb_plus_direction_comprehensive:
   - "move to top" ✓ (verb: move to = go to, direction: top)
   - "jump to bottom" ✓ (verb: jump to, direction: bottom)
   - "jump to button" ✓ (verb: jump to, direction: button=bottom)
+  - "go to button" ✓ (verb: go to, direction: button=bottom)
   - "回到頂部" ✓ (verb: 回到, direction: top)
   - "到底部" ✓ (verb: 到, direction: bottom)
   - "scroll up" ✓ (verb: scroll, direction: up)
