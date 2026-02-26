@@ -4,7 +4,7 @@
  * Controls the browser window's fullscreen state (not webpage fullscreen)
  */
 
-export async function window_control(args) {
+export async function screen_control(args) {
   console.log("[Window Control Skill] 啟動，接收到參數:", args);
 
   try {
@@ -45,7 +45,7 @@ export async function window_control(args) {
         console.log("[Window Control Skill] 退出全螢幕模式");
         
         // 退出全螢幕，恢復為正常狀態
-        await chrome.windows.update(windowId, { state: 'normal' });
+        await chrome.windows.update(windowId, { state: 'maximized' });
         
         return "✅ 已退出全螢幕模式";
 
@@ -53,7 +53,7 @@ export async function window_control(args) {
         console.log("[Window Control Skill] 切換全螢幕模式");
         
         // 根據當前狀態進行切換
-        const newState = (currentState === 'fullscreen') ? 'normal' : 'fullscreen';
+        const newState = (currentState === 'fullscreen') ? 'maximized' : 'fullscreen';
         await chrome.windows.update(windowId, { state: newState });
         
         if (newState === 'fullscreen') {

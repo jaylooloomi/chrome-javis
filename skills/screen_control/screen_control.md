@@ -1,4 +1,4 @@
-name: window_control
+name: screen_control
 runInPageContext: false
 
 description: Control browser window fullscreen mode using Chrome Extension API. Toggles the browser window between fullscreen and normal state. Only use this skill when the user explicitly asks to enter or exit fullscreen mode.
@@ -13,7 +13,7 @@ when_to_use:
      User must explicitly ask to enter or exit fullscreen mode
 
   ** DECISION RULE: Check for BOTH verb + fullscreen intent **
-  - If sentence has fullscreen verb (enter/exit/toggle fullscreen) → CALL window_control
+  - If sentence has fullscreen verb (enter/exit/toggle fullscreen) → CALL screen_control
   - If sentence is just mentioning fullscreen casually → REJECT
   - If sentence doesn't indicate entering/exiting fullscreen → REJECT
 
@@ -39,14 +39,14 @@ when_NOT_to_use:
 
 intent_examples:
   CORRECT - call this skill (HAS fullscreen verb):
-    - "enter fullscreen" → Call window_control with mode: "enter"
-    - "full screen" → Call window_control with mode: "enter"
-    - "exit fullscreen" → Call window_control with mode: "exit"
-    - "quit fullscreen" → Call window_control with mode: "exit"
-    - "全螢幕" → Call window_control with mode: "enter"
-    - "進入全螢幕" → Call window_control with mode: "enter"
-    - "退出全螢幕" → Call window_control with mode: "exit"
-    - "toggle fullscreen" → Call window_control with mode: "toggle"
+    - "enter fullscreen" → Call screen_control with mode: "enter"
+    - "full screen" → Call screen_control with mode: "enter"
+    - "exit fullscreen" → Call screen_control with mode: "exit"
+    - "quit fullscreen" → Call screen_control with mode: "exit"
+    - "全螢幕" → Call screen_control with mode: "enter"
+    - "進入全螢幕" → Call screen_control with mode: "enter"
+    - "退出全螢幕" → Call screen_control with mode: "exit"
+    - "toggle fullscreen" → Call screen_control with mode: "toggle"
 
   INCORRECT - do NOT call this skill (MISSING verb OR intent):
     - "what is fullscreen?" → REJECT (no verb)
@@ -57,7 +57,7 @@ input: User must explicitly request to enter, exit, or toggle fullscreen mode
 
 output:
 Only respond with THIS EXACT JSON format when user explicitly asks to control fullscreen:
-{"skill": "window_control", "args": {"mode": "enter"|"exit"|"toggle", "prompt": "user input"}}
+{"skill": "screen_control", "args": {"mode": "enter"|"exit"|"toggle", "prompt": "user input"}}
 
 If user is NOT asking to control fullscreen, respond with:
 {"error": "This request is not asking to control fullscreen mode"}
@@ -71,11 +71,11 @@ IMPORTANT - args structure:
   * "toggle" → "toggle"
 
 Examples of correct output:
-- User says "enter fullscreen" → {"skill": "window_control", "args": {"mode": "enter", "prompt": "enter fullscreen"}}
-- User says "exit fullscreen" → {"skill": "window_control", "args": {"mode": "exit", "prompt": "exit fullscreen"}}
-- User says "全螢幕" → {"skill": "window_control", "args": {"mode": "enter", "prompt": "全螢幕"}}
-- User says "退出全螢幕" → {"skill": "window_control", "args": {"mode": "exit", "prompt": "退出全螢幕"}}
-- User says "toggle fullscreen" → {"skill": "window_control", "args": {"mode": "toggle", "prompt": "toggle fullscreen"}}
+- User says "enter fullscreen" → {"skill": "screen_control", "args": {"mode": "enter", "prompt": "enter fullscreen"}}
+- User says "exit fullscreen" → {"skill": "screen_control", "args": {"mode": "exit", "prompt": "exit fullscreen"}}
+- User says "全螢幕" → {"skill": "screen_control", "args": {"mode": "enter", "prompt": "全螢幕"}}
+- User says "退出全螢幕" → {"skill": "screen_control", "args": {"mode": "exit", "prompt": "退出全螢幕"}}
+- User says "toggle fullscreen" → {"skill": "screen_control", "args": {"mode": "toggle", "prompt": "toggle fullscreen"}}
 
 CRITICAL RULE - FULLSCREEN CONTROL INTENT REQUIREMENT:
 ✓ MUST HAVE: Clear fullscreen control verb (enter/exit/toggle/fullscreen)
@@ -83,4 +83,4 @@ CRITICAL RULE - FULLSCREEN CONTROL INTENT REQUIREMENT:
 ✗ DO NOT CALL if it's a casual statement
 ✗ DO NOT CALL if intent is unclear
 
-Only proceed to call window_control if you can identify a CLEAR fullscreen control request with mode.
+Only proceed to call screen_control if you can identify a CLEAR fullscreen control request with mode.
