@@ -1056,3 +1056,31 @@ npx husky install
 了解更多 Git hooks 和 husky：
 - [Husky 官方文檔](https://typicode.github.io/husky/)
 - [Git Hooks 官方文檔](https://git-scm.com/docs/githooks)
+
+---
+
+## 📜 許可證 (License)
+
+本項目採用 **MIT License + Commons Clause** 的組合許可證。
+
+### ✅ 你可以：
+- 自由使用、修改、分發本軟件（非商業用途）
+- 個人學習、研究、內部業務使用
+- 提交 PR 改進項目
+- 在開源項目中使用（保持相同許可證）
+
+### ❌ 你不能：
+- 未經授權，將本軟件或衍生產品作為商業服務銷售
+- 提供 SaaS、雲服務、託管服務等商業化產品
+- 將本軟件的功能打包成付費服務
+
+### 💼 商業使用或其他許可需求
+
+如果你希望將本軟件用於商業目的（包括但不限於 SaaS、商業服務、付費插件等），
+請聯繫作者獲取商業許可。
+
+**聯繫方式**：
+- GitHub Issues
+- 在 README 頂部尋找聯繫信息
+
+詳見完整的 [LICENSE](./LICENSE) 文件。
