@@ -1,0 +1,22 @@
+{
+  "name": "chrome-jarvis",
+  "version": "1.3.0",
+  "description": "OmniAssistant - Chrome Extension AI Agent with multi-skill support",
+  "private": true,
+  "scripts": {
+    "generate-manifest": "node scripts/generate-manifest.js",
+    "prepare": "husky install && node scripts/generate-manifest.js"
+  },
+  "keywords": [
+    "chrome-extension",
+    "ai-assistant",
+    "gemini",
+    "ollama",
+    "skills"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "husky": "^8.0.3"
+  }
+}

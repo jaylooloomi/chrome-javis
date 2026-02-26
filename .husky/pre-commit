@@ -1,0 +1,16 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Auto-generate skills-manifest.json before commit
+echo "🔄 Checking skills manifest..."
+node scripts/generate-manifest.js
+
+# If manifest changed, add it to staging
+if git diff --cached --quiet skills/skills-manifest.json; then
+    # No changes to manifest in staging
+    exit 0
+else
+    # Manifest was updated, add it to commit
+    git add skills/skills-manifest.json
+    echo "✅ skills-manifest.json updated and added to commit"
+fi

@@ -729,8 +729,8 @@ export async function myskill(args) {
 ### 1. 安裝擴展
 
 1. 打開 `chrome://extensions/`
-2. 啟用 \"開發者模式\" (右上角切換)
-3. 點擊 \"載入已解壓的擴展程式\"
+2. 啟用 "開發者模式" (右上角切換)
+3. 點擊 "載入已解壓的擴展程式"
 4. 選擇本項目的資料夾
 
 ### 2. 配置 API
@@ -749,7 +749,275 @@ export async function myskill(args) {
 
 1. 點擊 Chrome 工具欄上的 Jarvis 圖標
 2. 在 SidePanel 中輸入指令
-3. 例如：\"open Google\", \"分析這個頁面\", \"關閉頁面\"
+3. 例如："open Google", "分析這個頁面", "關閉頁面"
+
+---
+
+## 💻 開發環境設置 (Development Environment)
+
+### 必要工具
+
+- Node.js 14+ (或任何支持 npm 的版本)
+- Git
+- Chrome 瀏覽器
+
+### 第 1 步：克隆並設置項目
+
+```bash
+# 克隆項目
+git clone https://github.com/jaylooloomi/chrome-jarvis.git
+cd chrome-jarvis
+
+# 安裝依賴並設置 Git hooks
+npm install
+```
+
+**第一次設置時會發生什麼：**
+1. npm 安裝 husky 和其他開發依賴
+2. `prepare` 腳本自動運行
+3. Husky 設置 Git pre-commit hook
+4. 自動生成 `skills/skills-manifest.json`
+
+### 第 2 步：了解項目結構
+
+```
+chrome-jarvis/
+├── package.json              # npm 配置和腳本
+├── scripts/
+│   └── generate-manifest.js  # 自動生成技能清單
+├── .husky/
+│   └── pre-commit            # Git 提交前自動運行
+├── skills/
+│   ├── skills-manifest.json  # 自動生成（勿手動編輯）
+│   ├── open_tab/
+│   ├── summary_this_page/
+│   ├── close_this_page/
+│   └── who_are_you/
+├── service-worker.js
+├── sidepanel.js
+└── README.md
+```
+
+### 第 3 步：在 Chrome 中加載項目
+
+1. 打開 `chrome://extensions/`
+2. 啟用"開發者模式"
+3. 點擊"載入已解壓的擴展程式"
+4. 選擇 `chrome-jarvis` 資料夾
+
+---
+
+## 📦 npm 腳本 (npm Scripts)
+
+### 生成技能清單
+
+```bash
+# 手動生成 skills-manifest.json
+npm run generate-manifest
+```
+
+**什麼時候需要手動運行？**
+- 完全移除 node_modules 後
+- 手動修改了技能文件後
+- 需要驗證技能是否正確註冊時
+
+**何時自動運行？**
+- ✅ `npm install` 時自動運行
+- ✅ Git commit 時自動運行（pre-commit hook）
+
+### 查看所有可用腳本
+
+```bash
+npm run
+```
+
+---
+
+## 🔄 開發工作流程 (Development Workflow)
+
+### 自動清單生成 (Auto-Manifest Generation)
+
+該項目使用 **Git pre-commit hook** 自動生成技能清單，這意味著：
+
+1. ✅ 開發者只需關注技能實現
+2. ✅ 提交代碼時自動掃描 `skills/` 目錄
+3. ✅ 自動生成 `skills/skills-manifest.json`
+4. ✅ 自動添加到提交中
+5. ✅ **無需手動維護清單！**
+
+### 常見場景
+
+#### 添加新技能
+
+1. **在 `skills/` 下創建新資料夾**
+   ```bash
+   mkdir skills/my-new-skill
+   ```
+
+2. **創建 `.md` 文件**
+   ```bash
+   touch skills/my-new-skill/my-new-skill.md
+   ```
+   編輯內容（參考《開發指南》部分）
+
+3. **創建 `.js` 文件**
+   ```bash
+   touch skills/my-new-skill/my-new-skill.js
+   ```
+   編輯實現代碼（參考《開發指南》部分）
+
+4. **提交代碼**
+   ```bash
+   git add skills/my-new-skill/
+   git commit -m "feat: add my-new-skill"
+   ```
+   **自動發生：**
+   - ✅ pre-commit hook 觸發
+   - ✅ 自動掃描 `skills/` 目錄
+   - ✅ 生成 `skills/skills-manifest.json`
+   - ✅ 自動添加到提交
+
+5. **推送到遠程**
+   ```bash
+   git push origin feature-branch
+   ```
+
+#### 修改現有技能
+
+```bash
+# 編輯文件
+vim skills/open_tab/open_tab.md
+vim skills/open_tab/open_tab.js
+
+# 測試（在 Chrome 中）
+# 1. 打開 chrome://extensions/
+# 2. 點擊 OmniAssistant 旁的"刷新"
+
+# 提交（manifest 自動更新）
+git add skills/open_tab/
+git commit -m "fix: improve open_tab skill"
+git push
+```
+
+#### 調試技能
+
+1. **查看 Service Worker 日誌**
+   ```
+   chrome://extensions/
+   → OmniAssistant 下方
+   → 點擊"Service Worker"文字
+   → DevTools 會打開
+   ```
+
+2. **查看 SidePanel 日誌**
+   ```
+   在 SidePanel 上右鍵
+   → 檢查
+   → 查看 Console 標籤
+   ```
+
+3. **重新加載擴展**
+   ```
+   chrome://extensions/
+   → OmniAssistant 旁
+   → 點擊"刷新"圖標
+   ```
+
+### Git 工作流程
+
+```bash
+# 創建功能分支
+git checkout -b feat/new-feature
+
+# 進行開發
+# ...編輯文件...
+
+# 提交（manifest 自動更新）
+git add .
+git commit -m "feat: add new feature"
+# Pre-commit hook 自動運行：
+# - npm run generate-manifest
+# - 更新 skills-manifest.json
+# - 添加到提交
+
+# 推送
+git push origin feat/new-feature
+
+# 創建 Pull Request
+# ...在 GitHub 上操作...
+```
+
+---
+
+## 🛠️ npm 與 Husky 故障排除
+
+### 問題：manifest 沒有自動更新
+
+**症狀：**
+- 添加新技能後，`skills-manifest.json` 沒有更新
+- 或者見到 hook 運行但 manifest 沒變
+
+**解決方案：**
+```bash
+# 手動運行生成腳本
+npm run generate-manifest
+
+# 查看輸出確認技能是否被正確發現
+```
+
+**檢查清單：**
+1. ✅ 技能資料夾名稱正確（如 `open_tab`）
+2. ✅ 文件名正確（如 `open_tab.md` 和 `open_tab.js`）
+3. ✅ 文件確實存在
+4. ✅ 沒有拼寫錯誤
+
+### 問題：Git hook 未運行
+
+**症狀：**
+- 提交代碼時 manifest 沒有自動更新
+- 沒有看到 "🔄 Checking skills manifest..." 消息
+
+**解決方案：**
+```bash
+# 確保 husky 已正確安裝
+npm install
+
+# 檢查 git hook 是否存在
+ls -la .git/hooks/pre-commit
+
+# 如果不存在，手動安裝
+npx husky install
+```
+
+### 問題：npm install 失敗
+
+**症狀：**
+```
+npm ERR! Cannot find module 'husky'
+```
+
+**解決方案：**
+```bash
+# 清除 npm 緩存
+npm cache clean --force
+
+# 重新安裝
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### 問題：Windows 上 pre-commit hook 不工作
+
+**原因：** Windows 使用不同的行終止符
+
+**解決方案：**
+```bash
+# 設置 Git 忽略行終止符差異
+git config core.safecrlf false
+
+# 重新安裝 husky
+npx husky install
+```
 
 ---
 
@@ -757,15 +1025,15 @@ export async function myskill(args) {
 
 ### 如何貢獻新技能
 
-1. 創建功能分支: `git checkout -b feat/new-skill-name`
-2. 按照《開發指南》部分添加技能
+1. 按照《開發工作流程》部分添加新技能
+2. 確保技能遵循《開發指南》中的規範
 3. 測試所有功能
 4. 提交 PR
 
 ### 如何自定義 AI 模型
 
 編輯 `config.json` 修改：
-- `activeModel` - 選擇 \"gemini\" 或 \"ollama\"
+- `activeModel` - 選擇 "gemini" 或 "ollama"
 - 各模型的參數 (temperature, maxTokens 等)
 
 ### 如何添加新語言
@@ -773,3 +1041,9 @@ export async function myskill(args) {
 1. 編輯 `i18n/locales.json`
 2. 添加新的語言代碼和翻譯
 3. 在 options.html 中添加語言選項
+
+### 更多關於 Husky
+
+了解更多 Git hooks 和 husky：
+- [Husky 官方文檔](https://typicode.github.io/husky/)
+- [Git Hooks 官方文檔](https://git-scm.com/docs/githooks)
