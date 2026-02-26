@@ -1,6 +1,49 @@
 📝 OmniAssistant - Chrome Extension AI Agent (Manifest V3)
 
+一個具備多技能的智能 Chrome 助手，採用 **Gateway-Client 微服務模式**，支持 12 種語言，可擴展的技能系統。
+
 ## 核心架構 (System Architecture)
+
+### 🎯 Gateway-Client 模式 (Gateway-Client Pattern)
+
+這是一種微服務架構模式，特別適合 Chrome 擴展的限制環境。
+
+**架構層次：**
+
+```
+┌─ Gateway Layer ─────────────────┐
+│  Service Worker                 │
+│  - 調用 Gemini API              │
+│  - AI 推理與決策                 │
+│  - 解析 JSON 指令                │
+│  - 路由到 Client                 │
+└─────────────────────────────────┘
+              ↓
+┌─ Client Layer ──────────────────┐
+│  SidePanel                      │
+│  - 動態加載技能模組              │
+│  - 執行業務邏輯                  │
+│  - 調用 Chrome APIs              │
+│  - 與用戶界面交互                │
+└─────────────────────────────────┘
+```
+
+**為什麼這樣分離？**
+
+| 特性 | Service Worker | SidePanel | 
+|------|-----------------|----------|
+| **動態 import()** | ❌ HTML 規範禁止 | ✅ 完全支援 | 
+| **DOM 存取** | ❌ 無 | ✅ 有 | 
+| **Chrome APIs** | ✅ 完全支援 | ✅ 完全支援 | 
+| **生命週期** | 👻 隨時睡眠 | 👤 用戶開啟時活躍 | 
+| **複雜邏輯** | ⚠️ 受限 | ✅ 完整網頁環境 | 
+
+**優勢：**
+- ✅ Service Worker 無需 hardcode 任何技能
+- ✅ SidePanel 可以動態加載任何技能模組
+- ✅ 符合 Chrome 規範，避免 CSP 衝突
+- ✅ 職責清晰，易於維護和測試
+- ✅ 可輕鬆擴展新功能
 
 ### 🎯 設計哲學：二層分離模式
 
@@ -188,7 +231,7 @@ export async function open_tab(args) {
 
 ### 3. 技能清單 (skills-manifest.json)
 
-註冊所有可用技能：
+註冊所有可用技能（位置：`skills/skills-manifest.json`）：
 
 ```json
 {
@@ -196,12 +239,91 @@ export async function open_tab(args) {
     {
       "name": "open_tab",
       "folder": "open_tab",
-      "description": "打開新分頁",
+      "description": "打開新標籤頁",
+      "runInPageContext": false
+    },
+    {
+      "name": "summary_this_page",
+      "folder": "summary_this_page",
+      "description": "分析並總結當前頁面",
+      "runInPageContext": false
+    },
+    {
+      "name": "close_this_page",
+      "folder": "close_this_page",
+      "description": "關閉當前標籤頁",
+      "runInPageContext": false
+    },
+    {
+      "name": "who_are_you",
+      "folder": "who_are_you",
+      "description": "介紹 Jarvis 助手功能",
       "runInPageContext": false
     }
   ]
 }
 ```
+
+---
+
+## 📚 當前支持的技能 (Supported Skills)
+
+### 1. open_tab - 打開新標籤頁
+
+**功能**：打開指定網站到新標籤頁
+
+**觸發規則**：
+- 必須有動詞：\"open\", \"visit\", \"go to\", \"check\", \"打開\", \"訪問\"
+- 必須有網站名：\"Google\", \"YouTube\", \"Gmail\", \"Setting\" 等
+
+**示例指令**：
+- \"open Google\"
+- \"visit YouTube Music\"
+- \"打開 Gmail\"
+- \"open setting\" (打開設定頁面)
+
+**支持的網站**：Google, YouTube, YouTube Music, GitHub, Twitter, LinkedIn, Facebook, Instagram, Yahoo, Gmail, Setting
+
+### 2. summary_this_page - 分析並總結頁面
+
+**功能**：將當前頁面發送到 Google Gemini 進行分析、摘要或評估
+
+**觸發規則**：
+- 必須有動詞：\"ask\", \"send\", \"analyze\", \"summarize\", \"分析\", \"總結\", \"檢查\"
+- 必須有對象：\"this page\", \"current page\", \"頁面\" 或隱含當前頁面
+
+**示例指令**：
+- \"analyze this page\"
+- \"summarize current page\"
+- \"分析頁面\"
+- \"重點整理一下\"
+
+### 3. close_this_page - 關閉當前標籤頁
+
+**功能**：立即關閉當前所在的瀏覽器標籤頁
+
+**觸發規則**：
+- 必須有動詞：\"close\", \"shut\", \"quit\", \"exit\", \"關閉\", \"關掉\", \"退出\"
+- 必須有對象：\"this page\", \"this tab\", \"current tab\", \"頁面\" 或隱含當前頁面
+
+**示例指令**：
+- \"close this page\"
+- \"close current tab\"
+- \"關閉頁面\"
+- \"退出\"
+
+### 4. who_are_you - 介紹助手
+
+**功能**：介紹 Jarvis 助手的功能、當前使用的 AI 模型和語言設置
+
+**觸發規則**：
+- 用戶詢問關於助手的問題
+
+**示例指令**：
+- \"who are you?\"
+- \"你是誰?\"
+- \"你能做什麼?\"
+- \"tell me about yourself\"
 
 ---
 
@@ -274,96 +396,380 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 ---
 
-## 開發工作流程 (Development Workflow)
+## ⚙️ 配置說明 (Configuration)
 
-### 添加新技能的步驟
+### 模型選擇
 
-1. **建立檔案結構**
-   ```
-   skills/myskill/
-   ├── myskill.md
-   └── myskill.js
-   ```
+用戶可以在 **選項頁面** (`chrome-extension://llffkjaidimijhnkgpacebjkiicccaaj/options.html`) 選擇 AI 模型：
 
-2. **編寫 .md 介面**
-   ```markdown
-   # myskill
-   
-   技能的用途說明...
-   ```
+**支持的模型**：
+- 🌐 **Gemini 2.5 Flash** (雲端) - 快速、準確、需要網絡
+- 🖥️ **Ollama Gemma 2B** (本地) - 隱私安全、速度較慢
+- 🖥️ **Ollama Gemma Large** (本地) - 效果更好、需更多資源
+- 🖥️ **Ollama Minimax M2** (本地) - 多語言支持
 
-3. **編寫 .js 實作**
-   ```javascript
-   export async function myskill(args) {
-       // 技能邏輯
-       return "執行結果";
-   }
-   ```
+選擇會保存到 `chrome.storage.sync`，並在技能執行時作為上下文參數傳遞。
 
-4. **註冊到 skills-manifest.json**
-   ```json
-   {
-       "name": "myskill",
-       "folder": "myskill",
-       "description": "技能描述",
-       "runInPageContext": false
-   }
-   ```
+### 語言設置
 
-5. **完成！** 系統會自動發現並加載新技能
+系統會自動檢測瀏覽器語言。用戶也可以在選項頁面手動選擇語言。
+
+### 通知設置
+
+用戶可以在選項頁面啟用/禁用技能執行完成後的 toast 通知。
 
 ---
 
-## 架構優勢總結 (Benefits)
+## 🌐 國際化支持 (i18n)
 
-✅ **零硬編碼** - Service Worker 不需要 import 任何技能  
-✅ **完全動態** - 新增技能自動被發現  
-✅ **符合規範** - 避免 HTML 規範和 CSP 限制  
-✅ **清晰職責** - Service Worker 是路由器，SidePanel 是執行器  
-✅ **易於測試** - 技能是獨立的 ES Module，可單獨測試  
-✅ **可擴展** - 未來可輕鬆添加 DOM 操作、複雜邏輯等  
+OmniAssistant 支持 **12 種語言**：
+
+| 語言 | 代碼 | 狀態 |
+|------|------|------|
+| 繁體中文 | zh-TW | ✅ |
+| 簡體中文 | zh-CN | ✅ |
+| 英文 (美國) | en-US | ✅ |
+| 日文 | ja-JP | ✅ |
+| 韓文 | ko-KR | ✅ |
+| 法文 | fr-FR | ✅ |
+| 德文 | de-DE | ✅ |
+| 西班牙文 | es-ES | ✅ |
+| 義大利文 | it-IT | ✅ |
+| 葡萄牙文 (巴西) | pt-BR | ✅ |
+| 泰文 | th-TH | ✅ |
+| 俄文 | ru-RU | ✅ |
+
+所有 UI 字符串都存儲在 `i18n/locales.json` 中，系統會根據用戶語言自動選擇翻譯。
 
 ---
 
-## 故障排除 (Troubleshooting)
+## 📖 開發指南 (Development Guide)
 
-### 「無法連接到 SidePanel」
+### 添加新技能的完整步驟
 
-**原因：** SidePanel 未開啟或 Chrome 未加載
+#### 第 1 步：建立檔案結構
 
-**解決：** 
-1. 確保 SidePanel 已打開（用戶應主動打開）
-2. 檢查 Chrome DevTools Console 是否有錯誤
+在 `skills/` 目錄下建立新技能資料夾：
 
-### 「動態 import 失敗」
-
-**原因：** 路徑錯誤或檔案不存在
-
-**解決：**
-1. 檢查 `skills-manifest.json` 中的 `folder` 名稱
-2. 確保檔案名與函數名一致
-3. 檢查 SidePanel Console 的詳細錯誤訊息
-
-### 「技能未被註冊」
-
-**原因：** 技能檔案沒有正確導出
-
-**解決：**
-```javascript
-// ✅ 必須是這樣
-export async function skillname(args) { ... }
-
-// ❌ 不要這樣
-export default async function(args) { ... }
-function skillname(args) { ... }  // 沒有 export
+```
+skills/
+├── myskill/
+│   ├── myskill.md          # AI 用的介面定義
+│   └── myskill.js          # 技能實現代碼
+└── ...
 ```
 
+#### 第 2 步：編寫 .md 介面文件
+
+這個文件告訴 AI 技能的用途和參數。建議參考現有技能（如 `open_tab.md`）的格式：
+
+```markdown
+name: myskill
+
+description: 技能的簡短描述
+
+when_to_use:
+  MUST HAVE BOTH:
+  1. **ACTION VERB** (必須有動詞):
+     English: "verb1", "verb2"
+     Chinese: "動詞1", "動詞2"
+  
+  2. **CONTEXT/OBJECT** (必須有對象):
+     "context1", "context2"
+
+examples_CORRECT:
+  - "example 1" ✓
+  - "example 2" ✓
+
+examples_INCORRECT:
+  - "bad example 1" ✗
+
+when_NOT_to_use:
+  - 不應使用的情況
+
+input: 輸入格式說明
+
+output:
+JSON 格式輸出說明和範例
+
+IMPORTANT:
+- 重要提示和限制
+```
+
+**提示**：這個 .md 文件會被放入 AI 的 System Prompt，所以要清楚易懂！
+
+#### 第 3 步：編寫 .js 實現文件
+
+**關鍵要求**：
+1. 必須導出與檔案名相同的 `async` 函數
+2. 函數名必須完全匹配技能名稱
+3. 使用 ES Module 語法 (`export async function`)
+4. 接收 `args` 參數物件
+5. 返回描述性的成功訊息
+6. 拋出有意義的錯誤訊息
+
+```javascript
+// skills/myskill/myskill.js
+// ✅ 正確的模板
+
+export async function myskill(args) {
+    console.log("[MySkill] 啟動，接收到參數:", args);
+
+    try {
+        // 驗證必要參數
+        if (!args.requiredParam) {
+            throw new Error("未提供必要參數: requiredParam");
+        }
+
+        console.log("[MySkill] 執行業務邏輯...");
+        
+        // 業務邏輯
+        const result = await someAsyncOperation(args.requiredParam);
+        
+        console.log("[MySkill] 執行成功");
+        return `✅ 操作成功：${result}`;
+        
+    } catch (error) {
+        console.error("[MySkill] 錯誤:", error);
+        throw new Error(`操作失敗：${error.message}`);
+    }
+}
+```
+
+**參數規範**：
+- `args.modelName` - 當前使用的 AI 模型名稱
+- `args.language` - 當前的語言代碼 (如 \"zh-TW\")
+- `args.tabId` - 源標籤頁 ID (如果需要)
+- `args.url` - 源頁面 URL (如果需要)
+- 其他參數由 AI 根據 `.md` 文件決定
+
+#### 第 4 步：註冊技能到清單
+
+編輯 `skills/skills-manifest.json` 並新增技能條目：
+
+```json
+{
+  "skills": [
+    {
+      "name": "myskill",
+      "folder": "myskill",
+      "description": "技能的簡短描述",
+      "runInPageContext": false
+    }
+  ]
+}
+```
+
+#### 第 5 步：測試
+
+1. 重新載入擴展 (`chrome://extensions/`)
+2. 打開 Service Worker 日誌，驗證技能是否被加載
+3. 在 SidePanel 中測試新指令
+4. 檢查 SidePanel Console 查看執行日誌
+
+#### 第 6 步：完成！
+
+系統會自動發現並加載新技能。無需修改任何核心代碼！
+
+### 技能編寫最佳實踐
+
+✅ **DO:**
+- 使用清晰的控制台日誌 `console.log("[SkillName] 訊息")`
+- 驗證所有輸入參數
+- 提供有意義的錯誤訊息
+- 使用 try-catch 處理所有異步操作
+- 返回人類可讀的成功訊息
+- 在 .md 文件中提供清晰的使用規則
+
+❌ **DON'T:**
+- 不要使用 `console.error` 作為正常流程
+- 不要返回空或 undefined
+- 不要忘記 `export async function`
+- 不要修改全局狀態
+- 不要在技能中硬編碼配置值
+
 ---
 
-## 專案狀態 (Project Status)
+## 🐛 調試方法 (Debugging)
 
-- ✅ Service Worker 路由架構完成
-- ✅ SidePanel 執行引擎實作
-- ✅ Gemini 2.0 Flash 整合
-- ✅ open_tab 技能示例完成
-- 📋 計畫中：summarize_page 技能
+### 查看 Service Worker (Gateway) 日誌
+
+1. 打開 `chrome://extensions/`
+2. 找到 \"OmniAssistant\"
+3. 點擊 \"Service Worker\" 下方的藍色文字（不是切換開關）
+4. DevTools 會打開，查看 **Console** 標籤
+
+**預期看到的日誌**：
+```
+[Gateway] 🚀 Service Worker 已加載
+[Gateway] 啟動動態技能加載器...
+[Gateway] 讀取技能清單: chrome-extension://...
+[Gateway] 發現技能: open_tab, summary_this_page, who_are_you, close_this_page
+[Gateway] ✅ 技能 [open_tab] 已加載
+[Gateway] 可用技能:(4) ['open_tab', 'summary_this_page', 'who_are_you', 'close_this_page']
+```
+
+### 查看 SidePanel 日誌
+
+1. 打開 SidePanel（點擊 Jarvis 圖標）
+2. 在 SidePanel 上點擊滑鼠右鍵 → \"檢查\"
+3. DevTools 會打開，查看 **Console** 標籤
+
+**預期看到的日誌**：
+```
+[SidePanel] 收到訊息: ask_ai
+[SidePanel] 用戶輸入: open Google
+[SidePanel] 發送的訊息: {action: "ask_ai", prompt: "open Google", config: {...}}
+[SidePanel] 收到回應: {status: "success", text: "..."}
+[SidePanel] 執行技能: open_tab
+[SidePanel] 技能執行成功: ✅ 成功開啟分頁：https://google.com
+```
+
+### 查看特定技能的日誌
+
+每個技能都使用自己的日誌前缀，方便定位問題：
+
+```
+[Gateway] - Service Worker 層
+[SidePanel] - SidePanel 主線程
+[Open Tab Skill] - open_tab 技能
+[Summary Page Skill] - summary_this_page 技能
+[Close Page Skill] - close_this_page 技能
+[Who Are You Skill] - who_are_you 技能
+```
+
+### 常見問題排查
+
+#### 問題：技能未被註冊
+
+**症狀**：Service Worker 日誌中沒有看到新技能
+
+**排查步驟**：
+1. ✅ 檢查 `skills/skills-manifest.json` 是否包含該技能
+2. ✅ 檢查資料夾名稱是否正確
+3. ✅ 檢查 .md 和 .js 檔案是否存在
+4. ✅ 重新載入擴展 (`chrome://extensions/` → 刷新)
+
+#### 問題：技能執行失敗
+
+**症狀**：SidePanel Console 顯示 \"技能執行失敗\"
+
+**排查步驟**：
+1. ✅ 查看完整的錯誤訊息
+2. ✅ 檢查 SidePanel Console 中的詳細日誌
+3. ✅ 驗證 `export async function skillname(args)` 的簽名
+4. ✅ 檢查函數名是否與檔案名完全相同
+5. ✅ 驗證所有必要的 `args` 參數是否存在
+
+#### 問題：AI 沒有調用正確的技能
+
+**症狀**：輸入指令後，AI 呼叫了錯誤的技能或返回錯誤
+
+**排查步驟**：
+1. ✅ 查看 Service Worker 日誌中的 AI 回應 JSON
+2. ✅ 檢查 `.md` 文件中的規則是否清晰
+3. ✅ 嘗試更明確的指令
+4. ✅ 檢查當前選擇的 AI 模型是否正常
+
+---
+
+## 📊 項目狀態 (Project Status)
+
+### 核心功能 ✅
+
+- ✅ Gateway-Client 微服務架構
+- ✅ Service Worker 路由層
+- ✅ SidePanel 執行引擎
+- ✅ 動態技能加載系統
+- ✅ Gemini 2.5 Flash API 整合
+- ✅ Ollama 本地模型支持
+- ✅ Chrome.storage.sync 配置持久化
+
+### 已實現的技能 ✅
+
+- ✅ **open_tab** - 打開新標籤頁
+- ✅ **summary_this_page** - 分析並總結頁面
+- ✅ **close_this_page** - 關閉當前標籤頁
+- ✅ **who_are_you** - 介紹助手功能
+
+### 國際化 (i18n) ✅
+
+- ✅ 12 種語言完全支持
+- ✅ 自動語言檢測
+- ✅ 手動語言選擇
+- ✅ 所有 UI 字符串國際化
+- ✅ 通知訊息國際化
+
+### 用戶設置 ✅
+
+- ✅ AI 模型選擇（Gemini / Ollama）
+- ✅ 語言設置
+- ✅ 通知開關
+- ✅ 設置持久化 (chrome.storage.sync)
+- ✅ 模型與語言信息傳遞給技能
+
+### 開發工具 ✅
+
+- ✅ 詳細的控制台日誌系統
+- ✅ 技能清單管理
+- ✅ 可擴展的技能框架
+- ✅ Git 分支工作流程 (feat/new-skills)
+
+### 文檔 ✅
+
+- ✅ 完整的 README.md
+- ✅ 技能開發指南
+- ✅ 調試方法文檔
+- ✅ Gateway-Client 架構說明
+
+---
+
+## 🚀 快速開始 (Quick Start)
+
+### 1. 安裝擴展
+
+1. 打開 `chrome://extensions/`
+2. 啟用 \"開發者模式\" (右上角切換)
+3. 點擊 \"載入已解壓的擴展程式\"
+4. 選擇本項目的資料夾
+
+### 2. 配置 API
+
+**如果使用 Gemini：**
+1. 訪問 [Google AI Studio](https://aistudio.google.com/app/apikeys)
+2. 創建 API Key
+3. 在 OmniAssistant 選項頁面配置 (需要實現)
+
+**如果使用 Ollama：**
+1. 安裝 Ollama: https://ollama.ai
+2. 拉取模型: `ollama pull gemma2:2b`
+3. 啟動服務: `ollama serve`
+
+### 3. 開始使用
+
+1. 點擊 Chrome 工具欄上的 Jarvis 圖標
+2. 在 SidePanel 中輸入指令
+3. 例如：\"open Google\", \"分析這個頁面\", \"關閉頁面\"
+
+---
+
+## 📚 進階主題 (Advanced Topics)
+
+### 如何貢獻新技能
+
+1. 創建功能分支: `git checkout -b feat/new-skill-name`
+2. 按照《開發指南》部分添加技能
+3. 測試所有功能
+4. 提交 PR
+
+### 如何自定義 AI 模型
+
+編輯 `config.json` 修改：
+- `activeModel` - 選擇 \"gemini\" 或 \"ollama\"
+- 各模型的參數 (temperature, maxTokens 等)
+
+### 如何添加新語言
+
+1. 編輯 `i18n/locales.json`
+2. 添加新的語言代碼和翻譯
+3. 在 options.html 中添加語言選項
