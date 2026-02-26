@@ -5,8 +5,8 @@ description: Open a website URL in a new browser tab. Only use this skill when t
 when_to_use:
   MUST HAVE BOTH:
   1. **ACTION VERB** (必須有動詞):
-     English: "open", "visit", "go to", "check", "browse", "access", "show"
-     Chinese: "打開", "開啟", "訪問", "查看", "前往", "進入"
+     English: "open", "visit", "check", "browse", "access", "show"
+     Chinese: "打開", "開啟", "訪問", "查看", "進入"
   
   2. **WEBSITE NAME** (必須有網站名稱):
      Supported: Google, YouTube, YouTube Music, GitHub, Twitter, LinkedIn, Facebook, Instagram, Yahoo, Gmail, Gemini, Setting
@@ -22,7 +22,6 @@ examples_CORRECT_verb_plus_website:
   - "visit YouTube" ✓ (verb: visit, site: YouTube)
   - "open YouTube Music" ✓ (verb: open, site: YouTube Music)
   - "打開 GitHub" ✓ (verb: 打開, site: GitHub)
-  - "go to Twitter" ✓ (verb: go to, site: Twitter)
   - "check LinkedIn" ✓ (verb: check, site: LinkedIn)
   - "visit Yahoo" ✓ (verb: visit, site: Yahoo)
   - "open Gmail" ✓ (verb: open, site: Gmail)
@@ -56,7 +55,6 @@ intent_examples:
     - "visit YouTube" → Call open_tab with YouTube
     - "open YouTube Music" → Call open_tab with YouTube Music
     - "打開 GitHub" → Call open_tab with GitHub
-    - "go to Twitter" → Call open_tab with Twitter
     - "visit Yahoo" → Call open_tab with Yahoo
     - "open Gemini" → Call open_tab with Gemini
     - "open Gmail" → Call open_tab with Gmail
@@ -108,7 +106,7 @@ Examples of correct output:
 - User says "open Google" → {"skill": "open_tab", "args": {"url": "https://google.com"}}
 - User says "visit YouTube" → {"skill": "open_tab", "args": {"url": "https://youtube.com"}}
 - User says "open YouTube Music" → {"skill": "open_tab", "args": {"url": "https://music.youtube.com"}}
-- User says "go to github.com" → {"skill": "open_tab", "args": {"url": "https://github.com"}}
+- User says "visit github.com" → {"skill": "open_tab", "args": {"url": "https://github.com"}}
 - User says "visit Yahoo" → {"skill": "open_tab", "args": {"url": "https://yahoo.com"}}
 - User says "open Gemini" → {"skill": "open_tab", "args": {"url": "https://gemini.google.com"}}
 - User says "open Gmail" → {"skill": "open_tab", "args": {"url": "https://mail.google.com"}}
