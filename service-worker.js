@@ -20,7 +20,7 @@ const SKILL_MAPPINGS = {};
 
 // --- 執行 SidePanel 技能 ---
 // 將技能執行請求轉發給 SidePanel，由 SidePanel 進行動態加載和執行
-async function executeSidePanelSkill(skillName, skillFolder, args) {
+async function executeSidePanelSkill(skillName, skillFolder, args, runInPageContext, tabId) {
     try {
         console.log(`[Gateway] 正在轉發技能到 SidePanel: ${skillName}`);
         
@@ -43,6 +43,8 @@ async function executeSidePanelSkill(skillName, skillFolder, args) {
                     type: 'EXECUTE_SKILL',
                     skill: skillName,
                     skillFolder: skillFolder,
+                    runInPageContext: runInPageContext,  // ← 新增：執行環境標誌
+                    tabId: tabId,                        // ← 新增：當前標籤頁 ID
                     args: args
                 },
                 (response) => {
@@ -298,14 +300,27 @@ async function handleRequest(userPrompt, sendResponse, configData = null, sender
         console.log(`[Gateway] 執行技能: ${command.skill}`);
         console.log(`[Gateway] 傳遞給技能的完整命令:`, command);
         
-        // 根據技能的執行環境選擇執行方式
-        if (skillInfo.runInPageContext) {
-            // 在網頁前端執行
-            await runSkillInTabContext(command.skill, skillInfo, command.args, sendResponse, senderTab);
-        } else {
-            // 在 Service Worker 中直接執行
-            await runSkillInServiceWorker(command.skill, skillInfo, command.args, sendResponse, configData);
+        // ===== 新的統一流程：所有技能都通過 SidePanel 執行 =====
+        // 第一步：自動獲取當前活跃標籤頁的 tabId
+        let activeTab = null;
+        try {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tab) {
+                activeTab = tab;
+                console.log(`[Gateway] 獲取當前活跃標籤頁: ID=${tab.id}, URL=${tab.url}`);
+            } else {
+                console.warn(`[Gateway] 找不到活跃標籤頁`);
+            }
+        } catch (error) {
+            console.warn(`[Gateway] 無法查詢標籤頁:`, error);
         }
+        
+        // 第二步：準備轉發給 SidePanel 的參數
+        const skillArgs = command.args || {};
+        const tabId = activeTab?.id || null;
+        
+        // 第三步：轉發給 SidePanel（統一入口）
+        await runSkillInSidePanel(command.skill, skillInfo, skillArgs, sendResponse, configData, tabId);
         
     } catch (error) {
         console.error("[Gateway] 執行失敗:", error);
@@ -313,34 +328,19 @@ async function handleRequest(userPrompt, sendResponse, configData = null, sender
     }
 }
 
-// --- 在 SidePanel 中執行技能 ---
-async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse, configData) {
+// --- 統一的技能執行入口：轉發給 SidePanel ---
+// 說明：所有技能（無論 runInPageContext 值）都通過此函數轉發給 SidePanel
+// SidePanel 根據 runInPageContext 標志決定執行方式
+async function runSkillInSidePanel(skillName, skillInfo, args, sendResponse, configData, tabId) {
     try {
         console.log(`[Gateway] 將技能轉發給 SidePanel 執行: ${skillName}`);
         console.log(`[Gateway] 傳遞的參數:`, args);
+        console.log(`[Gateway] runInPageContext: ${skillInfo.runInPageContext}`);
+        console.log(`[Gateway] tabId: ${tabId}`);
         
         // 確保 args 是一個對象，如果沒有參數則初始化為空對象
         if (!args) {
             args = {};
-        }
-        
-        // 替換佔位符：將 ACTIVE_TAB 和 ACTIVE_TAB_URL 替換為實際的 tabId 和 url
-        if (args.tabId === "ACTIVE_TAB" || args.url === "ACTIVE_TAB_URL") {
-            console.log(`[Gateway] 檢測到佔位符，正在獲取當前活動分頁...`);
-            const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            
-            if (!activeTab) {
-                throw new Error("無法獲取當前活動分頁");
-            }
-            
-            if (args.tabId === "ACTIVE_TAB") {
-                args.tabId = activeTab.id;
-                console.log(`[Gateway] 替換 tabId: ${activeTab.id}`);
-            }
-            if (args.url === "ACTIVE_TAB_URL") {
-                args.url = activeTab.url;
-                console.log(`[Gateway] 替換 url: ${activeTab.url}`);
-            }
         }
         
         // 添加當前模型名稱到 args
@@ -368,8 +368,14 @@ async function runSkillInServiceWorker(skillName, skillInfo, args, sendResponse,
             }
         }
         
-        // 改為調用 SidePanel 執行技能
-        const result = await executeSidePanelSkill(skillName, skillInfo.folder, args);
+        // 調用 SidePanel 執行技能，傳遞 runInPageContext 和 tabId
+        const result = await executeSidePanelSkill(
+            skillName, 
+            skillInfo.folder, 
+            args,
+            skillInfo.runInPageContext,  // ← 傳遞執行環境標誌
+            tabId                         // ← 傳遞 tabId
+        );
         
         console.log(`[Gateway] 技能 ${skillName} 執行結果:`, result);
         

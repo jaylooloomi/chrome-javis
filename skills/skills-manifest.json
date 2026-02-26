@@ -13,6 +13,12 @@
       "runInPageContext": false
     },
     {
+      "name": "page_control",
+      "folder": "page_control",
+      "description": "Navigate to the previous or next page using browser history. Only use this skill when the user explicitly asks to go back/forward or navigate to the previous/next page.",
+      "runInPageContext": true
+    },
+    {
       "name": "page_scroll",
       "folder": "page_scroll",
       "description": "Scroll the current page up, down, or jump to top/bottom. Only use this skill when the user explicitly asks to scroll/page up/down/to top/to bottom.",

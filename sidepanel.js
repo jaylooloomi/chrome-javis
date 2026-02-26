@@ -376,32 +376,118 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // ======== 技能執行監聽 (SidePanel 作為技能執行中心) ========
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.target === 'SIDE_PANEL' && message.type === 'EXECUTE_SKILL') {
-        console.log("[SidePanel] 收到技能執行請求:", message.skill, message.args);
+        console.log("[SidePanel] 收到技能執行請求:", message.skill);
+        console.log("[SidePanel] runInPageContext:", message.runInPageContext);
+        console.log("[SidePanel] tabId:", message.tabId);
+        console.log("[SidePanel] args:", message.args);
         
         // 異步處理技能執行
         (async () => {
             try {
-                // 動態 import 技能模組
-                const skillPath = `./skills/${message.skillFolder}/${message.skill}.js`;
-                console.log(`[SidePanel] 正在加載技能模組: ${skillPath}`);
-                
-                const module = await import(skillPath);
-                
-                // 執行技能函數
-                const skillFunc = module[message.skill];
-                if (typeof skillFunc !== 'function') {
-                    throw new Error(`技能模組中未找到函數: ${message.skill}`);
+                // ===== 分支 A：runInPageContext === true，需要注入到網頁執行 =====
+                if (message.runInPageContext) {
+                    console.log(`[SidePanel] 技能 ${message.skill} 需要在網頁前端執行，使用 chrome.scripting.executeScript`);
+                    
+                    if (!message.tabId) {
+                        throw new Error("runInPageContext === true 但沒有提供 tabId");
+                    }
+                    
+                    // 定義在網頁中執行的函數（注入到網頁）
+                    async function executeSkillInPage(skillName, skillFolder, args, skillUrl) {
+                        try {
+                            console.log(`[PageContext] 開始執行技能: ${skillName}`);
+                            console.log(`[PageContext] 技能 URL: ${skillUrl}`);
+                            
+                            // 動態 import skill 模組
+                            const skillModule = await import(skillUrl);
+                            
+                            // 獲取 skill 函數
+                            const skillFunc = skillModule[skillName];
+                            if (typeof skillFunc !== 'function') {
+                                throw new Error(`技能模組中未找到函數: ${skillName}`);
+                            }
+                            
+                            // 執行 skill 函數
+                            console.log(`[PageContext] 執行 ${skillName}，參數:`, args);
+                            const result = await skillFunc(args);
+                            
+                            console.log(`[PageContext] ${skillName} 執行成功:`, result);
+                            return {
+                                status: "success",
+                                result: result
+                            };
+                        } catch (error) {
+                            console.error(`[PageContext] ${skillName} 執行失敗:`, error);
+                            return {
+                                status: "error",
+                                error: error.message
+                            };
+                        }
+                    }
+                    
+                    // 計算技能 URL
+                    const skillUrl = chrome.runtime.getURL(`skills/${message.skillFolder}/${message.skill}.js`);
+                    console.log(`[SidePanel] 技能 URL: ${skillUrl}`);
+                    
+                    // 注入並執行技能函數到網頁前端
+                    const results = await chrome.scripting.executeScript({
+                        target: { tabId: message.tabId },
+                        func: executeSkillInPage,
+                        args: [message.skill, message.skillFolder, message.args, skillUrl]
+                    });
+                    
+                    console.log(`[SidePanel] 技能執行完成，結果:`, results);
+                    
+                    if (!results || results.length === 0) {
+                        throw new Error("技能執行沒有返回結果");
+                    }
+                    
+                    const callResult = results[0].result;
+                    console.log(`[SidePanel] 技能執行結果:`, callResult);
+                    
+                    if (callResult.status === "success") {
+                        console.log(`[SidePanel] 技能 ${message.skill} 執行成功`);
+                        // 顯示成功通知 (檢查通知設置)
+                        if (await shouldShowNotification()) {
+                            await showSuccessToast(message.skill, i18n.t('notification.skill.success'));
+                        }
+                        sendResponse({ status: "success", result: callResult.result });
+                    } else {
+                        console.error(`[SidePanel] 技能 ${message.skill} 執行失敗:`, callResult.error);
+                        // 顯示錯誤通知 (檢查通知設置)
+                        if (await shouldShowNotification()) {
+                            await showErrorToast(message.skill, i18n.t('notification.skill.error'));
+                        }
+                        sendResponse({ status: "error", error: callResult.error });
+                    }
+                    
+                } 
+                // ===== 分支 B：runInPageContext === false，直接在 SidePanel 執行 =====
+                else {
+                    console.log(`[SidePanel] 技能 ${message.skill} 直接在 SidePanel 中執行`);
+                    
+                    // 動態 import 技能模組
+                    const skillPath = `./skills/${message.skillFolder}/${message.skill}.js`;
+                    console.log(`[SidePanel] 正在加載技能模組: ${skillPath}`);
+                    
+                    const module = await import(skillPath);
+                    
+                    // 執行技能函數
+                    const skillFunc = module[message.skill];
+                    if (typeof skillFunc !== 'function') {
+                        throw new Error(`技能模組中未找到函數: ${message.skill}`);
+                    }
+                    
+                    console.log(`[SidePanel] 執行技能: ${message.skill}`);
+                    const result = await skillFunc(message.args);
+                    
+                    console.log(`[SidePanel] 技能執行成功:`, result);
+                    // 顯示成功通知 (檢查通知設置)
+                    if (await shouldShowNotification()) {
+                        await showSuccessToast(message.skill, i18n.t('notification.skill.success'));
+                    }
+                    sendResponse({ status: "success", result: result });
                 }
-                
-                console.log(`[SidePanel] 執行技能: ${message.skill}`);
-                const result = await skillFunc(message.args);
-                
-                console.log(`[SidePanel] 技能執行成功:`, result);
-                // 顯示成功通知 (檢查通知設置)
-                if (await shouldShowNotification()) {
-                    await showSuccessToast(message.skill, i18n.t('notification.skill.success'));
-                }
-                sendResponse({ status: "success", result: result });
                 
             } catch (error) {
                 console.error(`[SidePanel] 技能執行失敗:`, error);
