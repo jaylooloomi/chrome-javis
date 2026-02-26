@@ -25,8 +25,8 @@
       "runInPageContext": true
     },
     {
-      "name": "summary_this_page",
-      "folder": "summary_this_page",
+      "name": "summarize_this_page",
+      "folder": "summarize_this_page",
       "description": "分析頁面、重點整理 - 使用 Google Gemini 進行頁面內容摘要與分析。僅在用戶明確要求分析/摘要/發送當前頁面至 Gemini 時使用。Summarize and analyze the current page content using Google Gemini. Only use this skill when the user explicitly asks to analyze/summarize/send the current page to Gemini.",
       "runInPageContext": false
     },
@@ -34,6 +34,12 @@
       "name": "who_are_you",
       "folder": "who_are_you",
       "description": "Introduce yourself and provide information about the OmniAssistant. Use this skill when the user asks about your identity, capabilities, or what you can do.",
+      "runInPageContext": false
+    },
+    {
+      "name": "window_control",
+      "folder": "window_control",
+      "description": "Control window fullscreen mode. Only use this skill when the user explicitly asks to enter or exit fullscreen mode.",
       "runInPageContext": false
     }
   ]
