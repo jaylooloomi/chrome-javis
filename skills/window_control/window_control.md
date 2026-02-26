@@ -1,7 +1,7 @@
 name: window_control
 runInPageContext: false
 
-description: Control window fullscreen mode. Only use this skill when the user explicitly asks to enter or exit fullscreen mode.
+description: Control browser window fullscreen mode using Chrome Extension API. Toggles the browser window between fullscreen and normal state. Only use this skill when the user explicitly asks to enter or exit fullscreen mode.
 
 when_to_use:
   MUST HAVE BOTH:
