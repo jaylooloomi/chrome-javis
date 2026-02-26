@@ -86,8 +86,8 @@ async function loadSkillsDynamically() {
     console.log("[Gateway] 啟動動態技能加載器...");
     
     try {
-        // 1. 從 skills-manifest.json 讀取技能列表
-        const manifestUrl = chrome.runtime.getURL('skills-manifest.json');
+        // 1. 從 skills/skills-manifest.json 讀取技能列表
+        const manifestUrl = chrome.runtime.getURL('skills/skills-manifest.json');
         console.log(`[Gateway] 讀取技能清單: ${manifestUrl}`);
         const manifestResponse = await fetch(manifestUrl);
         if (!manifestResponse.ok) {

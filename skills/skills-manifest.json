@@ -17,6 +17,12 @@
       "folder": "who_are_you",
       "description": "介绍 OmniAssistant 的功能和能力",
       "runInPageContext": false
+    },
+    {
+      "name": "close_this_page",
+      "folder": "close_this_page",
+      "description": "关闭当前浏览器标签页",
+      "runInPageContext": false
     }
   ]
 }

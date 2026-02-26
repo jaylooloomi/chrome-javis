@@ -39,8 +39,8 @@
     {
       "resources": [
         "skills/*/*.md",
+        "skills/skills-manifest.json",
         "config.json",
-        "skills-manifest.json",
         "images/*.png",
         "i18n/locales.json"
       ],
