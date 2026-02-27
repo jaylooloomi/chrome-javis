@@ -253,7 +253,7 @@ function showLoading(show) {
  */
 function showStatus(message, type) {
     statusMessage.textContent = message;
-    statusMessage.className = `status ${type}`;
+    statusMessage.className = `status-message ${type}`;
     statusMessage.style.display = 'block';
     
     // 3 秒后自动隐藏成功消息
@@ -269,7 +269,7 @@ function showStatus(message, type) {
  */
 function clearStatus() {
     statusMessage.style.display = 'none';
-    statusMessage.className = 'status';
+    statusMessage.className = 'status-message';
 }
 
 /**
