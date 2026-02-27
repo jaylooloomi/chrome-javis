@@ -564,9 +564,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 console.log(`[Gateway] ✅ 已從 aiResultCache 刪除: "${userInput}"`);
             }
             
-            // 2. 從 recentCacheList 刪除
+            // 2. 從 recentCacheList 刪除（使用 splice，不能直接重新賦值 const）
             const beforeCount = recentCacheList.length;
-            recentCacheList = recentCacheList.filter(item => item.userInput !== userInput);
+            const index = recentCacheList.findIndex(item => item.userInput === userInput);
+            if (index !== -1) {
+                recentCacheList.splice(index, 1);
+            }
             const afterCount = recentCacheList.length;
             
             if (beforeCount > afterCount) {
