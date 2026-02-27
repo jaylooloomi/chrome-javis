@@ -230,7 +230,20 @@ function getLatestCacheEntries(n = 2) {
  * @returns {Promise<object>} - {totalCacheSize, recentCount, recentEntries, storage, etc.}
  */
 async function getCacheStats() {
-    const storage = await getStorageUsage();
+    // 改用緩存數量百分比而不是字節大小
+    const percentage = Math.round((aiResultCache.size / MAX_CACHE_SIZE) * 100);
+    let status = 'ok';
+    if (percentage >= 90) status = 'critical';
+    else if (percentage >= 70) status = 'warning';
+    
+    const storage = {
+        used: aiResultCache.size,
+        usedMB: aiResultCache.size.toString(),  // 顯示項目數
+        max: MAX_CACHE_SIZE,
+        maxMB: MAX_CACHE_SIZE.toString(),  // 最大容量
+        percentage: percentage,
+        status: status  // 'ok' | 'warning' | 'critical'
+    };
     
     return {
         totalCacheSize: aiResultCache.size,

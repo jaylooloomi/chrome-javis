@@ -73,7 +73,7 @@ async function loadCacheHistory() {
 function updateStats(stats) {
     totalCacheCount.textContent = stats.totalCacheSize || 0;
     recentCount.textContent = stats.recentCount || 0;
-    maxCache.textContent = stats.maxRecent || 10;
+    maxCache.textContent = stats.maxCacheSize || 50;  // 改為顯示 maxCacheSize（50）
     
     // 更新存儲使用信息
     if (stats.storage) {
@@ -99,7 +99,8 @@ function updateStats(stats) {
         }
         
         if (usedSizeEl) {
-            usedSizeEl.textContent = storage.usedMB + ' MB';
+            // 改為顯示 "N / 50" 的格式（項目數）
+            usedSizeEl.textContent = storage.used + ' / ' + storage.max;
         }
         
         if (percentageEl) {
