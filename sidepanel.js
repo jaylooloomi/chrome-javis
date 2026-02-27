@@ -51,7 +51,7 @@ let interim_transcript = '';
 let isAutoRunning = false;  // 標記是否在自動執行流程中
 let isMicEnabled = true;    // 常駐麥克風狀態 (預設開啟)
 let speechStartCount = 0;   // 累計 onstart 的次數
-let currentMicLanguage = 'zh-TW';  // 當前麥克風語言
+let currentMicLanguage = 'en-US';  // 當前麥克風語言（預設英文）
 
 if (SpeechRecognition) {
     recognition = new SpeechRecognition();
@@ -60,7 +60,7 @@ if (SpeechRecognition) {
     
     // 從 storage 加載語言設定
     chrome.storage.local.get('micLanguage', (result) => {
-        const language = result.micLanguage || 'zh-TW';
+        const language = result.micLanguage || 'en-US';
         currentMicLanguage = language;
         recognition.lang = language;
         console.log('[SidePanel] 麥克風語言已加載:', language);
