@@ -178,7 +178,7 @@ function renderCacheList(entries) {
             } else if (daysRemaining <= 14) {
                 expiryInfo = `<span class="expiry-info">ℹ️ ${i18n.t('cache.expiry.expiringIn').replace('{days}', daysRemaining)}</span>`;
             } else {
-                expiryInfo = `<span class="expiry-valid">✓ ${i18n.t('cache.expiry.valid').replace('{days}', daysRemaining)}</span>`;
+                expiryInfo = `<span class="expiry-valid">${i18n.t('cache.expiry.valid').replace('{days}', daysRemaining)}</span>`;
             }
         }
         
