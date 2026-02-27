@@ -37,19 +37,20 @@ const aiResultCache = new Map();
 // 用途：查看歷史快取，未來可用於 UI 展示
 const recentCacheList = [];
 const MAX_RECENT_CACHE = 10;
+const MAX_CACHE_SIZE = 50;  // ← Phase 2 淘汰機制預留
 
-// ======== Session 存儲持久化（Service Worker 重啟保護） ========
+// ======== Local 存儲持久化（永久化快取 + Service Worker 重啟保護） ========
 
 /**
- * 在 Service Worker 啟動時從 session 存儲恢復快取
- * 解決 Service Worker 30秒無活動被系統殺掉的問題
+ * 在 Service Worker 啟動時從 local 存儲恢復快取
+ * 改用 local 替代 session，實現永久化存儲
  * 同時恢復 aiResultCache 和 recentCacheList
  */
-async function initializeCacheFromSession() {
+async function initializeCacheFromLocal() {
     try {
-        const stored = await chrome.storage.session.get('aiCache');
+        const stored = await chrome.storage.local.get('aiCache');
         if (!stored.aiCache) {
-            console.log(`[Gateway] 📦 session 中無快取數據`);
+            console.log(`[Gateway] 📦 local 中無快取數據`);
             return 0;
         }
         
@@ -80,25 +81,25 @@ async function initializeCacheFromSession() {
         
         return 0;
     } catch (error) {
-        console.warn(`[Gateway] ⚠️ 從 session 恢復快取失敗:`, error);
+        console.warn(`[Gateway] ⚠️ 從 local 恢復快取失敗:`, error);
         return 0;
     }
 }
 
 /**
- * 異步將快取保存到 session 存儲（不阻塞主線程）
+ * 異步將快取保存到 local 存儲（不阻塞主線程）
  * 同時保存 aiResultCache 和 recentCacheList
  */
-async function saveCacheToSession() {
+async function saveCacheToLocal() {
     try {
         const cacheData = {
             cache: Array.from(aiResultCache.entries()),
             recent: recentCacheList
         };
-        await chrome.storage.session.set({ aiCache: cacheData });
-        console.log(`[Gateway] 💾 快取已保存到 session (${cacheData.cache.length} 項快取, ${cacheData.recent.length} 條記錄)`);
+        await chrome.storage.local.set({ aiCache: cacheData });
+        console.log(`[Gateway] 💾 快取已保存到 local (${cacheData.cache.length} 項快取, ${cacheData.recent.length} 條記錄)`);
     } catch (error) {
-        console.warn(`[Gateway] ⚠️ 快取保存到 session 失敗，但內存快取仍有效:`, error);
+        console.warn(`[Gateway] ⚠️ 快取保存到 local 失敗，但內存快取仍有效:`, error);
     }
 }
 
@@ -138,9 +139,9 @@ function putInCache(userInput, result) {
         recentCacheList.pop();
     }
     
-    // 4. ✨ 異步保存到 session（不阻塞）
-    saveCacheToSession().catch(err => 
-        console.warn(`[Gateway] 快取 session 保存失敗（非致命）:`, err)
+    // 4. ✨ 異步保存到 local（不阻塞）
+    saveCacheToLocal().catch(err => 
+        console.warn(`[Gateway] 快取 local 保存失敗（非致命）:`, err)
     );
     
     console.log(`[Gateway] 📝 將結果快取: "${userInput}"`);
@@ -323,11 +324,11 @@ async function loadSkillsDynamically() {
 }
 
 // ======== Service Worker 啟動時立即初始化緩存 ========
-// 不等 onInstalled，立即恢復會話緩存
+// 從 local 恢復永久化緩存
 (async () => {
     console.log("[Gateway] 正在初始化緩存...");
     await loadSkillsDynamically();
-    await initializeCacheFromSession();
+    await initializeCacheFromLocal();
     cacheInitialized = true;
     console.log("[Gateway] ✅ 緩存初始化完成");
 })();
@@ -384,12 +385,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             aiResultCache.clear();
             recentCacheList.length = 0;
             
-            // ✨ 同時清空 session 中的快取
-            chrome.storage.session.remove('aiCache').catch(err => {
-                console.warn("[Gateway] ⚠️ 清空 session 快取失敗（非致命）:", err);
+            // ✨ 同時清空 local 中的快取
+            chrome.storage.local.remove('aiCache').catch(err => {
+                console.warn("[Gateway] ⚠️ 清空 local 快取失敗（非致命）:", err);
             });
             
-            console.log("[Gateway] ✅ 快取已清空（內存 + Session）");
+            console.log("[Gateway] ✅ 快取已清空（內存 + Local）");
             sendResponse({ status: "success", message: "快取已清空" });
             return true;
         }
