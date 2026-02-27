@@ -38,8 +38,46 @@ const aiResultCache = new Map();
 const recentCacheList = [];
 const MAX_RECENT_CACHE = 10;
 const MAX_CACHE_SIZE = 50;  // ← Phase 2 淘汰機制預留
+const CACHE_TTL_DAYS = 30;  // Phase 3 數據過期機制
+const CACHE_TTL_MS = CACHE_TTL_DAYS * 24 * 60 * 60 * 1000;  // 毫秒
 
 // ======== Local 存儲持久化（永久化快取 + Service Worker 重啟保護） ========
+
+/**
+ * 判斷快取項目是否已過期
+ * @param {object} cacheItem - 快取項目
+ * @returns {boolean} - 是否過期
+ */
+function isExpired(cacheItem) {
+    // 舊快取沒有 expiresAt，視為有效（用戶會清空舊資料，此分支不會執行）
+    if (!cacheItem.expiresAt) {
+        return false;
+    }
+    
+    const now = Date.now();
+    return now > cacheItem.expiresAt;
+}
+
+/**
+ * 清理所有過期的快取項目
+ * 從 recentCacheList 和 aiResultCache 中同時移除
+ */
+function cleanupExpiredCache() {
+    const beforeSize = aiResultCache.size;
+    
+    // 遍歷 recentCacheList，移除已過期的快取
+    recentCacheList = recentCacheList.filter(item => {
+        if (isExpired(item)) {
+            aiResultCache.delete(item.userInput);
+            console.log(`[Gateway] 🗑️ 清理過期快取: "${item.userInput}"`);
+            return false;  // 從列表中移除
+        }
+        return true;  // 保留
+    });
+    
+    const afterSize = aiResultCache.size;
+    console.log(`[Gateway] ✅ 過期快取清理完成: ${beforeSize} → ${afterSize}`);
+}
 
 /**
  * 在 Service Worker 啟動時從 local 存儲恢復快取
@@ -67,6 +105,16 @@ async function initializeCacheFromLocal() {
                 recentCacheList.splice(0, 0, ...stored.aiCache.recent);
                 console.log(`[Gateway] ✅ 恢復 recentCacheList: ${stored.aiCache.recent.length} 項`);
             }
+            
+            // 🆕 Phase 3：添加遷移邏輯
+            // 舊快取沒有 expiresAt，補上 30 天期限
+            recentCacheList = recentCacheList.map(item => ({
+                ...item,
+                expiresAt: item.expiresAt || (Date.now() + CACHE_TTL_MS)
+            }));
+            
+            // 🆕 Phase 3：清理過期快取
+            cleanupExpiredCache();
             
             return aiResultCache.size;
         }
@@ -173,6 +221,21 @@ async function getStorageUsage() {
  * @returns {object|null} - 快取的結果或 null（如果未找到）
  */
 function getFromCache(userInput) {
+    const cacheItem = recentCacheList.find(item => item.userInput === userInput);
+    
+    if (!cacheItem) {
+        return null;
+    }
+    
+    // 🆕 Phase 3：檢查是否過期
+    if (isExpired(cacheItem)) {
+        console.log(`[Gateway] ⏰ 快取已過期: "${userInput}"`);
+        aiResultCache.delete(userInput);
+        recentCacheList = recentCacheList.filter(item => item.userInput !== userInput);
+        return null;
+    }
+    
+    // 快取有效
     const result = aiResultCache.get(userInput);
     if (result) {
         console.log(`[Gateway] 🚀 快取命中: "${userInput}"`);
@@ -191,11 +254,16 @@ function putInCache(userInput, result) {
     aiResultCache.set(userInput, result);
     
     // 2. 更新最近使用列表（策略 A：寫入時更新）
+    // 🆕 Phase 3：添加 expiresAt 字段
+    const now = Date.now();
+    const expiresAt = now + CACHE_TTL_MS;
+    
     recentCacheList.unshift({
         userInput,
         skill: result.skill,
         args: result.args,
-        timestamp: Date.now()
+        timestamp: now,
+        expiresAt: expiresAt  // 🆕 新增過期時間
     });
     
     // 3. 限制列表大小（只保留最近 10 條）
@@ -230,6 +298,10 @@ function getLatestCacheEntries(n = 2) {
  * @returns {Promise<object>} - {totalCacheSize, recentCount, recentEntries, storage, etc.}
  */
 async function getCacheStats() {
+    // 🆕 Phase 3：計算過期快取數量
+    const expiredCount = recentCacheList.filter(item => isExpired(item)).length;
+    const validCount = aiResultCache.size - expiredCount;
+    
     // 改用緩存數量百分比而不是字節大小
     const percentage = Math.round((aiResultCache.size / MAX_CACHE_SIZE) * 100);
     let status = 'ok';
@@ -252,7 +324,9 @@ async function getCacheStats() {
         maxRecent: MAX_RECENT_CACHE,
         recentEntries: recentCacheList,  // 返回全部最近記錄
         oldestEntry: recentCacheList[recentCacheList.length - 1] || null,
-        storage: storage  // 新增存儲信息
+        storage: storage,  // 新增存儲信息
+        expiredCount: expiredCount,  // 🆕 過期快取數
+        validCount: validCount       // 🆕 有效快取數
     };
 }
 
