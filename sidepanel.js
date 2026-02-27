@@ -43,9 +43,20 @@ i18nReady = (async () => {
 })();
 
 // ======== 下載文件命名監聽器 ========
-// 為所有下載操作攔截文件名，添加資料夾路徑
+// 為所有下載操作攔截文件名，添加時間戳和資料夾路徑
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
-    const newFilename = `downloaded_images/${item.filename}`;
+    // 生成時間戳：yyyyMMddhhmmss
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const date = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const timestamp = `${year}${month}${date}${hours}${minutes}${seconds}`;
+    
+    // 組合文件名和時間戳
+    const newFilename = `downloaded_images/${timestamp}_${item.filename}`;
     console.log('[SidePanel] 下載文件名已改: ' + newFilename);
     suggest({ filename: newFilename });
 });
