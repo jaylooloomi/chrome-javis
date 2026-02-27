@@ -121,7 +121,8 @@ function enforceCacheSizeLimit() {
         console.log(`[Gateway] 🗑️ 淘汰快取: "${oldest.userInput}"`);
     }
     
-    console.log(`[Gateway] ✅ 淘汰完成，快取大小: ${aiResultCache.size}`);\n}
+    console.log(`[Gateway] ✅ 淘汰完成，快取大小: ${aiResultCache.size}`);
+}
 
 /**
  * 獲取當前存儲使用情況

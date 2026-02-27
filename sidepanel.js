@@ -315,12 +315,17 @@ document.getElementById('runBtn').addEventListener('click', async () => {
         console.log("[SidePanel] activeModel:", config.activeModel);
         console.log("[SidePanel] 完整 config:", JSON.stringify(config, null, 2));
         
+        // 👇 診斷日誌
+        console.log("[SidePanel] 正在構建訊息...");
+        
         const message = { 
             action: "ask_ai", 
             prompt: text,
             config: config
         };
         
+        console.log("[SidePanel] 訊息已構建:", message);
+        console.log("[SidePanel] 即將發送訊息...");
         console.log("[SidePanel] 發送的訊息:", JSON.stringify(message, null, 2));
         
         const res = await chrome.runtime.sendMessage(message);
