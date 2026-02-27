@@ -33,7 +33,7 @@ i18nReady = (async () => {
     await i18n.load('sidepanel');  // 只加載 sidepanel 模組
     console.log('[SidePanel] i18n 初始化完成');
     applyTranslations();
-    
+
     // 監聽 i18n 語言變更
     i18n.onLanguageChange(() => {
         applyTranslations();
@@ -42,23 +42,37 @@ i18nReady = (async () => {
     });
 })();
 
+// 用來存儲當前下載任務的動態資訊
+window.currentDownloadConfig = {
+    skillName: "undefined",
+    tabId: "0",
+    title: "undefined",
+    active: false,
+};
 // ======== 下載文件命名監聽器 ========
 // 為所有下載操作攔截文件名，添加時間戳和資料夾路徑
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
-    // 生成時間戳：yyyyMMddhhmmss
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const date = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    const timestamp = `${year}${month}${date}${hours}${minutes}${seconds}`;
-    
-    // 組合文件名和時間戳
-    const newFilename = `downloaded_images/${timestamp}_${item.filename}`;
-    console.log('[SidePanel] 下載文件名已改: ' + newFilename);
-    suggest({ filename: newFilename });
+    // 檢查全域狀態是否處於「主動下載」模式
+    if (window.currentDownloadConfig.active) {
+        const { skillName, tabId, title } = window.currentDownloadConfig;
+        // 對文件名進行消毒
+        const safeName = item.filename.replace(/[<>:"|?*]/g, '_');
+
+        // 核心邏輯：動態組合成你想要的路徑
+        const dynamicPath = `downloaded_by_ai/${skillName}/${title}/${safeName}`;
+
+        console.log('[SidePanel] 下載文件名已改: ' + dynamicPath);
+        console.log('[SidePanel Monitor] 攔截成功，存入路徑:', dynamicPath);
+
+        suggest({
+            filename: dynamicPath,
+            conflictAction: 'uniquify'
+        });
+    } else {
+        // 如果不是由技能觸發的下載，則照原樣處理
+        suggest();
+    }
+    return true; // 保持非同步活性
 });
 
 // ======== 語音識別初始化 (直接使用 Web Speech API) ========
@@ -76,7 +90,7 @@ if (SpeechRecognition) {
     recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = true;  // 顯示實時轉錄文本
-    
+
     // 從 storage 加載語言設定
     chrome.storage.local.get('micLanguage', (result) => {
         const language = result.micLanguage || 'en-US';
@@ -89,7 +103,7 @@ if (SpeechRecognition) {
         console.log("[Speech] 語音識別已啟動");
         isListening = true;
         document.getElementById('output').textContent = i18n.t('status.listening.indicator');
-        
+
         // 累計 onstart 次數，每 5 次才顯示一次 toast
         speechStartCount++;
         if (speechStartCount % 2 === 0) {
@@ -97,7 +111,7 @@ if (SpeechRecognition) {
             //showInfoToast('🎤 語音助手', '正在聆聽...');  // 不自動關閉
         }
         console.log(`[Speech] onstart 累計次數: ${speechStartCount}`);
-        
+
         final_transcript = '';
         interim_transcript = '';
     };
@@ -105,13 +119,13 @@ if (SpeechRecognition) {
     recognition.onend = () => {
         console.log("[Speech] 語音識別已停止");
         isListening = false;
-        
+
         // 如果常駐麥克風已關閉，則不自動重啟
         if (!isMicEnabled) {
             console.log("[Speech] 常駐麥克風已關閉");
             return;
         }
-        
+
         // 識別結束後等待 0.5s，檢查是否有內容需要執行
         const text = final_transcript.trim();
         if (text && !isAutoRunning) {
@@ -139,11 +153,11 @@ if (SpeechRecognition) {
 
     recognition.onresult = (event) => {
         interim_transcript = '';
-        
+
         // 分離最終結果和臨時結果
         for (let i = event.resultIndex; i < event.results.length; i++) {
             const transcript = event.results[i][0].transcript;
-            
+
             if (event.results[i].isFinal) {
                 final_transcript += transcript + ' ';
                 console.log("[Speech] 最終結果:", transcript);
@@ -160,7 +174,7 @@ if (SpeechRecognition) {
 
     recognition.onerror = (event) => {
         console.error("[Speech] 錯誤:", event.error);
-        
+
         let errorMsg = event.error;
         if (event.error === 'no-speech') {
             errorMsg = '未检测到语音，请检查麦克风';
@@ -171,7 +185,7 @@ if (SpeechRecognition) {
         } else if (event.error === 'network') {
             errorMsg = '网络连接错误';
         }
-        
+
         // 权限被拒绝时，提供打开选项页面的按钮
         if (event.error === 'not-allowed') {
             const output = document.getElementById('output');
@@ -195,7 +209,7 @@ if (SpeechRecognition) {
             //showErrorToast('❌ 語音錯誤', errorMsg);
             document.getElementById('output').textContent = i18n.t('status.speech.error') + ': ' + errorMsg;
         }
-        
+
         isListening = false;
         updateMicSwitchUI();
     };
@@ -206,21 +220,20 @@ if (SpeechRecognition) {
 }
 
 // ======== 監聽設定變更 ========
-// ======== 監聽設定變更 ========
 // 監聽 storage 變化並即時更新 UI
 chrome.storage.onChanged.addListener((changes, areaName) => {
     console.log('[SidePanel] Storage 變化偵測:', { areaName, changes });
-    
+
     // 麥克風語言改動
     if (areaName === 'local' && changes.micLanguage) {
         const newLanguage = changes.micLanguage.newValue;
         console.log('[SidePanel] 麥克風語言改變:', newLanguage);
-        
+
         currentMicLanguage = newLanguage;
         if (recognition) {
             recognition.lang = newLanguage;
         }
-        
+
         // ✅ 立即更新 i18n 並觸發翻譯
         i18n.currentLanguage = newLanguage;
         console.log('[SidePanel] i18n 語言已更新:', newLanguage);
@@ -228,7 +241,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
         updateMicSwitchUI();
         updateConfigStatus();
     }
-    
+
     // AI 模型改動
     if (areaName === 'local' && changes.activeModel) {
         const newModel = changes.activeModel.newValue;
@@ -241,17 +254,17 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 function updateMicSwitchUI() {
     const switchBtn = document.getElementById('micSwitch');
     const statusLabel = document.getElementById('micStatus');
-    
+
     if (!switchBtn || !statusLabel) {
         console.warn('[SidePanel] 麥克風開關元素未找到');
         return;
     }
-    
+
     if (!i18n.isLoaded) {
         console.warn('[SidePanel] i18n 還未初始化，跳過 updateMicSwitchUI');
         return;
     }
-    
+
     if (isMicEnabled) {
         switchBtn.classList.add('on');
         statusLabel.textContent = i18n.t('button.mic');
@@ -271,16 +284,16 @@ document.getElementById('micSwitch').addEventListener('click', () => {
     // 切換常駐麥克風狀態
     isMicEnabled = !isMicEnabled;
     console.log("[Speech] 常駐麥克風狀態:", isMicEnabled ? "開啟" : "關閉");
-    
+
     // 更新配置狀態文字
     const configStatus = document.querySelector('.config-status');
     const listeningStatus = document.getElementById('listeningStatus');
-    
+
     if (isMicEnabled) {
         // 開啟常駐麥克風
         updateMicSwitchUI();
         document.getElementById('output').textContent = i18n.t('status.ready');
-        
+
         // 更新配置狀態
         if (configStatus) {
             configStatus.textContent = i18n.t('config.status');
@@ -288,14 +301,14 @@ document.getElementById('micSwitch').addEventListener('click', () => {
         if (listeningStatus) {
             listeningStatus.textContent = i18n.t('status.listening');
         }
-        
+
         console.log("[Speech] 開始常駐監聽");
         recognition.start();
     } else {
         // 關閉常駐麥克風
         updateMicSwitchUI();
         document.getElementById('output').textContent = i18n.t('status.closed');
-        
+
         // 更新配置狀態
         if (configStatus) {
             configStatus.textContent = i18n.t('config.status.disabled');
@@ -303,7 +316,7 @@ document.getElementById('micSwitch').addEventListener('click', () => {
         if (listeningStatus) {
             listeningStatus.textContent = i18n.t('status.idle');
         }
-        
+
         console.log("[Speech] 停止常駐監聽");
         recognition.stop();
     }
@@ -312,45 +325,45 @@ document.getElementById('micSwitch').addEventListener('click', () => {
 document.getElementById('runBtn').addEventListener('click', async () => {
     const text = document.getElementById('userInput').value;
     const output = document.getElementById('output');
-    
+
     if (!text) return;
-    
+
     output.textContent = i18n.t('status.processing');
-    
+
     try {
         // 從 config.json 讀取完整配置
         const configResponse = await fetch(chrome.runtime.getURL('config.json'));
         const config = await configResponse.json();
-        
+
         // 從 chrome.storage.local 讀取用戶選擇的模型
         const storageSettings = await chrome.storage.local.get('activeModel');
         if (storageSettings.activeModel) {
             config.activeModel = storageSettings.activeModel;
             console.log("[SidePanel] 從 storage 加載的 activeModel:", storageSettings.activeModel);
         }
-        
+
         console.log("[SidePanel] 準備發送訊息");
         console.log("[SidePanel] 用戶輸入:", text);
         console.log("[SidePanel] activeModel:", config.activeModel);
         console.log("[SidePanel] 完整 config:", JSON.stringify(config, null, 2));
-        
+
         // 👇 診斷日誌
         console.log("[SidePanel] 正在構建訊息...");
-        
-        const message = { 
-            action: "ask_ai", 
+
+        const message = {
+            action: "ask_ai",
             prompt: text,
             config: config
         };
-        
+
         console.log("[SidePanel] 訊息已構建:", message);
         console.log("[SidePanel] 即將發送訊息...");
         console.log("[SidePanel] 發送的訊息:", JSON.stringify(message, null, 2));
-        
+
         const res = await chrome.runtime.sendMessage(message);
         console.log("[SidePanel] 收到回應:", res);
         output.textContent = res.text || res.error;
-        
+
         // 顯示通知 - 執行成功
         if (res.status === "success") {
             console.log("[SidePanel] 執行成功，顯示成功通知");
@@ -359,7 +372,7 @@ document.getElementById('runBtn').addEventListener('click', async () => {
             interim_transcript = '';
             // 暫時註解不要刪除
             //await showSuccessToast('✅ AI 助手', '指令已執行');
-            
+
         } else {
             // 顯示通知 - 執行失敗 (檢查通知設置)
             console.log("[SidePanel] 執行失敗，顯示錯誤通知");
@@ -388,23 +401,23 @@ async function shouldShowNotification() {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'SHOW_NOTIFICATION') {
         console.log("[SidePanel] 收到通知訊息:", message);
-        
+
         // 檢查通知是否啟用
         (async () => {
             if (!await shouldShowNotification()) {
                 console.log("[SidePanel] 通知已禁用，不顯示 toast");
                 return;
             }
-            
+
             // 翻譯標題和消息
             const title = i18n.t(message.messageKey ? 'notification.title' : 'notification.title');
             let messageText = i18n.t(message.messageKey || 'notification.skill.error');
-            
+
             // 如果有自定義錯誤消息，追加到後面
             if (message.errorMessage) {
                 messageText += `: ${message.errorMessage}`;
             }
-            
+
             // 根據類型顯示相應的通知
             if (message.type === 'success') {
                 showSuccessToast(title, messageText);
@@ -424,37 +437,37 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log("[SidePanel] runInPageContext:", message.runInPageContext);
         console.log("[SidePanel] tabId:", message.args.tabId);
         console.log("[SidePanel] args:", message.args);
-        
+
         // 異步處理技能執行
         (async () => {
             try {
                 // ===== 分支 A：runInPageContext === true，需要注入到網頁執行 =====
                 if (message.runInPageContext) {
                     console.log(`[SidePanel] 技能 ${message.skill} 需要在網頁前端執行，使用 chrome.scripting.executeScript`);
-                    
+
                     if (!message.args.tabId) {
                         throw new Error("runInPageContext === true 但沒有提供 tabId");
                     }
-                    
+
                     // 定義在網頁中執行的函數（注入到網頁）
-                    async function executeSkillInPage(skillName, skillFolder, args, skillUrl) {
+                    async function executeSkillInPage(skillName, args, skillUrl) {
                         try {
                             console.log(`[PageContext] 開始執行技能: ${skillName}`);
                             console.log(`[PageContext] 技能 URL: ${skillUrl}`);
-                            
+
                             // 動態 import skill 模組
                             const skillModule = await import(skillUrl);
-                            
+
                             // 獲取 skill 函數
                             const skillFunc = skillModule[skillName];
                             if (typeof skillFunc !== 'function') {
                                 throw new Error(`技能模組中未找到函數: ${skillName}`);
                             }
-                            
+
                             // 執行 skill 函數
                             console.log(`[PageContext] 執行 ${skillName}，參數:`, args);
                             const result = await skillFunc(args);
-                            
+
                             console.log(`[PageContext] ${skillName} 執行成功:`, result);
                             return {
                                 status: "success",
@@ -468,27 +481,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             };
                         }
                     }
-                    
+
                     // 計算技能 URL
                     const skillUrl = chrome.runtime.getURL(`skills/${message.skillFolder}/${message.skill}.js`);
                     console.log(`[SidePanel] 技能 URL: ${skillUrl}`);
-                    
+
                     // 注入並執行技能函數到網頁前端
                     const results = await chrome.scripting.executeScript({
                         target: { tabId: message.args.tabId },
                         func: executeSkillInPage,
-                        args: [message.skill, message.skillFolder, message.args, skillUrl]
+                        args: [message.skill, message.args, skillUrl]
                     });
-                    
+
                     console.log(`[SidePanel] 技能執行完成，結果:`, results);
-                    
+
                     if (!results || results.length === 0) {
                         throw new Error("技能執行沒有返回結果");
                     }
-                    
+
                     const callResult = results[0].result;
                     console.log(`[SidePanel] 技能執行結果:`, callResult);
-                    
+
                     if (callResult.status === "success") {
                         console.log(`[SidePanel] 技能 ${message.skill} 執行成功`);
                         // 顯示成功通知 (檢查通知設置)
@@ -504,27 +517,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         }
                         sendResponse({ status: "error", error: callResult.error });
                     }
-                    
-                } 
+
+                }
                 // ===== 分支 B：runInPageContext === false，直接在 SidePanel 執行 =====
                 else {
                     console.log(`[SidePanel] 技能 ${message.skill} 直接在 SidePanel 中執行`);
-                    
+
                     // 動態 import 技能模組
                     const skillPath = `./skills/${message.skillFolder}/${message.skill}.js`;
                     console.log(`[SidePanel] 正在加載技能模組: ${skillPath}`);
-                    
+
                     const module = await import(skillPath);
-                    
+
                     // 執行技能函數
                     const skillFunc = module[message.skill];
                     if (typeof skillFunc !== 'function') {
                         throw new Error(`技能模組中未找到函數: ${message.skill}`);
                     }
-                    
+
                     console.log(`[SidePanel] 執行技能: ${message.skill}`);
                     const result = await skillFunc(message.args);
-                    
+
                     console.log(`[SidePanel] 技能執行成功:`, result);
                     // 顯示成功通知 (檢查通知設置)
                     if (await shouldShowNotification()) {
@@ -532,7 +545,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     }
                     sendResponse({ status: "success", result: result });
                 }
-                
+
             } catch (error) {
                 console.error(`[SidePanel] 技能執行失敗:`, error);
                 // 顯示錯誤通知 (檢查通知設置)
@@ -542,7 +555,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 sendResponse({ status: "error", error: error.message });
             }
         })();
-        
+
         // 必須返回 true 以保持消息通道開啟，直到異步 sendResponse 被調用
         return true;
     }
@@ -574,12 +587,12 @@ function updateConfigStatus() {
         console.warn('[SidePanel] config-status 元素未找到');
         return;
     }
-    
+
     if (!i18n.isLoaded) {
         console.warn('[SidePanel] i18n 還未初始化，跳過 updateConfigStatus');
         return;
     }
-    
+
     if (isMicEnabled) {
         configStatus.textContent = i18n.t('config.status');
     } else {
@@ -596,14 +609,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('[SidePanel] i18n 初始化失敗:', error);
     }
-    
+
     // 更新開關 UI 初始狀態
     if (i18n.isLoaded) {
         updateMicSwitchUI();
     } else {
         console.warn('[SidePanel] DOMContentLoaded 時 i18n 還未加載');
     }
-    
+
     if (recognition && isMicEnabled) {
         console.log("[Speech] 頁面載入，自動啟動常駐麥克風");
         recognition.start();

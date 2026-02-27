@@ -13,6 +13,12 @@
       "runInPageContext": false
     },
     {
+      "name": "download_all_images",
+      "folder": "download_all_images",
+      "description": "下載所有圖片 - 下載頁面上的所有圖片。僅在用戶明確要求下載/保存頁面圖片時使用。Download all images on the current page. Only use this skill when the user explicitly asks to download/save/export images from the current page.",
+      "runInPageContext": false
+    },
+    {
       "name": "open_tab",
       "folder": "open_tab",
       "description": "Open a website URL in a new browser tab. Only use this skill when the user explicitly asks to open/visit a specific website.",

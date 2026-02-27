@@ -5,7 +5,7 @@ description: 下載所有圖片 - 下載頁面上的所有圖片。僅在用戶�
 when_to_use:
   MUST HAVE BOTH:
   1. **ACTION VERB** (必須有動詞):
-     English: "download", "save", "export", "grab", "collect"
+     English: "download", "download images", "save", "export", "grab", "collect"
      Chinese: "下載", "保存", "導出", "下載下來", "存取"
   
   2. **OBJECT/CONTEXT** (必須有對象):
