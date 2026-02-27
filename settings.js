@@ -1,3 +1,46 @@
+// ========= i18n 初始化 =========
+async function initializeI18n() {
+    try {
+        await i18n.load('settings');
+        console.log('[Settings] i18n 已加載');
+        
+        // 應用翻譯到 DOM 元素
+        applyI18nTranslations();
+    } catch (error) {
+        console.error('[Settings] i18n 加載失敗:', error);
+    }
+}
+
+function applyI18nTranslations() {
+    // 找到所有帶有 data-i18n 屬性的元素
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        const translation = i18n.t(key);
+        if (translation) {
+            element.textContent = translation;
+        }
+    });
+    
+    // 處理 placeholder 翻譯
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+        const key = element.getAttribute('data-i18n-placeholder');
+        const translation = i18n.t(key);
+        if (translation) {
+            element.placeholder = translation;
+        }
+    });
+}
+
+// 監聽語言變化
+i18n.onLanguageChange(() => {
+    applyI18nTranslations();
+});
+
+// 在 DOMContentLoaded 前初始化 i18n
+document.addEventListener('DOMContentLoaded', async () => {
+    await initializeI18n();
+});
+
 // ========= 頁面區域 - 麥克風權限控制 =========
 document.getElementById('requestMicBtn').addEventListener('click', async () => {
     const statusDiv = document.getElementById('status');

@@ -1,14 +1,62 @@
 {
-  "zh-TW": {},
-  "zh-CN": {},
-  "en-US": {},
-  "en-GB": {},
-  "ja-JP": {},
-  "ko-KR": {},
-  "fr-FR": {},
-  "de-DE": {},
-  "es-ES": {},
-  "it-IT": {},
-  "pt-BR": {},
-  "ru-RU": {}
+  "zh-TW": {
+    "options.title": "⚙️ OmniAssistant 設定",
+    "options.tab.settings": "📋 設定選項",
+    "options.tab.cache": "📊 缓存历史"
+  },
+  "zh-CN": {
+    "options.title": "⚙️ OmniAssistant 设定",
+    "options.tab.settings": "📋 设定选项",
+    "options.tab.cache": "📊 缓存历史"
+  },
+  "en-US": {
+    "options.title": "⚙️ OmniAssistant Settings",
+    "options.tab.settings": "📋 Settings Options",
+    "options.tab.cache": "📊 Cache History"
+  },
+  "en-GB": {
+    "options.title": "⚙️ OmniAssistant Settings",
+    "options.tab.settings": "📋 Settings Options",
+    "options.tab.cache": "📊 Cache History"
+  },
+  "ja-JP": {
+    "options.title": "⚙️ OmniAssistant 設定",
+    "options.tab.settings": "📋 設定オプション",
+    "options.tab.cache": "📊 キャッシュ履歴"
+  },
+  "ko-KR": {
+    "options.title": "⚙️ OmniAssistant 설정",
+    "options.tab.settings": "📋 설정 옵션",
+    "options.tab.cache": "📊 캐시 기록"
+  },
+  "fr-FR": {
+    "options.title": "⚙️ OmniAssistant Paramètres",
+    "options.tab.settings": "📋 Options de paramètres",
+    "options.tab.cache": "📊 Historique des caches"
+  },
+  "de-DE": {
+    "options.title": "⚙️ OmniAssistant Einstellungen",
+    "options.tab.settings": "📋 Einstellungsoptionen",
+    "options.tab.cache": "📊 Cache-Verlauf"
+  },
+  "es-ES": {
+    "options.title": "⚙️ OmniAssistant Configuración",
+    "options.tab.settings": "📋 Opciones de configuración",
+    "options.tab.cache": "📊 Historial de caché"
+  },
+  "it-IT": {
+    "options.title": "⚙️ OmniAssistant Impostazioni",
+    "options.tab.settings": "📋 Opzioni di configurazione",
+    "options.tab.cache": "📊 Cronologia cache"
+  },
+  "pt-BR": {
+    "options.title": "⚙️ OmniAssistant Configurações",
+    "options.tab.settings": "📋 Opções de configuração",
+    "options.tab.cache": "📊 Histórico de cache"
+  },
+  "ru-RU": {
+    "options.title": "⚙️ OmniAssistant Параметры",
+    "options.tab.settings": "📋 Параметры настроек",
+    "options.tab.cache": "📊 История кэша"
+  }
 }

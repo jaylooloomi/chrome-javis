@@ -203,15 +203,15 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎤 OmniAssistant 語音識別設定</h1>
+        <h1 data-i18n="settings.title">🎤 OmniAssistant 語音識別設定</h1>
         
         <div class="warning">
-            <strong>⚠️ 重要：</strong> 必須先在此頁面授予麥克風權限，Side Panel 中的語音功能才能正常工作！
+            <strong data-i18n="settings.warning">⚠️ 重要：必須先在此頁面授予麥克風權限，Side Panel 中的語音功能才能正常工作！</strong>
         </div>
 
         <div class="section">
-            <h2>🌍 麥克風語言設定</h2>
-            <p>選擇語音識別的語言：</p>
+            <h2 data-i18n="settings.language.title">🌍 麥克風語言設定</h2>
+            <p data-i18n="settings.language.desc">選擇語音識別的語言：</p>
             <div class="switch-container" style="align-items: flex-start; flex-direction: column;">
                 <select id="micLanguage" style="padding: 10px; font-size: 14px; border-radius: 4px; border: 1px solid #ddd; width: 100%; max-width: 300px;">
                     <option value="zh-TW">繁體中文 (台灣)</option>
@@ -227,23 +227,23 @@
                     <option value="pt-BR">Português (Brasil)</option>
                     <option value="ru-RU">Русский</option>
                 </select>
-                <p style="font-size: 12px; color: var(--text-main); margin-top: 8px;">✅ 設定會自動保存</p>
+                <p style="font-size: 12px; color: var(--text-main); margin-top: 8px;" data-i18n="settings.language.auto">✅ 設定會自動保存</p>
             </div>
         </div>
 
         <div class="section">
-            <h2>🤖 AI 模型選擇</h2>
-            <p>選擇要使用的 AI 模型：</p>
+            <h2 data-i18n="settings.model.title">🤖 AI 模型選擇</h2>
+            <p data-i18n="settings.model.desc">選擇要使用的 AI 模型：</p>
             <div class="switch-container" style="align-items: flex-start; flex-direction: column;">
                 <select id="activeModel" style="padding: 10px; font-size: 14px; border-radius: 4px; border: 1px solid #ddd; width: 100%; max-width: 300px;">
-                    <option value="geminiFlash">🌐 Gemini 2.5 Flash (Cloud)</option>
-                    <option value="ollamaGemma2B">🖥️ Ollama Gemma 2B (Local)</option>
-                    <option value="ollamaGemmaLarge">🖥️ Ollama Gemma Large (Local)</option>
-                    <option value="ollamaMinimaxM2">🖥️ Ollama Minimax M2 (Local)</option>
+                    <option value="geminiFlash" data-i18n="settings.model.gemini">🌐 Gemini 2.5 Flash (Cloud)</option>
+                    <option value="ollamaGemma2B" data-i18n="settings.model.ollama1">🖥️ Ollama Gemma 2B (Local)</option>
+                    <option value="ollamaGemmaLarge" data-i18n="settings.model.ollama2">🖥️ Ollama Gemma Large (Local)</option>
+                    <option value="ollamaMinimaxM2" data-i18n="settings.model.ollama3">🖥️ Ollama Minimax M2 (Local)</option>
                 </select>
                 <div class="warning" style="margin-top: 10px; border-left: 4px solid #ffc107;">
-                    <strong>⚠️ 重要提醒：</strong> 變更模型後必須 <strong>重新啟動此擴展程式</strong> 才能生效。<br/>
-                    <small style="display: block; margin-top: 5px;">
+                    <strong data-i18n="settings.model.warning">⚠️ 重要提醒：變更模型後必須 <strong>重新啟動此擴展程式</strong> 才能生效。</strong><br/>
+                    <small style="display: block; margin-top: 5px;" data-i18n="settings.model.hint">
                         右鍵點擊擴展程式圖標 → 管理擴展程式 → 關閉再開啟，或訪問 <code>chrome://extensions</code> 重新加載。
                     </small>
                 </div>
@@ -252,76 +252,77 @@
         </div>
 
         <div class="section">
-            <h2>⚙️ API KEY 設定</h2>
-            <p>配置 Gemini API 金鑰：</p>
+            <h2 data-i18n="settings.apikey.title">⚙️ API KEY 設定</h2>
+            <p data-i18n="settings.apikey.desc">配置 Gemini API 金鑰：</p>
             <div style="display: flex; gap: 10px; align-items: center;">
-                <input type="password" id="geminiApiKey" placeholder="AlzaSy..." style="flex: 1; padding: 10px; background: rgba(0, 0, 0, 0.3); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px;">
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--accent-blue); text-decoration: none; font-size: 12px; white-space: nowrap;">查看 API Key →</a>
+                <input type="password" id="geminiApiKey" data-i18n-placeholder="settings.apikey.placeholder" placeholder="AlzaSy..." style="flex: 1; padding: 10px; background: rgba(0, 0, 0, 0.3); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px;">
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--accent-blue); text-decoration: none; font-size: 12px; white-space: nowrap;" data-i18n="settings.apikey.link">查看 API Key →</a>
             </div>
-            <div id="apiKeyTip" style="margin-top: 10px; padding: 12px; background: rgba(34, 197, 94, 0.15); border-left: 4px solid #22c55e; border-radius: 6px; color: var(--text-main); font-size: 13px; display: none;">
+            <div id="apiKeyTip" style="margin-top: 10px; padding: 12px; background: rgba(34, 197, 94, 0.15); border-left: 4px solid #22c55e; border-radius: 6px; color: var(--text-main); font-size: 13px; display: none;" data-i18n="settings.apikey.tip">
                 <strong style="color: #22c55e;">✅ 僅供使用者個人使用, 系統將不會保存!</strong>
             </div>
-            <button id="saveGeminiKeyBtn" style="margin-top: 12px;">💾 儲存</button>
+            <button id="saveGeminiKeyBtn" style="margin-top: 12px;" data-i18n="settings.apikey.save">💾 儲存</button>
             <div id="geminiKeyStatus" style="margin-top: 10px; font-size: 12px; display: none;"></div>
         </div>
 
         <div class="section">
-            <h2>🔔 通知設定</h2>
-            <p>控制技能執行完成時是否顯示通知提醒。</p>
+            <h2 data-i18n="settings.notification.title">🔔 通知設定</h2>
+            <p data-i18n="settings.notification.desc">控制技能執行完成時是否顯示通知提醒。</p>
             <div class="switch-container">
                 <div id="notificationToggle" class="toggle-switch active">
                     <div class="toggle-slider"></div>
                 </div>
                 <label style="cursor: pointer; margin: 0;">
-                    <strong id="notificationLabel">通知已啟用</strong><br/>
-                    <span class="notification-status">技能執行時將顯示右下角通知</span>
+                    <strong id="notificationLabel" data-i18n="settings.notification.enabled">通知已啟用</strong><br/>
+                    <span class="notification-status" data-i18n="settings.notification.hint">技能執行時將顯示右下角通知</span>
                 </label>
             </div>
         </div>
 
         <div class="section">
-            <h2>第 1 步：授予麥克風權限</h2>
-            <p>點擊下方按鈕，在彈出的 Chrome 權限對話框中選擇 <strong>「允許」</strong>。</p>
-            <button id="requestMicBtn">🔐 授予麥克風權限</button>
+            <h2 data-i18n="settings.mic.step1">第 1 步：授予麥克風權限</h2>
+            <p data-i18n="settings.mic.step1.desc">點擊下方按鈕，在彈出的 Chrome 權限對話框中選擇 <strong>「允許」</strong>。</p>
+            <button id="requestMicBtn" data-i18n="settings.mic.request">🔐 授予麥克風權限</button>
             <div id="status"></div>
         </div>
 
         <div class="section">
-            <h2>第 2 步：驗證權限</h2>
-            <p>權限授予成功後，會出現綠色的成功訊息。</p>
-            <div class="step">✅ 收到成功信息 → 可以關閉此頁面</div>
-            <div class="step">❌ 收到錯誤信息 → 請檢查麥克風設備或重試</div>
+            <h2 data-i18n="settings.mic.step2">第 2 步：驗證權限</h2>
+            <p data-i18n="settings.mic.step2.desc">權限授予成功後，會出現綠色的成功訊息。</p>
+            <div class="step" data-i18n="settings.mic.step2.success">✅ 收到成功信息 → 可以關閉此頁面</div>
+            <div class="step" data-i18n="settings.mic.step2.error">❌ 收到錯誤信息 → 請檢查麥克風設備或重試</div>
         </div>
 
         <div class="section">
-            <h2>第 3 步：使用語音功能</h2>
-            <p>返回 Side Panel 使用語音識別：</p>
+            <h2 data-i18n="settings.mic.step3">第 3 步：使用語音功能</h2>
+            <p data-i18n="settings.mic.step3.desc">返回 Side Panel 使用語音識別：</p>
             <ol>
-                <li>打開 OmniAssistant Side Panel</li>
-                <li>點擊麥克風按鈕 🎤</li>
-                <li>開始說話，看到實時轉錄文本</li>
-                <li>停止說話或點擊按鈕結束</li>
+                <li data-i18n="settings.mic.step3.list1">打開 OmniAssistant Side Panel</li>
+                <li data-i18n="settings.mic.step3.list2">點擊麥克風按鈕 🎤</li>
+                <li data-i18n="settings.mic.step3.list3">開始說話，看到實時轉錄文本</li>
+                <li data-i18n="settings.mic.step3.list4">停止說話或點擊按鈕結束</li>
             </ol>
         </div>
 
         <div class="section">
-            <h2>🔧 故障排除</h2>
+            <h2 data-i18n="settings.troubleshoot.title">🔧 故障排除</h2>
             <ul>
-                <li><strong>提示「權限被拒絕」？</strong><br/>
-                    → 前往 <code>chrome://settings/content/microphone</code> 檢查此擴展是否被阻止<br/>
-                    → 找到 OmniAssistant，改為「允許」
+                <li><strong data-i18n="settings.troubleshoot.denied">提示「權限被拒絕」？</strong><br/>
+                    <span data-i18n="settings.troubleshoot.denied.desc">→ 前往 <code>chrome://settings/content/microphone</code> 檢查此擴展是否被阻止<br/>
+                    → 找到 OmniAssistant，改為「允許」</span>
                 </li>
-                <li><strong>未找到麥克風？</strong><br/>
-                    → 確認電腦已連接麥克風設備<br/>
-                    → 檢查麥克風在系統設定中是否啟用
+                <li><strong data-i18n="settings.troubleshoot.nomicrophone">未找到麥克風？</strong><br/>
+                    <span data-i18n="settings.troubleshoot.nomicrophone.desc">→ 確認電腦已連接麥克風設備<br/>
+                    → 檢查麥克風在系統設定中是否啟用</span>
                 </li>
-                <li><strong>網路錯誤？</strong><br/>
-                    → 檢查網路連接是否正常
+                <li><strong data-i18n="settings.troubleshoot.network">網路錯誤？</strong><br/>
+                    <span data-i18n="settings.troubleshoot.network.desc">→ 檢查網路連接是否正常</span>
                 </li>
             </ul>
         </div>
     </div>
 
+    <script src="i18n/i18n.js"></script>
     <script src="settings.js"></script>
 </body>
 </html>
