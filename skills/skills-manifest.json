@@ -1,6 +1,12 @@
 {
   "skills": [
     {
+      "name": "close_all_pages",
+      "folder": "close_all_pages",
+      "description": "關閉所有頁面 - 關閉所有瀏覽器標籤頁（除了新開的 Google 標籤頁）。僅在用戶明確要求關閉所有/全部頁面時使用。Close all browser tabs except a new Google tab. Only use this skill when the user explicitly asks to close all/every page.",
+      "runInPageContext": false
+    },
+    {
       "name": "close_this_page",
       "folder": "close_this_page",
       "description": "關閉當前頁面 - 關閉用戶當前所在的瀏覽器標籤頁。僅在用戶明確要求關閉/退出當前頁面時使用。Close the current browser tab when user explicitly asks to close/exit the current page.",

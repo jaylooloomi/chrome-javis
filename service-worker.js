@@ -36,7 +36,7 @@ const aiResultCache = new Map();
 // 只保留最近 10 條記錄，便於監控和調試
 // 用途：查看歷史快取，未來可用於 UI 展示
 const recentCacheList = [];
-const MAX_RECENT_CACHE = 10;
+const MAX_RECENT_CACHE = 50;
 const MAX_CACHE_SIZE = 50;  // ← Phase 2 淘汰機制預留
 const CACHE_TTL_DAYS = 30;  // Phase 3 數據過期機制
 const CACHE_TTL_MS = CACHE_TTL_DAYS * 24 * 60 * 60 * 1000;  // 毫秒
