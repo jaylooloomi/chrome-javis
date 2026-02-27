@@ -49,29 +49,52 @@ export async function download_all_images(args) {
         // 2. 在「管理員環境」執行下載 (這裡有 chrome.downloads 權限！)
         console.log("[Download All Images Skill] 正在啟動下載任務...");
 
+        // 延遲函數
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        // 並發控制參數
+        const CONCURRENT_LIMIT = 3;   // 同時最多 3 個下載
+        const BATCH_DELAY = 200;      // 每批間隔 200ms
+
         let successCount = 0;
         let failureCount = 0;
-        await imageUrls.forEach((imageUrl, index) => {
-            // 構建文件名 (不需要路徑，監聽器會自動添加)
-            const fileName = `image_${String(index + 1).padStart(String(imageUrls.length).length, '0')}.jpg`;
 
-            chrome.downloads.download(
-                {
-                    url: imageUrl,
-                    saveAs: false,
-                    filename: fileName,
-                },
-                (downloadId) => {
-                    if (downloadId !== undefined) {
-                        successCount++;
-                        console.log("[Download All Images Skill] 已啟動下載任務", downloadId, "URL:", imageUrl);
-                    } else {
-                        failureCount++;
-                        console.error("[Download All Images Skill] 下載失敗:", imageUrl, "Error:", chrome.runtime.lastError?.message);
-                    }
-                }
-            );
-        });
+        // 分批下載：每次發起 CONCURRENT_LIMIT 個下載，然後等待一下再發起下一批
+        for (let i = 0; i < imageUrls.length; i += CONCURRENT_LIMIT) {
+            const batch = imageUrls.slice(i, i + CONCURRENT_LIMIT);
+
+            // 並發下載這一批
+            await Promise.all(batch.map((imageUrl, batchIndex) => {
+                return new Promise((resolve) => {
+                    const index = i + batchIndex;
+                    const fileName = `image_${String(index + 1).padStart(String(imageUrls.length).length, '0')}.jpg`;
+
+                    chrome.downloads.download(
+                        {
+                            url: imageUrl,
+                            saveAs: false,
+                            filename: fileName,
+                        },
+                        (downloadId) => {
+                            if (downloadId !== undefined) {
+                                successCount++;
+                                console.log("[Download All Images Skill] 已啟動下載任務", downloadId, "URL:", imageUrl);
+                            } else {
+                                failureCount++;
+                                console.error("[Download All Images Skill] 下載失敗:", imageUrl, "Error:", chrome.runtime.lastError?.message);
+                            }
+                            resolve();
+                        }
+                    );
+                });
+            }));
+
+            // 如果不是最後一批，等待一下才發起下一批
+            if (i + CONCURRENT_LIMIT < imageUrls.length) {
+                console.log(`[Download All Images Skill] 已發起 ${Math.min(CONCURRENT_LIMIT, batch.length)} 個下載，${BATCH_DELAY}ms 後繼續...`);
+                await delay(BATCH_DELAY);
+            }
+        }
 
         console.log("[Download All Images Skill] 操作完成");
         return `✅ 已啟動 ${imageUrls.length} 個圖片下載任務\n\n📸 圖片來自：${url}`;

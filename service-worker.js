@@ -254,7 +254,10 @@ function putInCache(userInput, result) {
     aiResultCache.set(userInput, result);
     
     // 2. 從 recentCacheList 中移除舊的同 key 項目（避免重複）
-    recentCacheList = recentCacheList.filter(item => item.userInput !== userInput);
+    const index = recentCacheList.findIndex(item => item.userInput === userInput);
+    if (index !== -1) {
+        recentCacheList.splice(index, 1);
+    }
     
     // 3. 更新最近使用列表（策略 A：寫入時更新）
     // 🆕 Phase 3：添加 expiresAt 字段
