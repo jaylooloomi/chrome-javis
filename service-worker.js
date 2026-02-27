@@ -857,8 +857,22 @@ async function callAIModel(userPrompt, systemPrompt, configData) {
             aiResponse = await callOllama(userPrompt, systemPrompt, configData.ollamaMinimaxM2);
         } else {
             console.log("[Gateway] ✅ 選擇使用 Gemini 2.5 Flash 模型");
-            console.log("[Gateway] Gemini 配置:", JSON.stringify({...configData.geminiFlash, apiKey: '***'}));
-            aiResponse = await callGeminiFlash(userPrompt, systemPrompt, configData.geminiFlash);
+            
+            // 🆕 從 storage 讀取儲存的 Gemini API Key
+            let geminiConfig = { ...configData.geminiFlash };
+            try {
+                const storedApiKey = await chrome.storage.local.get('geminiApiKey');
+                if (storedApiKey.geminiApiKey) {
+                    geminiConfig.apiKey = storedApiKey.geminiApiKey;
+                    console.log("[Gateway] ✅ 已從 storage 載入 Gemini API Key");
+                }
+            } catch (error) {
+                console.warn("[Gateway] ⚠️ 無法從 storage 讀取 API Key:", error);
+                // 繼續使用 configData.geminiFlash.apiKey（如果有的話）
+            }
+            
+            console.log("[Gateway] Gemini 配置:", JSON.stringify({...geminiConfig, apiKey: '***'}));
+            aiResponse = await callGeminiFlash(userPrompt, systemPrompt, geminiConfig);
         }
         
         console.log("[Gateway] AI 原始回應 (長度:", aiResponse.length, "):", aiResponse);

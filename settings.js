@@ -71,6 +71,64 @@ function updateNotificationUI(isEnabled) {
     }
 }
 
+// ========= Gemini API Key 設定區域（settings.html）=========
+const geminiApiKeyInput = document.getElementById('geminiApiKey');
+const geminiSaveBtn = document.getElementById('saveGeminiKeyBtn');
+const geminiStatusDiv = document.getElementById('geminiKeyStatus');
+
+// 只在 settings.html 中綁定事件（有 geminiSaveBtn 時）
+if (geminiSaveBtn) {
+    // 頁面加載時載入已儲存的 API Key
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const result = await chrome.storage.local.get('geminiApiKey');
+            if (result.geminiApiKey) {
+                geminiApiKeyInput.value = result.geminiApiKey;
+                showGeminiStatus('✅ 已載入儲存的 API Key', 'success');
+            }
+        } catch (error) {
+            console.error('[Settings] 讀取 Gemini API Key 失敗:', error);
+        }
+    });
+
+    // 儲存按鈕 - 存入 storage.local
+    geminiSaveBtn.addEventListener('click', async () => {
+        const apiKey = geminiApiKeyInput.value.trim();
+        
+        if (!apiKey) {
+            showGeminiStatus('❌ 請輸入有效的 API Key', 'error');
+            return;
+        }
+
+        // 基本格式驗證（Google API Key 以 AIzaSy 開頭）
+        if (!apiKey.startsWith('AIzaSy') || apiKey.length < 35) {
+            showGeminiStatus('❌ API Key 格式不正確，請確認是否為有效的 Gemini API Key', 'error');
+            return;
+        }
+        
+        try {
+            // 存入 chrome.storage.local（明文，因為需要在 service-worker 中直接讀取）
+            await chrome.storage.local.set({ geminiApiKey: apiKey });
+            showGeminiStatus('✅ API Key 已儲存！', 'success');
+            console.log('[Settings] Gemini API Key 已儲存');
+        } catch (error) {
+            console.error('[Settings] 儲存 API Key 失敗:', error);
+            showGeminiStatus('❌ 儲存失敗，請稍後再試', 'error');
+        }
+    });
+    
+    // 顯示狀態消息的輔助函數
+    function showGeminiStatus(message, type) {
+        geminiStatusDiv.textContent = message;
+        geminiStatusDiv.className = `status ${type}`;
+        geminiStatusDiv.style.display = 'block';
+        
+        if (type === 'success') {
+            setTimeout(() => { geminiStatusDiv.style.display = 'none'; }, 3000);
+        }
+    }
+}
+
 // ========= API Key 設定區域（加密版） =========
 // 只在 options.html 中執行（settings.html 中不存在這些元素）
 const apiKeyInput = document.getElementById('apiKey');
