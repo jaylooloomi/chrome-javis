@@ -1,5 +1,7 @@
 // cache-history.js - 缓存历史页面脚本
 
+import i18n from '../i18n/i18n.js';
+
 console.log('[CacheHistory] 页面加载');
 
 // DOM 元素
@@ -13,13 +15,36 @@ const totalCacheCount = document.getElementById('totalCacheCount');
 const recentCount = document.getElementById('recentCount');
 const maxCache = document.getElementById('maxCache');
 
+/**
+ * 翻译所有带有 data-i18n 属性的 DOM 元素
+ */
+function translatePage() {
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+        const key = el.getAttribute('data-i18n');
+        const translation = i18n.t(key);
+        el.textContent = translation;
+    });
+}
+
 // 事件监听
 refreshBtn.addEventListener('click', loadCacheHistory);
 clearBtn.addEventListener('click', clearCache);
 
-// 页面加载时获取缓存
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('[CacheHistory] DOM 加载完成，获取缓存历史');
+// 页面加载时获取缓存并初始化 i18n
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('[CacheHistory] DOM 加载完成');
+    
+    // 初始化 i18n
+    await i18n.load();
+    translatePage();
+    
+    // 监听语言变化
+    i18n.onLanguageChange(() => {
+        console.log('[CacheHistory] 语言已变更，重新翻译页面');
+        translatePage();
+    });
+    
+    console.log('[CacheHistory] 获取缓存历史');
     loadCacheHistory();
 });
 
@@ -55,9 +80,9 @@ async function loadCacheHistory() {
                 emptyState.style.display = 'block';
             }
             
-            showStatus('✅ 缓存数据已更新', 'success');
+            showStatus(i18n.t('cache.msg.updated'), 'success');
         } else {
-            showStatus('❌ 获取缓存失败: ' + (response?.error || '未知错误'), 'error');
+            showStatus(i18n.t('cache.msg.error') + ': ' + (response?.error || '未知错误'), 'error');
         }
     } catch (error) {
         console.error('[CacheHistory] 错误:', error);
@@ -222,7 +247,8 @@ function formatTime(timestamp) {
  * 删除指定的单条缓存
  */
 async function deleteSpecificCache(userInput, element) {
-    if (!confirm(`确定要删除此缓存吗？\n输入："${userInput}"`)) {
+    const confirmMsg = i18n.t('cache.msg.deleteConfirm') + `"${userInput}"`;
+    if (!confirm(confirmMsg)) {
         return;
     }
     
@@ -247,7 +273,7 @@ async function deleteSpecificCache(userInput, element) {
                     emptyState.style.display = 'block';
                 }
                 
-                showStatus(`✅ 已删除缓存：${userInput}`, 'success');
+                showStatus(i18n.t('cache.msg.deleted') + userInput, 'success');
                 
                 // 执行完整的刷新流程（类似点击刷新按钮）
                 setTimeout(() => {
@@ -255,7 +281,7 @@ async function deleteSpecificCache(userInput, element) {
                 }, 500);
             }, 300);
         } else {
-            showStatus('❌ 删除失败', 'error');
+            showStatus(i18n.t('cache.msg.deleteFailed'), 'error');
         }
     } catch (error) {
         console.error('[CacheHistory] 删除错误:', error);
@@ -267,7 +293,7 @@ async function deleteSpecificCache(userInput, element) {
  * 清空缓存
  */
 async function clearCache() {
-    if (!confirm('确定要清空所有缓存吗？这个操作不可撤销。')) {
+    if (!confirm(i18n.t('cache.msg.clearConfirm'))) {
         return;
     }
     
@@ -285,9 +311,9 @@ async function clearCache() {
             cacheList.innerHTML = '';
             emptyState.style.display = 'block';
             updateStats({ totalCacheSize: 0, recentCount: 0, maxRecent: 10 });
-            showStatus('✅ 缓存已清空', 'success');
+            showStatus(i18n.t('cache.msg.cleared'), 'success');
         } else {
-            showStatus('❌ 清空缓存失败', 'error');
+            showStatus(i18n.t('cache.msg.clearFailed'), 'error');
         }
     } catch (error) {
         console.error('[CacheHistory] 清空错误:', error);

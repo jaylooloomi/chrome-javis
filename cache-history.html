@@ -503,15 +503,15 @@
     <div class="container">
         <h1>
             <span>📊</span>
-            缓存历史
+            <span data-i18n="cache.title">缓存历史</span>
         </h1>
 
         <!-- 存儲使用進度條 -->
         <div class="storage-usage-section">
-            <h3 class="storage-title">💾 存儲使用情況</h3>
+            <h3 class="storage-title" data-i18n="cache.storage.title">💾 存儲使用情況</h3>
             <div class="progress-bar-container">
                 <div class="progress-bar" id="storageProgressBar"></div>
-                <div class="progress-text" id="storageText">計算中...</div>
+                <div class="progress-text" id="storageText" data-i18n="cache.storage.calculating">計算中...</div>
             </div>
             <div class="storage-info" id="storageInfo">
                 <span id="usedSize">0 / 50</span>
@@ -523,66 +523,67 @@
         <div class="stats-container">
             <div class="stat-card total">
                 <div class="stat-value" id="totalCacheCount">0</div>
-                <div class="stat-label">总缓存数</div>
+                <div class="stat-label" data-i18n="cache.stats.total">总缓存数</div>
             </div>
             <div class="stat-card recent">
                 <div class="stat-value" id="recentCount">0</div>
-                <div class="stat-label">最近记录</div>
+                <div class="stat-label" data-i18n="cache.stats.recent">最近记录</div>
             </div>
             <div class="stat-card max">
                 <div class="stat-value" id="maxCache">10</div>
-                <div class="stat-label">最大容量</div>
+                <div class="stat-label" data-i18n="cache.stats.max">最大容量</div>
             </div>
             <!-- 🆕 Phase 4：過期/有效快取統計 -->
             <div class="stat-card total" style="background: linear-gradient(135deg, #28a745 0%, #218838 100%);">
                 <div class="stat-value" id="validCount">0</div>
-                <div class="stat-label">有效缓存</div>
+                <div class="stat-label" data-i18n="cache.stats.valid">有效缓存</div>
             </div>
             <div class="stat-card recent" style="background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);">
                 <div class="stat-value" id="expiredCount">0</div>
-                <div class="stat-label">已过期</div>
+                <div class="stat-label" data-i18n="cache.stats.expired">已过期</div>
             </div>
         </div>
 
         <!-- 刷新控制 -->
         <div class="controls">
-            <button id="refreshBtn">🔄 刷新数据</button>
-            <button id="clearBtn" class="secondary">🗑️ 清空缓存</button>
+            <button id="refreshBtn" data-i18n="cache.button.refresh">🔄 刷新数据</button>
+            <button id="clearBtn" class="secondary" data-i18n="cache.button.clear">🗑️ 清空缓存</button>
         </div>
 
         <div id="statusMessage" class="status-message"></div>
 
         <!-- 缓存列表 -->
         <div class="section">
-            <h2>📋 最近 10 条缓存</h2>
+            <h2 data-i18n="cache.list.title">📋 最近 10 条缓存</h2>
             <div id="loadingIndicator" class="loading" style="display: none;">
                 <div class="spinner"></div>
-                <p>加载中...</p>
+                <p data-i18n="cache.loading">加载中...</p>
             </div>
             <ul id="cacheList" class="cache-list"></ul>
             <div id="emptyState" class="empty-state" style="display: none;">
-                <div class="empty-state-icon">📭</div>
-                <p>还没有缓存记录</p>
-                <small>当你使用 AI 助手时，缓存将显示在这里</small>
+                <div class="empty-state-icon" data-i18n="cache.empty.icon">📭</div>
+                <p data-i18n="cache.empty.message">还没有缓存记录</p>
+                <small data-i18n="cache.empty.hint">当你使用 AI 助手时，缓存将显示在这里</small>
             </div>
         </div>
 
         <!-- 信息提示 -->
         <div class="section">
-            <h2>💡 说明</h2>
+            <h2 data-i18n="cache.info.title">💡 说明</h2>
             <ul class="info-list">
-                <li>显示最近 10 条缓存记录（按创建时间倒序）</li>
-                <li>每条缓存包含：用户输入、识别的技能、执行参数、创建时间</li>
-                <li>缓存在当前会话中有效，刷新页面后会清空</li>
-                <li>用户输入相同时，直接使用缓存结果，加快执行速度</li>
-                <li>有效缓存：尚未过期且可使用的缓存记录</li>
-                <li>已过期：超过 30 天的缓存，将在下次启动或访问时清理</li>
-                <li>缓存容量：最多保存 50 条记录，超过时按 FIFO 顺序自动删除最旧的</li>
+                <li data-i18n="cache.info.line1">显示最近 10 条缓存记录（按创建时间倒序）</li>
+                <li data-i18n="cache.info.line2">每条缓存包含：用户输入、识别的技能、执行参数、创建时间</li>
+                <li data-i18n="cache.info.line3">缓存在当前会话中有效，刷新页面后会清空</li>
+                <li data-i18n="cache.info.line4">用户输入相同时，直接使用缓存结果，加快执行速度</li>
+                <li data-i18n="cache.info.line5">有效缓存：尚未过期且可使用的缓存记录</li>
+                <li data-i18n="cache.info.line6">已过期：超过 30 天的缓存，将在下次启动或访问时清理</li>
+                <li data-i18n="cache.info.line7">缓存容量：最多保存 50 条记录，超过时按 FIFO 顺序自动删除最旧的</li>
             </ul>
 
         </div>
         
     </div>
-    <script src="cache-history.js"></script>
+    <script src="../i18n/i18n.js" type="module"></script>
+    <script src="cache-history.js" type="module"></script>
 </body>
 </html>
