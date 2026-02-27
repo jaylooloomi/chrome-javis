@@ -9,7 +9,7 @@ when_to_use:
      Chinese: "打開", "開啟", "訪問", "查看", "進入"
   
   2. **WEBSITE NAME** (必須有網站名稱):
-     Supported: Google, YouTube, YouTube Music, GitHub, Twitter, LinkedIn, Facebook, Instagram, Yahoo, Gmail, Gemini, Nebula, Google Keep, Setting
+     Supported: Google, Google Search, YouTube, YouTube Music, GitHub, Twitter, LinkedIn, Facebook, Instagram, Yahoo, Gmail, Gemini, Nebula, Google Keep, Google Drive, Google Docs, Google Sheets, Google Slides, Google Forms, Google Photos, Google Calendar, Google Meet, Google Chat, Google Maps, Google Earth, Google Translate, Google Chrome, Google Cloud Platform, Google Search Console, Google Analytics, Google Ads, Google Play Store, Google Home, Google Sites, Google Finance, Google News, Google Contacts, Setting
   
   ** DECISION RULE: Check for BOTH verb + website name **
   - If sentence has ACTION VERB + website name → CALL open_tab
@@ -28,6 +28,11 @@ examples_CORRECT_verb_plus_website:
   - "open Gemini" ✓ (verb: open, site: Gemini)
   - "open Nebula" ✓ (verb: open, site: Nebula)
   - "open Google Keep" ✓ (verb: open, site: Google Keep)
+  - "open Google Drive" ✓ (verb: open, site: Google Drive)
+  - "open Google Docs" ✓ (verb: open, site: Google Docs)
+  - "open Google Sheets" ✓ (verb: open, site: Google Sheets)
+  - "open Google Meet" ✓ (verb: open, site: Google Meet)
+  - "open Google Maps" ✓ (verb: open, site: Google Maps)
 
 examples_INCORRECT_missing_verb:
   - "Google" ✗ (no verb, just website name)
@@ -90,7 +95,7 @@ IMPORTANT - args structure and URL conversion:
 - You must convert website names to full URLs using the rules below
 
 URL conversion rules:
-1. If user says "google" → "https://google.com"
+1. If user says "google" or "google search" → "https://google.com"
 2. If user says "youtube" → "https://youtube.com"
 3. If user says "youtube music" → "https://music.youtube.com"
 4. If user says "github" → "https://github.com"
@@ -101,10 +106,34 @@ URL conversion rules:
 9. If user says "yahoo" → "https://yahoo.com"
 10. If user says "gemini" → "https://gemini.google.com"
 11. If user says "nebula" → "https://www.nebula.gg/"
-12. If user says "setting" → "chrome-extension://llffkjaidimijhnkgpacebjkiicccaaj/options.html"
-14. Always add https:// prefix if missing (unless chrome-extension URL)
-15. Always add https:// prefix if missing (unless chrome-extension URL)
-14. Never return empty URL
+12. If user says "google drive" → "https://drive.google.com"
+13. If user says "google docs" → "https://docs.google.com"
+14. If user says "google sheets" → "https://sheets.google.com"
+15. If user says "google slides" → "https://slides.google.com"
+16. If user says "google forms" → "https://forms.google.com"
+17. If user says "google photos" → "https://photos.google.com"
+18. If user says "google calendar" → "https://calendar.google.com"
+19. If user says "google meet" → "https://meet.google.com"
+20. If user says "google chat" → "https://chat.google.com"
+21. If user says "google maps" → "https://maps.google.com"
+22. If user says "google earth" → "https://earth.google.com"
+23. If user says "google translate" → "https://translate.google.com"
+24. If user says "google chrome" → "https://google.com/chrome"
+25. If user says "google cloud platform" → "https://cloud.google.com"
+26. If user says "google search console" → "https://search.google.com/search-console"
+27. If user says "google analytics" → "https://www.google.com/search?q=analytics.google.com"
+28. If user says "google ads" → "https://ads.google.com"
+29. If user says "google play store" → "https://play.google.com"
+30. If user says "google home" → "https://home.google.com"
+31. If user says "google sites" → "https://sites.google.com"
+32. If user says "google finance" → "https://google.com/finance"
+33. If user says "google news" → "https://news.google.com"
+34. If user says "google contacts" → "https://contacts.google.com"
+35. If user says "gmail" → "https://mail.google.com"
+36. If user says "google keep" → "https://keep.google.com"
+37. If user says "setting" → "chrome-extension://llffkjaidimijhnkgpacebjkiicccaaj/options.html"
+38. Always add https:// prefix if missing (unless chrome-extension URL)
+39. Never return empty URL
 
 Examples of correct output:
 - User says "open Google" → {"skill": "open_tab", "args": {"url": "https://google.com"}}
@@ -115,6 +144,14 @@ Examples of correct output:
 - User says "open Gemini" → {"skill": "open_tab", "args": {"url": "https://gemini.google.com"}}
 - User says "open Gmail" → {"skill": "open_tab", "args": {"url": "https://mail.google.com"}}
 - User says "open Nebula" → {"skill": "open_tab", "args": {"url": "https://www.nebula.gg/"}}
+- User says "open Google Drive" → {"skill": "open_tab", "args": {"url": "https://drive.google.com"}}
+- User says "open Google Docs" → {"skill": "open_tab", "args": {"url": "https://docs.google.com"}}
+- User says "open Google Sheets" → {"skill": "open_tab", "args": {"url": "https://sheets.google.com"}}
+- User says "open Google Meet" → {"skill": "open_tab", "args": {"url": "https://meet.google.com"}}
+- User says "open Google Maps" → {"skill": "open_tab", "args": {"url": "https://maps.google.com"}}
+- User says "open Google Calendar" → {"skill": "open_tab", "args": {"url": "https://calendar.google.com"}}
+- User says "open Google Cloud Platform" → {"skill": "open_tab", "args": {"url": "https://cloud.google.com"}}
+- User says "open Google Analytics" → {"skill": "open_tab", "args": {"url": "https://www.google.com/search?q=analytics.google.com"}}
 - User says "open setting" → {"skill": "open_tab", "args": {"url": "chrome-extension://llffkjaidimijhnkgpacebjkiicccaaj/options.html"}}
 
 CRITICAL RULE - VERB + WEBSITE REQUIREMENT:
