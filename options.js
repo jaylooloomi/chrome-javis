@@ -42,14 +42,6 @@ i18n.onLanguageChange(() => {
 
 // ========== 頁籤切換邏輯 ==========
 
-// 綁定頁籤按鈕點擊事件
-document.querySelectorAll('.tab-button').forEach(button => {
-    button.addEventListener('click', (e) => {
-        const tabName = e.target.getAttribute('data-tab');
-        switchTab(tabName);
-    });
-});
-
 /**
  * 切換頁籤
  */
@@ -84,6 +76,13 @@ function switchTab(tabName) {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('[Options] 初始化設定頁面');
     await initializeI18n();
-    // 頁籤已在 HTML 中綁定了
+    
+    // 綁定頁籤按鈕點擊事件（在 DOM 準備好後執行）
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const tabName = e.target.getAttribute('data-tab');
+            switchTab(tabName);
+        });
+    });
 });
 
