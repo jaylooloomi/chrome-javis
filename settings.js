@@ -54,13 +54,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             try {
                 console.log("[Settings] 正在請求麥克風權限...");
-                statusDiv.textContent = '正在請求麥克風權限...';
+                statusDiv.textContent = i18n.t('settings.mic.requesting');
                 statusDiv.className = 'status pending';
                 
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 
                 console.log("[Settings] 麥克風權限已授予");
-                statusDiv.textContent = '✅ 麥克風權限已成功授予！您現在可以在 Side Panel 中使用語音輸入功能。';
+                statusDiv.textContent = i18n.t('settings.mic.granted');
                 statusDiv.className = 'status success';
                 
                 stream.getTracks().forEach(track => track.stop());
@@ -70,14 +70,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 let errorMsg = error.name;
                 if (error.name === 'NotAllowedError') {
-                    errorMsg = '您拒絕了麥克風許可權限';
+                    errorMsg = i18n.t('settings.mic.denied.notallowed');
                 } else if (error.name === 'NotFoundError') {
-                    errorMsg = '未找到麥克風設備';
+                    errorMsg = i18n.t('settings.mic.denied.notfound');
                 } else if (error.name === 'NotReadableError') {
-                    errorMsg = '麥克風被其他程式佔用';
+                    errorMsg = i18n.t('settings.mic.denied.notreadable');
                 }
                 
-                statusDiv.textContent = `❌ 麥克風權限授予失敗: ${errorMsg}`;
+                statusDiv.textContent = i18n.t('settings.mic.error').replace('{error}', errorMsg);
                 statusDiv.className = 'status error';
             }
         });
@@ -124,11 +124,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (result.geminiApiKey) {
                 geminiApiKeyInput.value = result.geminiApiKey;
                 if (geminiStatusDiv) {
-                    showGeminiStatus('✅ 已載入儲存的 API Key', 'success');
+                    showGeminiStatus(i18n.t('settings.apikey.loaded'), 'success');
                 }
             } else {
                 // 如果 storage.local 沒有，則從 config.json 讀取
-                console.log('[Settings] 從 config.json 載入 API Key...');
+                console.log('[Settings] ' + i18n.t('settings.apikey.loading'));
                 const configUrl = chrome.runtime.getURL('config.json');
                 const configResponse = await fetch(configUrl);
                 const configData = await configResponse.json();
@@ -159,24 +159,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             const apiKey = geminiApiKeyInput.value.trim();
             
             if (!apiKey) {
-                showGeminiStatus('❌ 請輸入有效的 API Key', 'error');
+                showGeminiStatus(i18n.t('settings.apikey.error.empty'), 'error');
                 return;
             }
 
             // 基本格式驗證（Google API Key 以 AIzaSy 開頭）
             if (!apiKey.startsWith('AIzaSy') || apiKey.length < 35) {
-                showGeminiStatus('❌ API Key 格式不正確，請確認是否為有效的 Gemini API Key', 'error');
+                showGeminiStatus(i18n.t('settings.apikey.error.invalid'), 'error');
                 return;
             }
             
             try {
                 // 存入 chrome.storage.local（明文，因為需要在 service-worker 中直接讀取）
                 await chrome.storage.local.set({ geminiApiKey: apiKey });
-                showGeminiStatus('✅ API Key 已儲存！', 'success');
+                showGeminiStatus(i18n.t('settings.apikey.saved'), 'success');
                 console.log('[Settings] Gemini API Key 已儲存');
             } catch (error) {
                 console.error('[Settings] 儲存 API Key 失敗:', error);
-                showGeminiStatus('❌ 儲存失敗，請稍後再試', 'error');
+                showGeminiStatus(i18n.t('settings.apikey.error.save'), 'error');
             }
         });
     }
@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 const langStatus = document.getElementById('langStatus') || document.createElement('div');
                 langStatus.id = 'langStatus';
-                langStatus.textContent = '✅ 語言設定已儲存';
+                langStatus.textContent = i18n.t('settings.lang.saved');
                 langStatus.className = 'status success';
                 langStatus.style.marginTop = '10px';
                 langStatus.style.display = 'block';
@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 const modelStatus = document.getElementById('modelStatus') || document.createElement('div');
                 modelStatus.id = 'modelStatus';
-                modelStatus.textContent = '✅ 模型設定已儲存（需重新啟動擴展程式才能生效）';
+                modelStatus.textContent = i18n.t('settings.model.saved');
                 modelStatus.className = 'status success';
                 modelStatus.style.marginTop = '10px';
                 modelStatus.style.display = 'block';
@@ -265,10 +265,10 @@ function updateNotificationUI(isEnabled) {
     
     if (isEnabled) {
         notificationToggle.classList.add('active');
-        notificationLabel.textContent = '通知已啟用';
+        notificationLabel.textContent = i18n.t('settings.notification.enabled');
     } else {
         notificationToggle.classList.remove('active');
-        notificationLabel.textContent = '通知已停用';
+        notificationLabel.textContent = i18n.t('settings.notification.disabled');
     }
 }
 
