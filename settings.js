@@ -78,16 +78,30 @@ const geminiStatusDiv = document.getElementById('geminiKeyStatus');
 
 // 只在 settings.html 中綁定事件（有 geminiSaveBtn 時）
 if (geminiSaveBtn) {
-    // 頁面加載時載入已儲存的 API Key
+    // 頁面加載時載入 API Key（優先級：1. storage.local 2. config.json）
     document.addEventListener('DOMContentLoaded', async () => {
         try {
+            // 優先從 storage.local 讀取已儲存的 API Key
             const result = await chrome.storage.local.get('geminiApiKey');
             if (result.geminiApiKey) {
                 geminiApiKeyInput.value = result.geminiApiKey;
                 showGeminiStatus('✅ 已載入儲存的 API Key', 'success');
+                return;
+            }
+            
+            // 如果 storage.local 沒有，則從 config.json 讀取
+            console.log('[Settings] 從 config.json 載入 API Key...');
+            const configUrl = chrome.runtime.getURL('config.json');
+            const configResponse = await fetch(configUrl);
+            const configData = await configResponse.json();
+            
+            if (configData.geminiFlash && configData.geminiFlash.apiKey) {
+                const apiKeyFromConfig = configData.geminiFlash.apiKey;
+                geminiApiKeyInput.value = apiKeyFromConfig;
+                console.log('[Settings] 已從 config.json 載入 API Key');
             }
         } catch (error) {
-            console.error('[Settings] 讀取 Gemini API Key 失敗:', error);
+            console.error('[Settings] 讀取 API Key 失敗:', error);
         }
     });
 
