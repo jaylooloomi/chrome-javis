@@ -43,8 +43,8 @@ export async function download_all_images(args) {
         let failureCount = 0;
 
         imageUrls.forEach((imageUrl, index) => {
-            // 構建文件名
-            const fileName = `downloaded_images/image_${String(index + 1).padStart(String(imageUrls.length).length, '0')}.jpg`;
+            // 構建文件名 (不需要路徑，監聽器會自動添加)
+            const fileName = `image_${String(index + 1).padStart(String(imageUrls.length).length, '0')}.jpg`;
             
             chrome.downloads.download(
                 {
@@ -62,9 +62,6 @@ export async function download_all_images(args) {
                     }
                 }
             );
-
-            // 每個下載延遲 100ms，避免過快
-            // (實際延遲會在瀏覽器內部處理)
         });
 
         console.log("[Download All Images Skill] 操作完成");

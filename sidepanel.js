@@ -42,6 +42,14 @@ i18nReady = (async () => {
     });
 })();
 
+// ======== 下載文件命名監聽器 ========
+// 為所有下載操作攔截文件名，添加資料夾路徑
+chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
+    const newFilename = `downloaded_images/${item.filename}`;
+    console.log('[SidePanel] 下載文件名已改: ' + newFilename);
+    suggest({ filename: newFilename });
+});
+
 // ======== 語音識別初始化 (直接使用 Web Speech API) ========
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
