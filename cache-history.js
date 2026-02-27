@@ -42,6 +42,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     i18n.onLanguageChange(() => {
         console.log('[CacheHistory] 语言已变更，重新翻译页面');
         translatePage();
+        // 重新渲染缓存列表以应用新语言的动态内容（时间格式、过期状态等）
+        loadCacheHistory();
     });
     
     console.log('[CacheHistory] 获取缓存历史');
