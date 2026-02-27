@@ -13,7 +13,8 @@
     "clipboardRead",
     "clipboardWrite",
     "tabs",
-    "notifications"
+    "notifications",
+    "downloads"
   ],
   "host_permissions": [
     "http://localhost:11434/*",
