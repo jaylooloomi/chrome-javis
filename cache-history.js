@@ -172,13 +172,13 @@ function renderCacheList(entries) {
             const daysRemaining = Math.ceil((entry.expiresAt - now) / (24 * 60 * 60 * 1000));
             
             if (daysRemaining <= 0) {
-                expiryInfo = `<span class="expiry-expired">已過期</span>`;
+                expiryInfo = `<span class="expiry-expired">${i18n.t('cache.expiry.expired')}</span>`;
             } else if (daysRemaining <= 7) {
-                expiryInfo = `<span class="expiry-warning">⚠️ 還剩 ${daysRemaining} 天過期</span>`;
+                expiryInfo = `<span class="expiry-warning">⚠️ ${i18n.t('cache.expiry.expiringIn').replace('{days}', daysRemaining)}</span>`;
             } else if (daysRemaining <= 14) {
-                expiryInfo = `<span class="expiry-info">ℹ️ 還剩 ${daysRemaining} 天過期</span>`;
+                expiryInfo = `<span class="expiry-info">ℹ️ ${i18n.t('cache.expiry.expiringIn').replace('{days}', daysRemaining)}</span>`;
             } else {
-                expiryInfo = `<span class="expiry-valid">✓ 有效期：${daysRemaining} 天</span>`;
+                expiryInfo = `<span class="expiry-valid">✓ ${i18n.t('cache.expiry.valid').replace('{days}', daysRemaining)}</span>`;
             }
         }
         
@@ -192,15 +192,15 @@ function renderCacheList(entries) {
                         #${index + 1} "${entry.userInput}"
                     </div>
                 </div>
-                <button class="cache-item-delete-btn" title="删除此缓存">🗑️</button>
+                <button class="cache-item-delete-btn" title="${i18n.t('cache.list.deleteItem')}">🗑️</button>
             </div>
             <div class="cache-item-details">
                 <div class="detail-row">
-                    <span class="detail-label">技能</span>
+                    <span class="detail-label">${i18n.t('cache.list.skill')}</span>
                     <span class="detail-value">${escapeHtml(entry.skill)}</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">参数</span>
+                    <span class="detail-label">${i18n.t('cache.list.params')}</span>
                     <span class="detail-value"><code>${escapeHtml(argsStr)}</code></span>
                 </div>
             </div>
@@ -226,7 +226,7 @@ function renderCacheList(entries) {
  * 格式化时间戳
  */
 function formatTime(timestamp) {
-    if (!timestamp) return '未知时间';
+    if (!timestamp) return i18n.t('cache.time.unknown');
     
     const now = Date.now();
     const diff = now - timestamp;
@@ -236,11 +236,11 @@ function formatTime(timestamp) {
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
     
-    if (days > 0) return `${days} 天前`;
-    if (hours > 0) return `${hours} 小时前`;
-    if (minutes > 0) return `${minutes} 分钟前`;
-    if (seconds > 0) return `${seconds} 秒前`;
-    return '刚刚';
+    if (days > 0) return `${days} ${i18n.t('cache.time.daysAgo')}`;
+    if (hours > 0) return `${hours} ${i18n.t('cache.time.hoursAgo')}`;
+    if (minutes > 0) return `${minutes} ${i18n.t('cache.time.minutesAgo')}`;
+    if (seconds > 0) return `${seconds} ${i18n.t('cache.time.secondsAgo')}`;
+    return i18n.t('cache.time.justNow');
 }
 
 /**
