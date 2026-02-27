@@ -75,6 +75,18 @@ function updateNotificationUI(isEnabled) {
 const geminiApiKeyInput = document.getElementById('geminiApiKey');
 const geminiSaveBtn = document.getElementById('saveGeminiKeyBtn');
 const geminiStatusDiv = document.getElementById('geminiKeyStatus');
+const apiKeyTip = document.getElementById('apiKeyTip');
+
+// 添加輸入框 focus 事件顯示提醒
+if (geminiApiKeyInput && apiKeyTip) {
+    geminiApiKeyInput.addEventListener('focus', () => {
+        apiKeyTip.style.display = 'block';
+    });
+    
+    geminiApiKeyInput.addEventListener('blur', () => {
+        apiKeyTip.style.display = 'none';
+    });
+}
 
 // 只在 settings.html 中綁定事件（有 geminiSaveBtn 時）
 if (geminiSaveBtn) {
