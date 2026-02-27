@@ -253,7 +253,10 @@ function putInCache(userInput, result) {
     // 1. 存入主快取 Map
     aiResultCache.set(userInput, result);
     
-    // 2. 更新最近使用列表（策略 A：寫入時更新）
+    // 2. 從 recentCacheList 中移除舊的同 key 項目（避免重複）
+    recentCacheList = recentCacheList.filter(item => item.userInput !== userInput);
+    
+    // 3. 更新最近使用列表（策略 A：寫入時更新）
     // 🆕 Phase 3：添加 expiresAt 字段
     const now = Date.now();
     const expiresAt = now + CACHE_TTL_MS;
@@ -266,15 +269,15 @@ function putInCache(userInput, result) {
         expiresAt: expiresAt  // 🆕 新增過期時間
     });
     
-    // 3. 限制列表大小（只保留最近 10 條）
+    // 4. 限制列表大小（只保留最近 10 條）
     if (recentCacheList.length > MAX_RECENT_CACHE) {
         recentCacheList.pop();
     }
     
-    // 4. ✨ 強制快取大小限制（超過 MAX_CACHE_SIZE 時淘汰）
+    // 5. ✨ 強制快取大小限制（超過 MAX_CACHE_SIZE 時淘汰）
     enforceCacheSizeLimit();
     
-    // 5. ✨ 異步保存到 local（不阻塞）
+    // 6. ✨ 異步保存到 local（不阻塞）
     saveCacheToLocal().catch(err => 
         console.warn(`[Gateway] 快取 local 保存失敗（非致命）:`, err)
     );
