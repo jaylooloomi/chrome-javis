@@ -244,6 +244,38 @@
             padding-top: 10px;
         }
 
+        /* 🆕 Phase 4：過期信息樣式 */
+        .cache-item-expiry {
+            font-size: 12px;
+            margin-top: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            background: #f0f0f0;
+        }
+
+        .expiry-valid {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .expiry-info {
+            color: #17a2b8;
+            font-weight: bold;
+        }
+
+        .expiry-warning {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .expiry-expired {
+            color: #721c24;
+            background: #f8d7da;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
         .empty-state {
             text-align: center;
             padding: 40px;
@@ -385,6 +417,15 @@
                 <div class="stat-value" id="maxCache">10</div>
                 <div class="stat-label">最大容量</div>
             </div>
+            <!-- 🆕 Phase 4：過期/有效快取統計 -->
+            <div class="stat-card total" style="background: linear-gradient(135deg, #28a745 0%, #218838 100%);">
+                <div class="stat-value" id="validCount">0</div>
+                <div class="stat-label">有效缓存</div>
+            </div>
+            <div class="stat-card recent" style="background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);">
+                <div class="stat-value" id="expiredCount">0</div>
+                <div class="stat-label">已过期</div>
+            </div>
         </div>
 
         <!-- 刷新控制 -->
@@ -418,6 +459,11 @@
                 <li>每条缓存包含：用户输入、识别的技能、执行参数、创建时间</li>
                 <li>缓存在当前会话中有效，刷新页面后会清空</li>
                 <li>用户输入相同时，直接使用缓存结果，加快执行速度</li>
+                <!-- 🆕 Phase 4：TTL 過期機制說明 -->
+                <li><strong>✨ Phase 3 TTL 机制</strong>：每条缓存有效期为 30 天，过期后将自动清理</li>
+                <li>有效缓存：尚未过期且可使用的缓存记录</li>
+                <li>已过期：超过 30 天的缓存，将在下次启动或访问时清理</li>
+                <li>缓存容量：最多保存 50 条记录，超过时按 FIFO 顺序自动删除最旧的</li>
             </ul>
         </div>
     </div>

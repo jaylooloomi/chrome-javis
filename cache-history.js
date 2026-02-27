@@ -75,6 +75,18 @@ function updateStats(stats) {
     recentCount.textContent = stats.recentCount || 0;
     maxCache.textContent = stats.maxCacheSize || 50;  // 改為顯示 maxCacheSize（50）
     
+    // 🆕 Phase 4：顯示過期快取統計
+    const expiredCountEl = document.getElementById('expiredCount');
+    const validCountEl = document.getElementById('validCount');
+    
+    if (expiredCountEl && stats.expiredCount !== undefined) {
+        expiredCountEl.textContent = stats.expiredCount;
+    }
+    
+    if (validCountEl && stats.validCount !== undefined) {
+        validCountEl.textContent = stats.validCount;
+    }
+    
     // 更新存儲使用信息
     if (stats.storage) {
         const storage = stats.storage;
@@ -128,6 +140,23 @@ function renderCacheList(entries) {
         // 格式化时间戳
         const timeStr = formatTime(entry.timestamp);
         
+        // 🆕 Phase 4：計算過期倒計時（還剩多少天）
+        let expiryInfo = '';
+        if (entry.expiresAt) {
+            const now = Date.now();
+            const daysRemaining = Math.ceil((entry.expiresAt - now) / (24 * 60 * 60 * 1000));
+            
+            if (daysRemaining <= 0) {
+                expiryInfo = `<span class="expiry-expired">已過期</span>`;
+            } else if (daysRemaining <= 7) {
+                expiryInfo = `<span class="expiry-warning">⚠️ 還剩 ${daysRemaining} 天過期</span>`;
+            } else if (daysRemaining <= 14) {
+                expiryInfo = `<span class="expiry-info">ℹ️ 還剩 ${daysRemaining} 天過期</span>`;
+            } else {
+                expiryInfo = `<span class="expiry-valid">✓ 有效期：${daysRemaining} 天</span>`;
+            }
+        }
+        
         // 格式化 args 为可读文本
         const argsStr = JSON.stringify(entry.args, null, 2).substring(0, 200);
         
@@ -147,6 +176,9 @@ function renderCacheList(entries) {
             </div>
             <div class="cache-item-time">
                 ⏱️ ${timeStr}
+            </div>
+            <div class="cache-item-expiry">
+                ${expiryInfo}
             </div>
         `;
         
