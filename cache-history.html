@@ -306,6 +306,24 @@
             color: var(--text-sub);
         }
 
+        .info-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .info-list li {
+            margin-bottom: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-main);
+        }
+
+        .info-list li:last-child {
+            margin-bottom: 0;
+        }
+
         .empty-state-icon {
             font-size: 48px;
             margin-bottom: 15px;
@@ -340,24 +358,37 @@
             display: none;
         }
 
+        .status {
+            padding: 12px 15px 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            border-left: 3px solid transparent;
+            display: none;
+        }
+
         .status.success { 
-            background: rgba(74, 222, 128, 0.2);
-            color: #4ade80; 
+            background: rgba(74, 222, 128, 0.15);
+            color: #4ade80;
             border: 1px solid rgba(74, 222, 128, 0.3);
+            border-left: 3px solid #4ade80;
             display: block;
         }
 
         .status.error { 
-            background: rgba(255, 107, 107, 0.2);
-            color: #ff6b6b; 
+            background: rgba(255, 107, 107, 0.15);
+            color: #ff6b6b;
             border: 1px solid rgba(255, 107, 107, 0.3);
+            border-left: 3px solid #ff6b6b;
             display: block;
         }
 
         .status.pending { 
-            background: rgba(56, 189, 248, 0.2);
-            color: var(--accent-blue); 
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-blue);
             border: 1px solid rgba(56, 189, 248, 0.3);
+            border-left: 3px solid var(--accent-blue);
             display: block;
         }
 
@@ -496,20 +527,19 @@
         <!-- 信息提示 -->
         <div class="section">
             <h2>💡 说明</h2>
-            <ul style="line-height: 1.8;">
+            <ul class="info-list">
                 <li>显示最近 10 条缓存记录（按创建时间倒序）</li>
                 <li>每条缓存包含：用户输入、识别的技能、执行参数、创建时间</li>
                 <li>缓存在当前会话中有效，刷新页面后会清空</li>
                 <li>用户输入相同时，直接使用缓存结果，加快执行速度</li>
-                <!-- 🆕 Phase 4：TTL 過期機制說明 -->
-                <li><strong>✨ Phase 3 TTL 机制</strong>：每条缓存有效期为 30 天，过期后将自动清理</li>
                 <li>有效缓存：尚未过期且可使用的缓存记录</li>
                 <li>已过期：超过 30 天的缓存，将在下次启动或访问时清理</li>
                 <li>缓存容量：最多保存 50 条记录，超过时按 FIFO 顺序自动删除最旧的</li>
             </ul>
-        </div>
-    </div>
 
+        </div>
+        
+    </div>
     <script src="cache-history.js"></script>
 </body>
 </html>
