@@ -127,3 +127,5 @@ class I18n {
 
 // 建立全局 i18n 實例
 const i18n = new I18n();
+
+export default i18n;
