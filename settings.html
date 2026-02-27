@@ -3,22 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <style>
+      :root {
+        --bg-color: #0f172a;
+        --card-bg: rgba(30, 41, 59, 0.7);
+        --accent-blue: #38bdf8;
+        --accent-purple: #818cf8;
+        --accent-cyan: #06b6d4;
+        --text-main: #f1f5f9;
+        --text-sub: #94a3b8;
+        --border-color: rgba(255, 255, 255, 0.1);
+      }
+
         body { 
-            font-family: 'Microsoft JhengHei', sans-serif; 
+            font-family: 'Inter', 'Microsoft JhengHei', -apple-system, sans-serif; 
             padding: 20px; 
             max-width: 600px; 
             margin: 0 auto;
-            background: #f5f5f5;
+            background-color: var(--bg-color);
+            color: var(--text-main);
         }
         .container { 
-            border: 1px solid #ddd; 
+            border: 1px solid var(--border-color); 
             padding: 20px; 
-            border-radius: 8px; 
-            background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 12px; 
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
         h1 { 
-            color: #333; 
+            color: var(--text-main); 
             display: flex;
             align-items: center;
             gap: 10px;
@@ -26,14 +39,21 @@
         .section { 
             margin: 20px 0; 
             padding: 15px;
-            background: #f9f9f9;
-            border-left: 4px solid #28a745;
-            border-radius: 4px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
         }
         .section h2 {
             margin-top: 0;
-            color: #28a745;
+            color: var(--accent-blue);
             font-size: 18px;
+        }
+        .section p {
+            color: var(--text-sub);
+        }
+        .section strong {
+            color: var(--text-main);
         }
         button { 
             padding: 12px 24px; 
@@ -75,17 +95,21 @@
             display: block;
         }
         .warning {
-            background: #fff3cd;
+            background: rgba(255, 193, 7, 0.15);
             border-left: 4px solid #ffc107;
             padding: 15px;
-            border-radius: 4px;
+            border-radius: 8px;
             margin: 15px 0;
         }
         .warning strong {
-            color: #856404;
+            color: #ffc107;
+        }
+        .warning small {
+            color: var(--text-sub);
         }
         ul {
             line-height: 1.8;
+            color: var(--text-main);
         }
         .step {
             background: #e7f3ff;
@@ -94,12 +118,21 @@
             margin: 10px 0;
             border-radius: 4px;
         }
+        li {
+            color: var(--text-main);
+        }
+        li strong {
+            color: var(--text-main);
+        }
         code {
-            background: #f0f0f0;
+            background: rgba(0, 0, 0, 0.3);
             padding: 2px 6px;
-            border-radius: 3px;
+            border-radius: 4px;
             font-family: monospace;
-            color: #d63384;
+            color: #ffa8e8;
+        }
+        p code {
+            color: #ffa8e8;
         }
         .switch-container {
             display: flex;
@@ -111,13 +144,15 @@
             position: relative;
             width: 50px;
             height: 28px;
-            background-color: #ccc;
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
             border-radius: 14px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s;
         }
         .toggle-switch.active {
-            background-color: #4CAF50;
+            background: linear-gradient(135deg, #28a745, #218838);
+            border-color: #28a745;
         }
         .toggle-slider {
             position: absolute;
@@ -134,21 +169,33 @@
         }
         .notification-status {
             font-size: 14px;
-            color: #666;
+            color: var(--text-sub);
+        }
+        label {
+            color: var(--text-main);
         }
         select {
-            background: white;
-            color: #333;
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: border-color 0.3s;
+            transition: all 0.3s;
+        }
+        select option {
+            background: var(--bg-color);
+            color: var(--text-main);
         }
         select:hover {
-            border-color: #28a745 !important;
+            border-color: var(--accent-blue) !important;
+            background: rgba(0, 0, 0, 0.4);
         }
         select:focus {
             outline: none;
-            border-color: #28a745 !important;
-            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+            border-color: var(--accent-blue) !important;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
         }
     </style>
 </head>
