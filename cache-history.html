@@ -219,6 +219,40 @@
             background: rgba(0, 0, 0, 0.3);
         }
 
+        .cache-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .cache-item-input-container {
+            flex: 1;
+        }
+
+        .cache-item-delete-btn {
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px 8px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .cache-item:hover .cache-item-delete-btn {
+            opacity: 1;
+        }
+
+        .cache-item-delete-btn:hover {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff5252;
+            transform: scale(1.1);
+        }
+
         .cache-item-input {
             font-weight: bold;
             color: var(--text-main);

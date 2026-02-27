@@ -553,6 +553,36 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true;
         }
         
+        // ====== 刪除指定快取項目 API ======
+        if (request.action === "delete_cache_item") {
+            const userInput = request.userInput;
+            console.log(`[Gateway] 請求刪除指定快取: "${userInput}"`);
+            
+            // 1. 從 aiResultCache 刪除
+            if (aiResultCache.has(userInput)) {
+                aiResultCache.delete(userInput);
+                console.log(`[Gateway] ✅ 已從 aiResultCache 刪除: "${userInput}"`);
+            }
+            
+            // 2. 從 recentCacheList 刪除
+            const beforeCount = recentCacheList.length;
+            recentCacheList = recentCacheList.filter(item => item.userInput !== userInput);
+            const afterCount = recentCacheList.length;
+            
+            if (beforeCount > afterCount) {
+                console.log(`[Gateway] ✅ 已從 recentCacheList 刪除: "${userInput}"`);
+            }
+            
+            // 3. 同步保存到 local 存儲
+            saveCacheToLocal().catch(err => {
+                console.warn("[Gateway] ⚠️ 同步 local 存儲失敗（非致命）:", err);
+            });
+            
+            console.log(`[Gateway] ✅ 快取項目已刪除（內存 + Local 已同步）`);
+            sendResponse({ status: "success", message: `快取已刪除: "${userInput}"` });
+            return true;
+        }
+        
         console.warn("[Gateway] 未知的訊息類型:", request.action);
         sendResponse({ status: "error", text: "未知訊息類型" });
         return true;

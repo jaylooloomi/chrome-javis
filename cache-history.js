@@ -161,8 +161,13 @@ function renderCacheList(entries) {
         const argsStr = JSON.stringify(entry.args, null, 2).substring(0, 200);
         
         li.innerHTML = `
-            <div class="cache-item-input">
-                #${index + 1} "${entry.userInput}"
+            <div class="cache-item-header">
+                <div class="cache-item-input-container">
+                    <div class="cache-item-input">
+                        #${index + 1} "${entry.userInput}"
+                    </div>
+                </div>
+                <button class="cache-item-delete-btn" title="删除此缓存">🗑️</button>
             </div>
             <div class="cache-item-details">
                 <div class="detail-row">
@@ -183,6 +188,12 @@ function renderCacheList(entries) {
         `;
         
         cacheList.appendChild(li);
+        
+        // 为删除按钮添加事件监听
+        const deleteBtn = li.querySelector('.cache-item-delete-btn');
+        deleteBtn.addEventListener('click', () => {
+            deleteSpecificCache(entry.userInput, li);
+        });
     });
 }
 
@@ -205,6 +216,47 @@ function formatTime(timestamp) {
     if (minutes > 0) return `${minutes} 分钟前`;
     if (seconds > 0) return `${seconds} 秒前`;
     return '刚刚';
+}
+
+/**
+ * 删除指定的单条缓存
+ */
+async function deleteSpecificCache(userInput, element) {
+    if (!confirm(`确定要删除此缓存吗？\n输入："${userInput}"`)) {
+        return;
+    }
+    
+    try {
+        console.log('[CacheHistory] 请求删除指定缓存:', userInput);
+        
+        const response = await chrome.runtime.sendMessage({
+            action: 'delete_cache_item',
+            userInput: userInput
+        });
+        
+        if (response && response.status === 'success') {
+            // 删除 UI 中的该项
+            element.style.opacity = '0';
+            element.style.transform = 'translateX(-20px)';
+            
+            setTimeout(() => {
+                element.remove();
+                
+                // 如果列表为空，显示空状态
+                if (cacheList.children.length === 0) {
+                    emptyState.style.display = 'block';
+                }
+                
+                showStatus(`✅ 已删除缓存：${userInput}`, 'success');
+                loadCacheStats();  // 刷新统计信息
+            }, 300);
+        } else {
+            showStatus('❌ 删除失败', 'error');
+        }
+    } catch (error) {
+        console.error('[CacheHistory] 删除错误:', error);
+        showStatus('❌ 错误: ' + error.message, 'error');
+    }
 }
 
 /**
