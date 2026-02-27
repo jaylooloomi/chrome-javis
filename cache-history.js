@@ -248,7 +248,11 @@ async function deleteSpecificCache(userInput, element) {
                 }
                 
                 showStatus(`✅ 已删除缓存：${userInput}`, 'success');
-                loadCacheStats();  // 刷新统计信息
+                
+                // 执行完整的刷新流程（类似点击刷新按钮）
+                setTimeout(() => {
+                    loadCacheHistory();
+                }, 500);
             }, 300);
         } else {
             showStatus('❌ 删除失败', 'error');
