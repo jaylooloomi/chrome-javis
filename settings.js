@@ -31,308 +31,159 @@ function applyI18nTranslations() {
     });
 }
 
-// 監聽語言變化
-i18n.onLanguageChange(() => {
-    applyI18nTranslations();
-});
-
-// 在 DOMContentLoaded 前初始化 i18n
+// ========== DOMContentLoaded - 所有初始化在此執行 ==========
 document.addEventListener('DOMContentLoaded', async () => {
+    // 初始化 i18n
     await initializeI18n();
-});
-
-// ========= 頁面區域 - 麥克風權限控制 =========
-document.getElementById('requestMicBtn').addEventListener('click', async () => {
-    const statusDiv = document.getElementById('status');
-    statusDiv.textContent = '';
-    statusDiv.className = '';
     
-    try {
-        console.log("[Options] 正在請求麥克風權限...");
-        statusDiv.textContent = '正在請求麥克風權限...';
-        statusDiv.className = 'status pending';
-        
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        
-        console.log("[Options] 麥克風權限已授予");
-        statusDiv.textContent = '✅ 麥克風權限已成功授予！您現在可以在 Side Panel 中使用語音輸入功能。';
-        statusDiv.className = 'status success';
-        
-        stream.getTracks().forEach(track => track.stop());
-        
-    } catch (error) {
-        console.error("[Options] 麥克風權限被拒絕:", error);
-        
-        let errorMsg = error.name;
-        if (error.name === 'NotAllowedError') {
-            errorMsg = '您拒絕了麥克風許可權限';
-        } else if (error.name === 'NotFoundError') {
-            errorMsg = '未找到麥克風設備';
-        } else if (error.name === 'NotReadableError') {
-            errorMsg = '麥克風被其他程式佔用';
+    // 監聽語言變化
+    if (i18n && typeof i18n.onLanguageChange === 'function') {
+        i18n.onLanguageChange(() => {
+            applyI18nTranslations();
+        });
+    }
+    
+    // ========= 麥克風權限控制 =========
+    const requestMicBtn = document.getElementById('requestMicBtn');
+    if (requestMicBtn) {
+        requestMicBtn.addEventListener('click', async () => {
+            const statusDiv = document.getElementById('status');
+            if (!statusDiv) return;
+            statusDiv.textContent = '';
+            statusDiv.className = '';
+            
+            try {
+                console.log("[Settings] 正在請求麥克風權限...");
+                statusDiv.textContent = '正在請求麥克風權限...';
+                statusDiv.className = 'status pending';
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                console.log("[Settings] 麥克風權限已授予");
+                statusDiv.textContent = '✅ 麥克風權限已成功授予！您現在可以在 Side Panel 中使用語音輸入功能。';
+                statusDiv.className = 'status success';
+                
+                stream.getTracks().forEach(track => track.stop());
+                
+            } catch (error) {
+                console.error("[Settings] 麥克風權限被拒絕:", error);
+                
+                let errorMsg = error.name;
+                if (error.name === 'NotAllowedError') {
+                    errorMsg = '您拒絕了麥克風許可權限';
+                } else if (error.name === 'NotFoundError') {
+                    errorMsg = '未找到麥克風設備';
+                } else if (error.name === 'NotReadableError') {
+                    errorMsg = '麥克風被其他程式佔用';
+                }
+                
+                statusDiv.textContent = `❌ 麥克風權限授予失敗: ${errorMsg}`;
+                statusDiv.className = 'status error';
+            }
+        });
+    }
+    
+    // ========= 通知設定 =========
+    const notificationToggle = document.getElementById('notificationToggle');
+    const notificationLabel = document.getElementById('notificationLabel');
+    
+    if (notificationToggle && notificationLabel) {
+        try {
+            // 通知設定不敏感，維持 storage.local（不需要 sync）
+            const settings = await chrome.storage.local.get('notificationsEnabled');
+            const isEnabled = settings.notificationsEnabled !== false;
+            updateNotificationUI(isEnabled);
+        } catch (error) {
+            console.error('[Settings] 讀取通知設定失敗:', error);
         }
         
-        statusDiv.textContent = `❌ 麥克風權限授予失敗: ${errorMsg}`;
-        statusDiv.className = 'status error';
+        notificationToggle.addEventListener('click', async () => {
+            try {
+                const isCurrentlyActive = notificationToggle.classList.contains('active');
+                const newState = !isCurrentlyActive;
+                await chrome.storage.local.set({ notificationsEnabled: newState });
+                updateNotificationUI(newState);
+                console.log('[Settings] 通知設定已更新:', newState);
+            } catch (error) {
+                console.error('[Settings] 保存通知設定失敗:', error);
+            }
+        });
     }
-});
-
-// ========= 通知設定 =========
-const notificationToggle = document.getElementById('notificationToggle');
-const notificationLabel = document.getElementById('notificationLabel');
-
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        // 通知設定不敏感，維持 storage.local（不需要 sync）
-        const settings = await chrome.storage.local.get('notificationsEnabled');
-        const isEnabled = settings.notificationsEnabled !== false;
-        updateNotificationUI(isEnabled);
-    } catch (error) {
-        console.error('[Options] 讀取通知設定失敗:', error);
-    }
-});
-
-notificationToggle.addEventListener('click', async () => {
-    try {
-        const isCurrentlyActive = notificationToggle.classList.contains('active');
-        const newState = !isCurrentlyActive;
-        await chrome.storage.local.set({ notificationsEnabled: newState });
-        updateNotificationUI(newState);
-        console.log('[Options] 通知設定已更新:', newState);
-    } catch (error) {
-        console.error('[Options] 保存通知設定失敗:', error);
-    }
-});
-
-function updateNotificationUI(isEnabled) {
-    if (isEnabled) {
-        notificationToggle.classList.add('active');
-        notificationLabel.textContent = '通知已啟用';
-    } else {
-        notificationToggle.classList.remove('active');
-        notificationLabel.textContent = '通知已停用';
-    }
-}
-
-// ========= Gemini API Key 設定區域（settings.html）=========
-const geminiApiKeyInput = document.getElementById('geminiApiKey');
-const geminiSaveBtn = document.getElementById('saveGeminiKeyBtn');
-const geminiStatusDiv = document.getElementById('geminiKeyStatus');
-const apiKeyTip = document.getElementById('apiKeyTip');
-
-// 添加輸入框 focus 事件顯示提醒
-if (geminiApiKeyInput && apiKeyTip) {
-    geminiApiKeyInput.addEventListener('focus', () => {
-        apiKeyTip.style.display = 'block';
-    });
     
-    geminiApiKeyInput.addEventListener('blur', () => {
-        apiKeyTip.style.display = 'none';
-    });
-}
-
-// 只在 settings.html 中綁定事件（有 geminiSaveBtn 時）
-if (geminiSaveBtn) {
-    // 頁面加載時載入 API Key（優先級：1. storage.local 2. config.json）
-    document.addEventListener('DOMContentLoaded', async () => {
+    // ========= Gemini API Key 設定區域 =========
+    const geminiApiKeyInput = document.getElementById('geminiApiKey');
+    const geminiSaveBtn = document.getElementById('saveGeminiKeyBtn');
+    const geminiStatusDiv = document.getElementById('geminiKeyStatus');
+    const apiKeyTip = document.getElementById('apiKeyTip');
+    
+    if (geminiApiKeyInput && geminiSaveBtn) {
+        // 頁面加載時載入 API Key（優先級：1. storage.local 2. config.json）
         try {
             // 優先從 storage.local 讀取已儲存的 API Key
             const result = await chrome.storage.local.get('geminiApiKey');
             if (result.geminiApiKey) {
                 geminiApiKeyInput.value = result.geminiApiKey;
-                showGeminiStatus('✅ 已載入儲存的 API Key', 'success');
-                return;
-            }
-            
-            // 如果 storage.local 沒有，則從 config.json 讀取
-            console.log('[Settings] 從 config.json 載入 API Key...');
-            const configUrl = chrome.runtime.getURL('config.json');
-            const configResponse = await fetch(configUrl);
-            const configData = await configResponse.json();
-            
-            if (configData.geminiFlash && configData.geminiFlash.apiKey) {
-                const apiKeyFromConfig = configData.geminiFlash.apiKey;
-                geminiApiKeyInput.value = apiKeyFromConfig;
-                console.log('[Settings] 已從 config.json 載入 API Key');
+                if (geminiStatusDiv) {
+                    showGeminiStatus('✅ 已載入儲存的 API Key', 'success');
+                }
+            } else {
+                // 如果 storage.local 沒有，則從 config.json 讀取
+                console.log('[Settings] 從 config.json 載入 API Key...');
+                const configUrl = chrome.runtime.getURL('config.json');
+                const configResponse = await fetch(configUrl);
+                const configData = await configResponse.json();
+                
+                if (configData.geminiFlash && configData.geminiFlash.apiKey) {
+                    const apiKeyFromConfig = configData.geminiFlash.apiKey;
+                    geminiApiKeyInput.value = apiKeyFromConfig;
+                    console.log('[Settings] 已從 config.json 載入 API Key');
+                }
             }
         } catch (error) {
             console.error('[Settings] 讀取 API Key 失敗:', error);
         }
-    });
-
-    // 儲存按鈕 - 存入 storage.local
-    geminiSaveBtn.addEventListener('click', async () => {
-        const apiKey = geminiApiKeyInput.value.trim();
         
-        if (!apiKey) {
-            showGeminiStatus('❌ 請輸入有效的 API Key', 'error');
-            return;
-        }
-
-        // 基本格式驗證（Google API Key 以 AIzaSy 開頭）
-        if (!apiKey.startsWith('AIzaSy') || apiKey.length < 35) {
-            showGeminiStatus('❌ API Key 格式不正確，請確認是否為有效的 Gemini API Key', 'error');
-            return;
-        }
-        
-        try {
-            // 存入 chrome.storage.local（明文，因為需要在 service-worker 中直接讀取）
-            await chrome.storage.local.set({ geminiApiKey: apiKey });
-            showGeminiStatus('✅ API Key 已儲存！', 'success');
-            console.log('[Settings] Gemini API Key 已儲存');
-        } catch (error) {
-            console.error('[Settings] 儲存 API Key 失敗:', error);
-            showGeminiStatus('❌ 儲存失敗，請稍後再試', 'error');
-        }
-    });
-    
-    // 顯示狀態消息的輔助函數
-    function showGeminiStatus(message, type) {
-        geminiStatusDiv.textContent = message;
-        geminiStatusDiv.className = `status ${type}`;
-        geminiStatusDiv.style.display = 'block';
-        
-        if (type === 'success') {
-            setTimeout(() => { geminiStatusDiv.style.display = 'none'; }, 3000);
-        }
-    }
-}
-
-// ========= API Key 設定區域（加密版） =========
-// 只在 options.html 中執行（settings.html 中不存在這些元素）
-const apiKeyInput = document.getElementById('apiKey');
-const saveBtn = document.getElementById('saveApiKeyBtn');
-const statusDiv = document.getElementById('apiKeyStatus');
-const toggleVisibilityBtn = document.getElementById('toggleApiKeyVisibility');
-
-// 只在 options.html 中綁定事件（有這些元素時）
-if (apiKeyInput && toggleVisibilityBtn && saveBtn) {
-    // 頁面加載時檢查 API Key 狀態
-    document.addEventListener('DOMContentLoaded', updateConfigStatus);
-
-    // 顯示/隱藏 API Key 切換
-    toggleVisibilityBtn.addEventListener('click', () => {
-        if (apiKeyInput.type === 'password') {
-            apiKeyInput.type = 'text';
-            toggleVisibilityBtn.textContent = '🙈 隱藏';
-        } else {
-            apiKeyInput.type = 'password';
-            toggleVisibilityBtn.textContent = '👁 顯示';
-        }
-    });
-
-    // 儲存按鈕 - 加密後存入 storage.local
-    saveBtn.addEventListener('click', async () => {
-        const apiKey = apiKeyInput.value.trim();
-        
-        if (!apiKey) {
-            statusDiv.textContent = '❌ 請輸入有效的 API Key';
-            statusDiv.className = 'status error';
-            return;
-        }
-
-        // 基本格式驗證（Google API Key 以 AIzaSy 開頭）
-        if (!apiKey.startsWith('AIzaSy') || apiKey.length < 35) {
-            statusDiv.textContent = '❌ API Key 格式不正確，請確認是否為有效的 Gemini API Key';
-            statusDiv.className = 'status error';
-            return;
-        }
-        
-        try {
-            // 加密後存入 chrome.storage.local（不 sync 到其他裝置）
-            const encrypted = await encryptApiKey(apiKey);
-            await chrome.storage.local.set({ geminiApiKeyEncrypted: encrypted });
-
-            // 確保舊的明文 sync key 被清除
-            await chrome.storage.sync.remove('geminiApiKey');
+        // 添加輸入框 focus 事件顯示提醒
+        if (apiKeyTip) {
+            geminiApiKeyInput.addEventListener('focus', () => {
+                apiKeyTip.style.display = 'block';
+            });
             
-            statusDiv.textContent = '✅ API Key 已加密儲存於本機！';
-            statusDiv.className = 'status success';
-            
-            apiKeyInput.value = '';
-            apiKeyInput.type = 'password';
-            toggleVisibilityBtn.textContent = '👁 顯示';
-            
-            updateConfigStatus();
-        } catch (error) {
-            console.error('[Options] 儲存 API Key 時出錯:', error);
-            statusDiv.textContent = '❌ 儲存失敗，請稍後再試';
-            statusDiv.className = 'status error';
+            geminiApiKeyInput.addEventListener('blur', () => {
+                apiKeyTip.style.display = 'none';
+            });
         }
-    });
-
-    // 刪除 API Key
-    document.getElementById('deleteApiKeyBtn').addEventListener('click', async () => {
-        if (!confirm('確定要刪除已儲存的 API Key 嗎？')) return;
-        try {
-            await chrome.storage.local.remove(['geminiApiKeyEncrypted', 'javis_enc_key']);
-            await chrome.storage.sync.remove('geminiApiKey'); // 清除舊版明文
-            updateConfigStatus();
-            statusDiv.textContent = '✅ API Key 已刪除';
-            statusDiv.className = 'status success';
-        } catch (error) {
-            console.error('[Options] 刪除 API Key 失敗:', error);
-        }
-    });
-}
-
-// 更新 API Key 配置狀態顯示
-async function updateConfigStatus() {
-    // 只在有 configStatus 元素時執行（即 options.html 中）
-    const configStatus = document.getElementById('configStatus');
-    if (!configStatus) {
-        console.log('[Settings] configStatus 元素不存在，跳過更新');
-        return;
-    }
-    
-    try {
-        const result = await chrome.storage.local.get('geminiApiKeyEncrypted');
         
-        if (!result.geminiApiKeyEncrypted) {
-            // 檢查是否有舊版明文 key，提示遷移
-            const oldResult = await chrome.storage.sync.get('geminiApiKey');
-            if (oldResult.geminiApiKey) {
-                configStatus.innerHTML = `
-                    ⚠️ 偵測到舊版未加密的 API Key<br>
-                    <small style="color: #856404;">請重新輸入您的 API Key 以升級為加密儲存</small>
-                `;
-                configStatus.className = 'status warning';
-            } else {
-                configStatus.innerHTML = `
-                    ❌ 尚未設定 API Key<br>
-                    <small style="color: #666;">請在下方輸入您的 Gemini API Key</small>
-                `;
-                configStatus.className = 'status error';
+        // 儲存按鈕 - 存入 storage.local
+        geminiSaveBtn.addEventListener('click', async () => {
+            const apiKey = geminiApiKeyInput.value.trim();
+            
+            if (!apiKey) {
+                showGeminiStatus('❌ 請輸入有效的 API Key', 'error');
+                return;
             }
-        } else {
-            // 解密後只顯示遮罩（前4碼 + 後4碼）
+
+            // 基本格式驗證（Google API Key 以 AIzaSy 開頭）
+            if (!apiKey.startsWith('AIzaSy') || apiKey.length < 35) {
+                showGeminiStatus('❌ API Key 格式不正確，請確認是否為有效的 Gemini API Key', 'error');
+                return;
+            }
+            
             try {
-                const decrypted = await decryptApiKey(result.geminiApiKeyEncrypted);
-                const masked = maskApiKey(decrypted);
-                configStatus.innerHTML = `
-                    ✅ 已設定 API Key（加密儲存於本機）<br>
-                    <small style="color: #666; font-family: monospace;">金鑰: ${masked}</small>
-                `;
-            } catch {
-                configStatus.innerHTML = `✅ 已設定 API Key（加密儲存於本機）`;
+                // 存入 chrome.storage.local（明文，因為需要在 service-worker 中直接讀取）
+                await chrome.storage.local.set({ geminiApiKey: apiKey });
+                showGeminiStatus('✅ API Key 已儲存！', 'success');
+                console.log('[Settings] Gemini API Key 已儲存');
+            } catch (error) {
+                console.error('[Settings] 儲存 API Key 失敗:', error);
+                showGeminiStatus('❌ 儲存失敗，請稍後再試', 'error');
             }
-            configStatus.className = 'status success';
-        }
-    } catch (error) {
-        console.error('[Settings] 檢查配置時出錯:', error);
+        });
     }
-}
-
-// ========= 麥克風語言設定 =========
-let micLangSelect;
-let activeModelSelect;
-
-document.addEventListener('DOMContentLoaded', async () => {
-    // 麥克風語言選擇器
-    micLangSelect = document.getElementById('micLanguage');
-    if (!micLangSelect) {
-        console.error('[Settings] 找不到麥克風語言選擇器');
-    } else {
+    
+    // ========= 麥克風語言設定 =========
+    const micLangSelect = document.getElementById('micLanguage');
+    if (micLangSelect) {
         try {
             const result = await chrome.storage.local.get('micLanguage');
             const language = result.micLanguage || 'zh-TW';
@@ -348,7 +199,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const language = micLangSelect.value;
                 await chrome.storage.local.set({ micLanguage: language });
                 console.log('[Settings] 麥克風語言設定已更新:', language);
-                // ✅ 存儲改變會觸發 sidepanel.js 中的 chrome.storage.onChanged 監聽器
                 
                 const langStatus = document.getElementById('langStatus') || document.createElement('div');
                 langStatus.id = 'langStatus';
@@ -369,10 +219,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ========= AI 模型選擇 =========
-    activeModelSelect = document.getElementById('activeModel');
-    if (!activeModelSelect) {
-        console.error('[Settings] 找不到 AI 模型選擇器');
-    } else {
+    const activeModelSelect = document.getElementById('activeModel');
+    if (activeModelSelect) {
         try {
             const result = await chrome.storage.local.get('activeModel');
             const model = result.activeModel || 'geminiFlash';
@@ -407,3 +255,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 });
+
+// ========= 輔助函數 =========
+function updateNotificationUI(isEnabled) {
+    const notificationToggle = document.getElementById('notificationToggle');
+    const notificationLabel = document.getElementById('notificationLabel');
+    
+    if (!notificationToggle || !notificationLabel) return;
+    
+    if (isEnabled) {
+        notificationToggle.classList.add('active');
+        notificationLabel.textContent = '通知已啟用';
+    } else {
+        notificationToggle.classList.remove('active');
+        notificationLabel.textContent = '通知已停用';
+    }
+}
+
+function showGeminiStatus(message, type) {
+    const geminiStatusDiv = document.getElementById('geminiKeyStatus');
+    if (!geminiStatusDiv) return;
+    
+    geminiStatusDiv.textContent = message;
+    geminiStatusDiv.className = `status ${type}`;
+    geminiStatusDiv.style.display = 'block';
+    
+    if (type === 'success') {
+        setTimeout(() => { geminiStatusDiv.style.display = 'none'; }, 3000);
+    }
+}

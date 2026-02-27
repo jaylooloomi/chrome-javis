@@ -35,11 +35,6 @@ function applyI18nTranslations() {
     });
 }
 
-// 監聽語言變化
-i18n.onLanguageChange(() => {
-    applyI18nTranslations();
-});
-
 // ========== 頁籤切換邏輯 ==========
 
 /**
@@ -76,6 +71,11 @@ function switchTab(tabName) {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('[Options] 初始化設定頁面');
     await initializeI18n();
+    
+    // 監聽語言變化
+    i18n.onLanguageChange(() => {
+        applyI18nTranslations();
+    });
     
     // 綁定頁籤按鈕點擊事件（在 DOM 準備好後執行）
     document.querySelectorAll('.tab-button').forEach(button => {
