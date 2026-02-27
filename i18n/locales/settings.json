@@ -145,7 +145,6 @@
     "settings.apikey.save": "💾 Save",
     "settings.notification.title": "🔔 Notification Settings",
     "settings.notification.desc": "Control whether to show notifications when skills execution completes.",
-    "settings.notification.enabled": "Notifications Enabled",
     "settings.notification.hint": "Notifications will appear in the bottom right corner when skills execute",
     "settings.mic.request": "🔐 Grant Microphone Permission",
     "settings.mic.step1": "Step 1: Grant Microphone Permission",
