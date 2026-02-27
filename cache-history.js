@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('[CacheHistory] DOM 加载完成');
     
     // 初始化 i18n
-    await i18n.load();
+    await i18n.load('cache');  // 只加載 cache 模組
     translatePage();
     
     // 监听语言变化

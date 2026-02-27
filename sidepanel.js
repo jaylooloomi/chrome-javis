@@ -30,7 +30,7 @@ function applyTranslations() {
 
 // ======== 初始化 i18n ========
 i18nReady = (async () => {
-    await i18n.load();
+    await i18n.load('sidepanel');  // 只加載 sidepanel 模組
     console.log('[SidePanel] i18n 初始化完成');
     applyTranslations();
     

@@ -8,13 +8,44 @@ class I18n {
         this.isLoaded = false;
     }
 
-    // 載入翻譯文件
-    async load() {
+    // 載入翻譯文件（支援模組化加載）
+    async load(modules = null) {
         try {
-            const response = await fetch(chrome.runtime.getURL('i18n/locales.json'));
-            this.translations = await response.json();
+            let modulesToLoad = ['sidepanel', 'cache', 'options', 'settings'];
+            
+            // 如果指定了特定模組，只加載那些
+            if (modules) {
+                if (typeof modules === 'string') {
+                    modulesToLoad = [modules];
+                } else if (Array.isArray(modules)) {
+                    modulesToLoad = modules;
+                }
+            }
+            
+            // 載入所有指定的模組
+            for (const module of modulesToLoad) {
+                try {
+                    const response = await fetch(chrome.runtime.getURL(`i18n/locales/${module}.json`));
+                    const moduleData = await response.json();
+                    
+                    // 合併模組數據到 translations
+                    for (const language in moduleData) {
+                        if (!this.translations[language]) {
+                            this.translations[language] = {};
+                        }
+                        this.translations[language] = {
+                            ...this.translations[language],
+                            ...moduleData[language]
+                        };
+                    }
+                    console.log(`[i18n] 模組 '${module}' 已加載`);
+                } catch (error) {
+                    console.warn(`[i18n] 加載模組 '${module}' 失敗:`, error);
+                }
+            }
+            
             this.isLoaded = true;
-            console.log('[i18n] 翻譯檔案已加載');
+            console.log('[i18n] 翻譯檔案已加載（模組化）');
             
             // 從 storage 加載語言設定
             await this.loadLanguageFromStorage();
