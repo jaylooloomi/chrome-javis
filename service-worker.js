@@ -104,6 +104,69 @@ async function saveCacheToLocal() {
 }
 
 /**
+ * 強制快取大小限制（超過 MAX_CACHE_SIZE 時刪除最老的）
+ * 使用 FIFO 策略：刪除 recentCacheList 中最老的記錄
+ */
+function enforceCacheSizeLimit() {
+    if (aiResultCache.size <= MAX_CACHE_SIZE) {
+        return;  // 未超限，無需淘汰
+    }
+    
+    console.log(`[Gateway] ⚠️ 快取已超限 (${aiResultCache.size} > ${MAX_CACHE_SIZE})`);
+    
+    // 刪除 recentCacheList 中最老的記錄，直到達到限制
+    while (aiResultCache.size > MAX_CACHE_SIZE && recentCacheList.length > 0) {
+        const oldest = recentCacheList.pop();  // 刪除最老的
+        aiResultCache.delete(oldest.userInput);
+        console.log(`[Gateway] 🗑️ 淘汰快取: "${oldest.userInput}"`);
+    }
+    
+    console.log(`[Gateway] ✅ 淘汰完成，快取大小: ${aiResultCache.size}`);\n}
+
+/**
+ * 獲取當前存儲使用情況
+ * @returns {Promise<object>} - {used: bytes, usedMB, percentage: 0-100, status: 'ok'|'warning'|'critical'}
+ */
+async function getStorageUsage() {
+    try {
+        // 估算存儲使用（JSON 序列化後的大小）
+        const cacheData = {
+            cache: Array.from(aiResultCache.entries()),
+            recent: recentCacheList
+        };
+        const jsonString = JSON.stringify(cacheData);
+        const usedBytes = new Blob([jsonString]).size;
+        
+        // Chrome local storage 限制 10MB
+        const maxBytes = 10 * 1024 * 1024;  // 10MB
+        const percentage = Math.round((usedBytes / maxBytes) * 100);
+        
+        let status = 'ok';
+        if (percentage >= 90) status = 'critical';
+        else if (percentage >= 70) status = 'warning';
+        
+        return {
+            used: usedBytes,
+            usedMB: (usedBytes / 1024 / 1024).toFixed(2),
+            max: maxBytes,
+            maxMB: 10,
+            percentage: percentage,
+            status: status  // 'ok' | 'warning' | 'critical'
+        };
+    } catch (error) {
+        console.warn(`[Gateway] ⚠️ 無法計算存儲使用:`, error);
+        return {
+            used: 0,
+            usedMB: '0.00',
+            max: 10 * 1024 * 1024,
+            maxMB: 10,
+            percentage: 0,
+            status: 'ok'
+        };
+    }
+}
+
+/**
  * 從快取中獲取 AI 推理結果
  * @param {string} userInput - 用戶的文本輸入
  * @returns {object|null} - 快取的結果或 null（如果未找到）
@@ -139,7 +202,10 @@ function putInCache(userInput, result) {
         recentCacheList.pop();
     }
     
-    // 4. ✨ 異步保存到 local（不阻塞）
+    // 4. ✨ 強制快取大小限制（超過 MAX_CACHE_SIZE 時淘汰）
+    enforceCacheSizeLimit();
+    
+    // 5. ✨ 異步保存到 local（不阻塞）
     saveCacheToLocal().catch(err => 
         console.warn(`[Gateway] 快取 local 保存失敗（非致命）:`, err)
     );
@@ -160,15 +226,19 @@ function getLatestCacheEntries(n = 2) {
 
 /**
  * 獲取快取統計信息（用於監控面板和調試）
- * @returns {object} - {totalCacheSize, recentCount, recentEntries, etc.}
+ * @returns {Promise<object>} - {totalCacheSize, recentCount, recentEntries, storage, etc.}
  */
-function getCacheStats() {
+async function getCacheStats() {
+    const storage = await getStorageUsage();
+    
     return {
         totalCacheSize: aiResultCache.size,
+        maxCacheSize: MAX_CACHE_SIZE,
         recentCount: recentCacheList.length,
         maxRecent: MAX_RECENT_CACHE,
         recentEntries: recentCacheList,  // 返回全部最近記錄
-        oldestEntry: recentCacheList[recentCacheList.length - 1] || null
+        oldestEntry: recentCacheList[recentCacheList.length - 1] || null,
+        storage: storage  // 新增存儲信息
     };
 }
 
@@ -372,7 +442,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     console.warn("[Gateway] ⚠️ 初始化超時，但仍返回當前緩存");
                 }
                 
-                const stats = getCacheStats();
+                const stats = await getCacheStats();
                 console.log("[Gateway] 快取統計:", stats);
                 sendResponse({ status: "success", data: stats });
             })();

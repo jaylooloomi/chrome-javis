@@ -74,6 +74,44 @@ function updateStats(stats) {
     totalCacheCount.textContent = stats.totalCacheSize || 0;
     recentCount.textContent = stats.recentCount || 0;
     maxCache.textContent = stats.maxRecent || 10;
+    
+    // 更新存儲使用信息
+    if (stats.storage) {
+        const storage = stats.storage;
+        const progressBar = document.getElementById('storageProgressBar');
+        const progressText = document.getElementById('storageText');
+        const usedSizeEl = document.getElementById('usedSize');
+        const percentageEl = document.getElementById('percentage');
+        
+        if (progressBar) {
+            progressBar.style.width = storage.percentage + '%';
+            // 根據狀態改變顏色
+            progressBar.className = 'progress-bar';
+            if (storage.status === 'warning') {
+                progressBar.classList.add('warning');
+            } else if (storage.status === 'critical') {
+                progressBar.classList.add('critical');
+            }
+        }
+        
+        if (progressText) {
+            progressText.textContent = storage.percentage + '%';
+        }
+        
+        if (usedSizeEl) {
+            usedSizeEl.textContent = storage.usedMB + ' MB';
+        }
+        
+        if (percentageEl) {
+            percentageEl.textContent = storage.percentage + '%';
+            percentageEl.className = 'percentage-badge';
+            if (storage.status === 'warning') {
+                percentageEl.classList.add('warning');
+            } else if (storage.status === 'critical') {
+                percentageEl.classList.add('critical');
+            }
+        }
+    }
 }
 
 /**

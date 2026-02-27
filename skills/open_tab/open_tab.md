@@ -9,7 +9,7 @@ when_to_use:
      Chinese: "打開", "開啟", "訪問", "查看", "進入"
   
   2. **WEBSITE NAME** (必須有網站名稱):
-     Supported: Google, YouTube, YouTube Music, GitHub, Twitter, LinkedIn, Facebook, Instagram, Yahoo, Gmail, Gemini, Nebula, Setting
+     Supported: Google, YouTube, YouTube Music, GitHub, Twitter, LinkedIn, Facebook, Instagram, Yahoo, Gmail, Gemini, Nebula, Google Keep, Setting
   
   ** DECISION RULE: Check for BOTH verb + website name **
   - If sentence has ACTION VERB + website name → CALL open_tab
@@ -27,6 +27,7 @@ examples_CORRECT_verb_plus_website:
   - "open Gmail" ✓ (verb: open, site: Gmail)
   - "open Gemini" ✓ (verb: open, site: Gemini)
   - "open Nebula" ✓ (verb: open, site: Nebula)
+  - "open Google Keep" ✓ (verb: open, site: Google Keep)
 
 examples_INCORRECT_missing_verb:
   - "Google" ✗ (no verb, just website name)
@@ -59,6 +60,7 @@ intent_examples:
     - "visit Yahoo" → Call open_tab with Yahoo
     - "open Gemini" → Call open_tab with Gemini
     - "open Gmail" → Call open_tab with Gmail
+    - "open Google Keep" → Call open_tab with Google Keep
     - "open Nebula" → Call open_tab with Nebula
     - "open setting" → Call open_tab with Setting
 

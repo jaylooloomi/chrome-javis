@@ -17,6 +17,8 @@ export async function open_tab(args) {
             // 特殊網站轉換
             if (url.toLowerCase() === 'gmail') {
                 url = 'https://mail.google.com';
+            } else if (url.toLowerCase() === 'google keep') {
+                url = 'https://keep.google.com';
             } else if (url.toLowerCase() === 'setting') {
                 url = 'chrome-extension://llffkjaidimijhnkgpacebjkiicccaaj/options.html';
             } else if (!url.includes('.')) {
