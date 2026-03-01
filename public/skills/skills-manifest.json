@@ -1,0 +1,58 @@
+{
+  "skills": [
+    {
+      "name": "close_all_pages",
+      "folder": "close_all_pages",
+      "description": "關閉所有頁面 - 關閉所有瀏覽器標籤頁（除了新開的 Google 標籤頁）。僅在用戶明確要求關閉所有/全部頁面時使用。Close all browser tabs except a new Google tab. Only use this skill when the user explicitly asks to close all/every page.",
+      "runInPageContext": false
+    },
+    {
+      "name": "close_this_page",
+      "folder": "close_this_page",
+      "description": "關閉當前頁面 - 關閉用戶當前所在的瀏覽器標籤頁。僅在用戶明確要求關閉/退出當前頁面時使用。Close the current browser tab when user explicitly asks to close/exit the current page.",
+      "runInPageContext": false
+    },
+    {
+      "name": "download_all_images",
+      "folder": "download_all_images",
+      "description": "下載所有圖片 - 下載頁面上的所有圖片。僅在用戶明確要求下載/保存頁面圖片時使用。Download all images on the current page. Only use this skill when the user explicitly asks to download/save/export images from the current page.",
+      "runInPageContext": false
+    },
+    {
+      "name": "open_tab",
+      "folder": "open_tab",
+      "description": "Open a website URL in a new browser tab. Only use this skill when the user explicitly asks to open/visit a specific website.",
+      "runInPageContext": false
+    },
+    {
+      "name": "page_control",
+      "folder": "page_control",
+      "description": "Navigate to the previous or next page using browser history. Only use this skill when the user explicitly asks to go back/forward or navigate to the previous/next page.",
+      "runInPageContext": true
+    },
+    {
+      "name": "page_scroll",
+      "folder": "page_scroll",
+      "description": "Scroll the current page up, down, or jump to top/bottom. Only use this skill when the user explicitly asks to scroll/page up/down/to top/to bottom.",
+      "runInPageContext": true
+    },
+    {
+      "name": "screen_control",
+      "folder": "screen_control",
+      "description": "Control browser window fullscreen mode using Chrome Extension API. Toggles the browser window between fullscreen and normal state. Only use this skill when the user explicitly asks to enter or exit fullscreen mode.",
+      "runInPageContext": false
+    },
+    {
+      "name": "summarize_this_page",
+      "folder": "summarize_this_page",
+      "description": "分析頁面、重點整理 - 使用 Google Gemini 進行頁面內容摘要與分析。僅在用戶明確要求分析/摘要/發送當前頁面至 Gemini 時使用。Summarize and analyze the current page content using Google Gemini. Only use this skill when the user explicitly asks to analyze/summarize/send the current page to Gemini.",
+      "runInPageContext": false
+    },
+    {
+      "name": "who_are_you",
+      "folder": "who_are_you",
+      "description": "Introduce yourself and provide information about the OmniAssistant. Use this skill when the user asks about your identity, capabilities, or what you can do.",
+      "runInPageContext": false
+    }
+  ]
+}

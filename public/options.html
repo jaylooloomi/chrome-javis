@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>設定 - OmniAssistant</title>
+    <style>
+      :root {
+        --bg-color: #0f172a;
+        --card-bg: rgba(30, 41, 59, 0.7);
+        --accent-blue: #38bdf8;
+        --accent-purple: #818cf8;
+        --accent-cyan: #06b6d4;
+        --text-main: #f1f5f9;
+        --text-sub: #94a3b8;
+        --border-color: rgba(255, 255, 255, 0.1);
+      }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body { 
+            font-family: 'Inter', 'Microsoft JhengHei', -apple-system, sans-serif; 
+            padding: 0; 
+            background: var(--bg-color);
+            color: var(--text-main);
+        }
+
+        .container { 
+            max-width: 100%;
+            margin: 0;
+            border: none; 
+            border-radius: 0;
+            background: var(--bg-color);
+            box-shadow: none;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+        }
+
+        h1 { 
+            color: var(--text-main); 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            font-size: 24px;
+        }
+
+        /* ===== 頁籤樣式 ===== */
+        .tabs-wrapper {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            flex: 1;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .tab-button {
+            padding: 15px 24px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-sub);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+
+        .tab-button.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+            background: transparent;
+        }
+
+        /* ===== 內容區域 ===== */
+        .content-wrapper {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .tab-content {
+            display: none;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== iframe 樣式 ===== */
+        iframe {
+            border: none;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+        }
+
+        /* ===== 響應式設計 ===== */
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px;
+            }
+
+            .tab-button {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 標題 -->
+        <div class="header">
+            <h1 data-i18n="options.title">⚙️ OmniAssistant 設定</h1>
+        </div>
+
+        <!-- 頁籤導航 -->
+        <div class="tabs-wrapper">
+            <ul class="tabs">
+                <li><button class="tab-button active" data-tab="settings" data-i18n="options.tab.settings">📋 設定選項</button></li>
+                <li><button class="tab-button" data-tab="cache" data-i18n="options.tab.cache">📊 缓存历史</button></li>
+            </ul>
+        </div>
+
+        <!-- 內容區域 -->
+        <div class="content-wrapper">
+            <!-- 設定選項頁籤 - 嵌入 settings.html -->
+            <div id="settings" class="tab-content active">
+                <iframe src="settings.html"></iframe>
+            </div>
+
+            <!-- 缓存历史頁籤 - 嵌入 cache-history.html -->
+            <div id="cache" class="tab-content">
+                <iframe src="cache-history.html"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="options-loader.js"></script>
+    <script src="options.js"></script>
+</body>
+</html>

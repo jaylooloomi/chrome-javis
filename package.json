@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "generate-manifest": "node scripts/generate-manifest.js",
-    "prepare": "husky install && node scripts/generate-manifest.js"
+    "prepare": "husky install && node scripts/generate-manifest.js",
+    "build": "node build-for-chrome.js"
   },
   "keywords": [
     "chrome-extension",
