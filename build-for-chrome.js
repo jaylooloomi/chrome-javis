@@ -45,7 +45,7 @@ const DIRS_TO_COPY = [
 
 // 需要創建但不複製內容的文件夾
 const DIRS_TO_CREATE = [
-    'images',      // 創建空文件夾，圖片不打包
+    
 ];
 
 // ========== 工具函數 ==========

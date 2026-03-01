@@ -7,6 +7,16 @@
 
 console.log("[Gateway] 🚀 Service Worker 已加載");
 
+// ======== 點擊 Extension Icon 時打開 SidePanel ========
+chrome.action.onClicked.addListener(async (tab) => {
+    try {
+        console.log(`[Gateway] 點擊 Extension Icon，打開 SidePanel for tab ${tab.id}`);
+        await chrome.sidePanel.open({ tabId: tab.id });
+    } catch (error) {
+        console.error(`[Gateway] 打開 SidePanel 失敗:`, error);
+    }
+});
+
 // ======== 緩存初始化標誌 ========
 // 確保 get_cache_stats 時初始化已完成
 let cacheInitialized = false;

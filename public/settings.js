@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (micLangSelect) {
         try {
             const result = await chrome.storage.local.get('micLanguage');
-            const language = result.micLanguage || 'zh-TW';
+            const language = result.micLanguage || 'en-US';
             micLangSelect.value = language;
             console.log('[Settings] 麥克風語言設定已載入:', language);
         } catch (error) {
