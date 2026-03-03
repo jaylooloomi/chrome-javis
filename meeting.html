@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Meeting Assistant</title>
+    <style>
+      :root {
+        --bg-color: #0f172a;
+        --card-bg: rgba(30, 41, 59, 0.7);
+        --accent-blue: #38bdf8;
+        --accent-purple: #818cf8;
+        --accent-cyan: #06b6d4;
+        --text-main: #f1f5f9;
+        --text-sub: #94a3b8;
+        --border-color: rgba(255, 255, 255, 0.1);
+      }
+
+        body { 
+            font-family: 'Inter', 'Microsoft JhengHei', -apple-system, sans-serif; 
+            padding: 20px; 
+            max-width: 900px; 
+            margin: 0 auto;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+        }
+        
+        .container { 
+            border: 1px solid var(--border-color); 
+            padding: 20px; 
+            border-radius: 12px; 
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 { 
+            color: var(--text-main); 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 0;
+        }
+        
+        .section { 
+            margin: 20px 0; 
+            padding: 20px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+        }
+        
+        .section h2 {
+            margin-top: 0;
+            color: var(--accent-blue);
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        button { 
+            padding: 10px 16px; 
+            background: var(--accent-blue); 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        button:hover { 
+            background: #0ea5e9;
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        button.recording {
+            background: #ef4444;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        button.success {
+            background: #10b981;
+        }
+        
+        button.success:hover {
+            background: #059669;
+        }
+        
+        button.danger {
+            background: #ef4444;
+        }
+        
+        button.danger:hover {
+            background: #dc2626;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'Inter', 'Microsoft JhengHei', monospace;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+        }
+        
+        textarea:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        
+        /* Section A - Voice & Audio */
+        .section-a .button-group {
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        
+        #textboxA {
+            min-height: 120px;
+            margin-top: 15px;
+        }
+        
+        /* Section B - Prompt */
+        .prompt-input-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        #textboxB {
+            flex: 1;
+            min-height: 60px;
+        }
+        
+        .add-prompt-btn {
+            padding: 10px 12px;
+            min-width: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .prompt-cards-container {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px 0;
+            margin-top: 15px;
+        }
+        
+        .prompt-cards-container::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        .prompt-cards-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+        
+        .prompt-cards-container::-webkit-scrollbar-thumb {
+            background: var(--accent-blue);
+            border-radius: 3px;
+        }
+        
+        .prompt-card {
+            flex-shrink: 0;
+            min-width: 200px;
+            padding: 12px 15px;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(129, 140, 248, 0.1));
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            word-wrap: break-word;
+            font-size: 14px;
+            color: var(--text-main);
+            position: relative;
+        }
+        
+        .prompt-card:hover {
+            border-color: var(--accent-blue);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(129, 140, 248, 0.2));
+        }
+        
+        .prompt-card.active {
+            border-color: var(--accent-blue);
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(129, 140, 248, 0.3));
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+        }
+        
+        .prompt-card-close {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            color: var(--text-main);
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            padding: 0;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1;
+            display: none;
+        }
+        
+        .prompt-card:hover .prompt-card-close {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Section C - Output */
+        #textboxC {
+            min-height: 200px;
+            background: rgba(0, 0, 0, 0.5);
+            color: var(--accent-cyan);
+        }
+        
+        .status { 
+            margin-top: 15px; 
+            padding: 12px; 
+            border-radius: 6px;
+            font-weight: 600;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .status.success { 
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981; 
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            display: block;
+        }
+        
+        .status.error { 
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444; 
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            display: block;
+        }
+        
+        .status.pending { 
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8; 
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            display: block;
+        }
+        
+        .info-text {
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-top: 8px;
+        }
+        
+        .label {
+            display: block;
+            margin: 10px 0 8px 0;
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Meeting Assistant</h1>
+        
+        <!-- Section A: Voice & Audio Input -->
+        <div class="section section-a">
+            <h2>🎤 語音和音檔輸入</h2>
+            
+            <div class="button-group">
+                <button id="recordBtn" onclick="toggleRecording()">
+                    🎙️ 開始錄音
+                </button>
+                <button onclick="document.getElementById('audioFile').click()">
+                    📁 導入音檔 (.mp3, .m4a)
+                </button>
+            </div>
+            
+            <input type="file" id="audioFile" accept=".mp3,.m4a,audio/mpeg,audio/mp4" onchange="handleAudioImport(event)">
+            
+            <p class="info-text">💡 即時語音錄音或導入本地音檔，自動轉錄為文字</p>
+            
+            <label class="label">錄音文字內容</label>
+            <textarea id="textboxA" placeholder="語音轉錄的文字將在此顯示..." readonly></textarea>
+        </div>
+        
+        <!-- Section B: Prompt Selection -->
+        <div class="section section-b">
+            <h2>✨ 自訂提示語 (Prompt)</h2>
+            
+            <label class="label">輸入新的提示語</label>
+            <div class="prompt-input-group">
+                <textarea id="textboxB" placeholder="例：請將會議內容整理成要點..."></textarea>
+                <button class="add-prompt-btn" onclick="addPromptCard()" title="新增提示語">+</button>
+            </div>
+            
+            <p class="info-text">💡 點擊下方小卡選擇提示語，點擊小卡右上角可刪除</p>
+            <label class="label">常用提示語</label>
+            <div class="prompt-cards-container" id="promptCardsContainer">
+                <div class="prompt-card active" data-prompt="幫我做會議記錄整理" onclick="selectPromptCard(this)">
+                    幫我做會議記錄整理
+                    <button class="prompt-card-close" onclick="deletePromptCard(event)">×</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section C: Meeting Notes Output -->
+        <div class="section section-c">
+            <h2>📝 會議記錄生成</h2>
+            
+            <div class="button-group">
+                <button class="success" onclick="generateMeetingNotes()" id="generateBtn">
+                    🤖 生成會議記錄
+                </button>
+                <button class="success" onclick="downloadMarkdown()" id="downloadBtn">
+                    ⬇️ 下載 .md 檔案
+                </button>
+            </div>
+            
+            <label class="label">會議記錄結果</label>
+            <textarea id="textboxC" placeholder="會議記錄將在此顯示..." readonly></textarea>
+            
+            <div id="statusMessage" class="status"></div>
+        </div>
+    </div>
+
+    <script src="meeting.js"></script>
+</body>
+</html>
