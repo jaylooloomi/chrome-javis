@@ -312,6 +312,51 @@
             color: var(--text-main);
             font-size: 14px;
         }
+        
+        select {
+            padding: 10px 16px;
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Inter', 'Microsoft JhengHei', -apple-system, sans-serif;
+        }
+        
+        select:hover {
+            border-color: var(--accent-blue);
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+        }
+        
+        select option {
+            background: var(--bg-color);
+            color: var(--text-main);
+        }
+        
+        .output-group {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            align-items: center;
+        }
+        
+        #submitOutputBtn {
+            padding: 10px 16px;
+            min-width: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            gap: 6px;
+        }
     </style>
 </head>
 <body>
@@ -374,6 +419,19 @@
             
             <label class="label">會議記錄結果</label>
             <textarea id="textboxC" placeholder="會議記錄將在此顯示..." readonly></textarea>
+            
+            <label class="label">輸出到</label>
+            <div class="output-group">
+                <select id="outputTargetSelect">
+                    <option value="googledoc">輸出到 Google Docs</option>
+                    <option value="googlekeep">輸出到 Google Keep</option>
+                    <option value="gemini">輸出到 Gemini</option>
+                    <option value="notebooklm">輸出到 NotebookLM</option>
+                </select>
+                <button class="success" id="submitOutputBtn" title="送出到選定的應用程式">
+                    📤
+                </button>
+            </div>
             
             <div id="statusMessage" class="status"></div>
         </div>

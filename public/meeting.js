@@ -326,6 +326,98 @@ function downloadMarkdown() {
     showStatus(`已下載: ${fileName}`, 'success');
 }
 
+// Submit Output to Different Platforms
+function submitOutput() {
+    const textboxC = document.getElementById('textboxC');
+    const content = textboxC.value.trim();
+    const targetSelect = document.getElementById('outputTargetSelect');
+    const selectedTarget = targetSelect.value;
+    
+    if (!content) {
+        showStatus('沒有會議記錄可輸出', 'error');
+        return;
+    }
+    
+    showStatus('正在輸出...', 'pending');
+    
+    const outputTitle = `會議記錄 - ${new Date().toLocaleDateString('zh-TW')}`;
+    
+    switch (selectedTarget) {
+        case 'googledoc':
+            sendToGoogleDoc(outputTitle, content);
+            break;
+        case 'googlekeep':
+            sendToGoogleKeep(outputTitle, content);
+            break;
+        case 'gemini':
+            sendToGemini(outputTitle, content);
+            break;
+        case 'notebooklm':
+            sendToNotebookLM(outputTitle, content);
+            break;
+        default:
+            showStatus('不支援的輸出目標', 'error');
+    }
+}
+
+// Send to Google Docs
+function sendToGoogleDoc(title, content) {
+    // This will be implemented with Google Docs API
+    // For now, showing placeholder message
+    console.log('[Meeting] 準備輸出到 Google Docs:', { title, content });
+    
+    // TODO: Implement Google Docs API integration
+    // You'll need to:
+    // 1. Set up Google OAuth credentials
+    // 2. Use Google Docs API to create/update document
+    // 3. Handle authentication flows
+    
+    showStatus('Google Docs 整合開發中，敬請期待 📄', 'success');
+}
+
+// Send to Google Keep
+function sendToGoogleKeep(title, content) {
+    // This will be implemented with Google Keep API or Save to Pocket/Note
+    // For now, showing placeholder message
+    console.log('[Meeting] 準備輸出到 Google Keep:', { title, content });
+    
+    // TODO: Implement Google Keep integration
+    // Note: Google Keep doesn't have official API
+    // Alternative: Use web scraping or direct API if available
+    
+    showStatus('Google Keep 整合開發中，敬請期待 📌', 'success');
+}
+
+// Send to Gemini (Google AI Platform)
+function sendToGemini(title, content) {
+    // This will be implemented with Gemini API
+    // For now, showing placeholder message
+    console.log('[Meeting] 準備傳送到 Gemini:', { title, content });
+    
+    // TODO: Implement Gemini API integration
+    // You'll need to:
+    // 1. Get Gemini API key
+    // 2. Send content to Gemini for processing/summarization
+    // 3. Handle API responses
+    
+    showStatus('Gemini 整合開發中，敬請期待 ✨', 'success');
+}
+
+// Send to NotebookLM
+function sendToNotebookLM(title, content) {
+    // This will be implemented with NotebookLM API or web integration
+    // For now, showing placeholder message
+    console.log('[Meeting] 準備輸出到 NotebookLM:', { title, content });
+    
+    // TODO: Implement NotebookLM integration
+    // You'll need to:
+    // 1. Set up NotebookLM credentials
+    // 2. Create notebook and upload content
+    // 3. Handle synchronization
+    
+    showStatus('NotebookLM 整合開發中，敬請期待 📚', 'success');
+}
+
 // Show Status Message
 function showStatus(message, type) {
     const statusEl = document.getElementById('statusMessage');
@@ -384,6 +476,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     } else {
         console.error('[Meeting] 未找到 downloadBtn 按鈕');
+    }
+    
+    // 綁定「送出」按鈕
+    const submitOutputBtn = document.getElementById('submitOutputBtn');
+    if (submitOutputBtn) {
+        console.log('[Meeting] 找到 submitOutputBtn 按鈕');
+        submitOutputBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('[Meeting] submitOutputBtn 被點擊');
+            submitOutput();
+        });
+    } else {
+        console.error('[Meeting] 未找到 submitOutputBtn 按鈕');
     }
     
     console.log('[Meeting] 頁面初始化完成');
