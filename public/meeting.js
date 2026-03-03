@@ -122,8 +122,16 @@ async function processAudioTranscription(audioDataUrl, fileName) {
 
 // Add Prompt Card
 function addPromptCard() {
+    console.log('[Meeting] addPromptCard 被觸發');
+    
     const textboxB = document.getElementById('textboxB');
+    if (!textboxB) {
+        console.error('[Meeting] 找不到 textboxB 元素');
+        return;
+    }
+    
     const promptText = textboxB.value.trim();
+    console.log('[Meeting] 提示語內容:', promptText);
     
     if (!promptText) {
         showStatus('請輸入提示語', 'error');
@@ -132,6 +140,11 @@ function addPromptCard() {
     
     // Check if prompt already exists
     const container = document.getElementById('promptCardsContainer');
+    if (!container) {
+        console.error('[Meeting] 找不到 promptCardsContainer 元素');
+        return;
+    }
+    
     const existingCards = Array.from(container.querySelectorAll('.prompt-card'));
     if (existingCards.some(card => card.dataset.prompt === promptText)) {
         showStatus('此提示語已存在', 'error');
@@ -143,14 +156,19 @@ function addPromptCard() {
     card.className = 'prompt-card';
     card.dataset.prompt = promptText;
     card.onclick = function() { selectPromptCard(this); };
-    card.innerHTML = `
-        ${promptText}
-        <button class="prompt-card-close" onclick="deletePromptCard(event)">×</button>
-    `;
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'prompt-card-close';
+    closeBtn.textContent = '×';
+    closeBtn.onclick = function(event) { deletePromptCard(event); };
+    
+    card.textContent = promptText;
+    card.appendChild(closeBtn);
     
     container.appendChild(card);
     textboxB.value = '';
     
+    console.log('[Meeting] 新卡片已新增，當前卡片數量:', container.querySelectorAll('.prompt-card').length);
     showStatus('提示語已新增', 'success');
 }
 
