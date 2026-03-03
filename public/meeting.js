@@ -164,6 +164,7 @@ function addPromptCard() {
     textSpan.textContent = promptText;
     textSpan.style.flex = '1';
     textSpan.style.paddingRight = '25px';
+    textSpan.style.display = 'block';
     textSpan.style.wordWrap = 'break-word';
     textSpan.style.wordBreak = 'break-word';
     textSpan.style.whiteSpace = 'normal';

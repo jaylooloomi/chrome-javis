@@ -200,6 +200,7 @@
         .prompt-card {
             flex-shrink: 0;
             min-width: 200px;
+            max-width: 300px;
             padding: 12px 15px;
             background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(129, 140, 248, 0.1));
             border: 1px solid var(--border-color);
@@ -213,8 +214,9 @@
             color: var(--text-main);
             position: relative;
             display: flex;
-            align-items: center;
-            overflow: hidden;
+            align-items: flex-start;
+            overflow: visible;
+            min-height: 40px;
         }
         
         .prompt-card:hover {
