@@ -122,6 +122,27 @@ async function processAudioTranscription(audioDataUrl, fileName) {
     }
 }
 
+// Bind Event Listeners to Prompt Cards
+function bindPromptCardEvents() {
+    const cards = document.querySelectorAll('.prompt-card');
+    cards.forEach(card => {
+        const closeBtn = card.querySelector('.prompt-card-close');
+        
+        // 綁定卡片點擊事件
+        card.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('prompt-card-close')) {
+                selectPromptCard(this);
+            }
+        });
+        
+        // 綁定關閉按鈕事件
+        if (closeBtn) {
+            closeBtn.addEventListener('click', deletePromptCard);
+        }
+    });
+    console.log(`[Meeting] 已為 ${cards.length} 張卡片綁定事件監聽器`);
+}
+
 // Add Prompt Card
 function addPromptCard() {
     console.log('[Meeting] addPromptCard 被觸發');
@@ -157,7 +178,6 @@ function addPromptCard() {
     const card = document.createElement('div');
     card.className = 'prompt-card';
     card.dataset.prompt = promptText;
-    card.onclick = function() { selectPromptCard(this); };
     
     // 創建文字容器
     const textSpan = document.createElement('span');
@@ -175,7 +195,6 @@ function addPromptCard() {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'prompt-card-close';
     closeBtn.textContent = '×';
-    closeBtn.onclick = function(event) { deletePromptCard(event); };
     card.appendChild(closeBtn);
     
     container.appendChild(card);
@@ -183,6 +202,10 @@ function addPromptCard() {
     
     console.log('[Meeting] 新卡片已新增，當前卡片數量:', container.querySelectorAll('.prompt-card').length);
     showStatus('提示語已新增', 'success');
+    
+    // 為新卡片綁定事件監聽器
+    bindPromptCardEvents();
+}
 }
 
 // Select Prompt Card
@@ -491,6 +514,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.error('[Meeting] 未找到 submitOutputBtn 按鈕');
     }
+    
+    // 為所有卡片綁定事件監聽器（包括預設卡片）
+    bindPromptCardEvents();
     
     console.log('[Meeting] 頁面初始化完成');
 });
