@@ -2,61 +2,73 @@
   "zh-TW": {
     "options.title": "⚙️ OmniAssistant 設定",
     "options.tab.settings": "📋 設定選項",
-    "options.tab.cache": "📊 缓存历史"
+    "options.tab.cache": "📊 缓存历史",
+    "options.tab.meeting": "📝 會議記錄"
   },
   "zh-CN": {
     "options.title": "⚙️ OmniAssistant 设定",
     "options.tab.settings": "📋 设定选项",
-    "options.tab.cache": "📊 缓存历史"
+    "options.tab.cache": "📊 缓存历史",
+    "options.tab.meeting": "📝 会议记录"
   },
   "en-US": {
     "options.title": "⚙️ OmniAssistant Settings",
     "options.tab.settings": "📋 Settings Options",
-    "options.tab.cache": "📊 Cache History"
+    "options.tab.cache": "📊 Cache History",
+    "options.tab.meeting": "📝 Meeting Notes"
   },
   "en-GB": {
     "options.title": "⚙️ OmniAssistant Settings",
     "options.tab.settings": "📋 Settings Options",
-    "options.tab.cache": "📊 Cache History"
+    "options.tab.cache": "📊 Cache History",
+    "options.tab.meeting": "📝 Meeting Notes"
   },
   "ja-JP": {
     "options.title": "⚙️ OmniAssistant 設定",
     "options.tab.settings": "📋 設定オプション",
-    "options.tab.cache": "📊 キャッシュ履歴"
+    "options.tab.cache": "📊 キャッシュ履歴",
+    "options.tab.meeting": "📝 会議記録"
   },
   "ko-KR": {
     "options.title": "⚙️ OmniAssistant 설정",
     "options.tab.settings": "📋 설정 옵션",
-    "options.tab.cache": "📊 캐시 기록"
+    "options.tab.cache": "📊 캐시 기록",
+    "options.tab.meeting": "📝 회의 기록"
   },
   "fr-FR": {
     "options.title": "⚙️ OmniAssistant Paramètres",
     "options.tab.settings": "📋 Options de paramètres",
-    "options.tab.cache": "📊 Historique des caches"
+    "options.tab.cache": "📊 Historique des caches",
+    "options.tab.meeting": "📝 Notes de réunion"
   },
   "de-DE": {
     "options.title": "⚙️ OmniAssistant Einstellungen",
     "options.tab.settings": "📋 Einstellungsoptionen",
-    "options.tab.cache": "📊 Cache-Verlauf"
+    "options.tab.cache": "📊 Cache-Verlauf",
+    "options.tab.meeting": "📝 Besprechungsnotizen"
   },
   "es-ES": {
     "options.title": "⚙️ OmniAssistant Configuración",
     "options.tab.settings": "📋 Opciones de configuración",
-    "options.tab.cache": "📊 Historial de caché"
+    "options.tab.cache": "📊 Historial de caché",
+    "options.tab.meeting": "📝 Notas de reunión"
   },
   "it-IT": {
     "options.title": "⚙️ OmniAssistant Impostazioni",
     "options.tab.settings": "📋 Opzioni di configurazione",
-    "options.tab.cache": "📊 Cronologia cache"
+    "options.tab.cache": "📊 Cronologia cache",
+    "options.tab.meeting": "📝 Note riunione"
   },
   "pt-BR": {
     "options.title": "⚙️ OmniAssistant Configurações",
     "options.tab.settings": "📋 Opções de configuração",
-    "options.tab.cache": "📊 Histórico de cache"
+    "options.tab.cache": "📊 Histórico de cache",
+    "options.tab.meeting": "📝 Notas de reunião"
   },
   "ru-RU": {
     "options.title": "⚙️ OmniAssistant Параметры",
     "options.tab.settings": "📋 Параметры настроек",
-    "options.tab.cache": "📊 История кэша"
+    "options.tab.cache": "📊 История кэша",
+    "options.tab.meeting": "📝 Заметки о собрании"
   }
 }
