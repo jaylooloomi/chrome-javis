@@ -83,6 +83,25 @@
         button.recording {
             background: #ef4444;
             animation: pulse 1.5s infinite;
+            position: relative;
+        }
+        
+        button.recording::before {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #dc2626;
+            border-radius: 50%;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            animation: blink 0.8s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 49%, 100% { opacity: 1; }
+            50%, 99% { opacity: 0.3; }
         }
         
         @keyframes pulse {
@@ -361,7 +380,7 @@
             <h2>🎤 語音和音檔輸入</h2>
             
             <div class="button-group">
-                <button id="recordBtn" onclick="toggleRecording()">
+                <button id="recordBtn">
                     🎙️ 開始錄音
                 </button>
                 <button onclick="document.getElementById('audioFile').click()">

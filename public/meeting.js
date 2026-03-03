@@ -23,8 +23,10 @@ function initSpeechRecognition() {
     
     recognition.onstart = () => {
         isRecording = true;
-        document.getElementById('recordBtn').textContent = '🎙️ 停止錄音';
+        recordedTranscript = document.getElementById('textboxA').value || '';
+        document.getElementById('recordBtn').textContent = '⏹️ 停止錄音';
         document.getElementById('recordBtn').classList.add('recording');
+        console.log('[Meeting] 開始錄音，初始轉錄:', recordedTranscript);
     };
     
     recognition.onresult = (event) => {
@@ -35,12 +37,16 @@ function initSpeechRecognition() {
             
             if (event.results[i].isFinal) {
                 recordedTranscript += transcript + ' ';
+                console.log('[Meeting] 最終轉錄:', transcript);
             } else {
                 interimTranscript += transcript;
             }
         }
         
-        document.getElementById('textboxA').value = recordedTranscript + interimTranscript;
+        // 實時更新 textboxA
+        const textboxA = document.getElementById('textboxA');
+        textboxA.value = recordedTranscript + interimTranscript;
+        console.log('[Meeting] 更新 textboxA:', textboxA.value);
     };
     
     recognition.onerror = (event) => {
@@ -51,6 +57,9 @@ function initSpeechRecognition() {
         isRecording = false;
         document.getElementById('recordBtn').textContent = '🎙️ 開始錄音';
         document.getElementById('recordBtn').classList.remove('recording');
+        // 最後一次確保 textboxA 包含完整的錄音結果
+        document.getElementById('textboxA').value = recordedTranscript.trim();
+        console.log('[Meeting] 錄音結束，最終轉錄:', recordedTranscript.trim());
     };
     
     return true;
@@ -63,10 +72,11 @@ function toggleRecording() {
     }
     
     if (isRecording) {
+        console.log('[Meeting] 停止錄音');
         recognition.stop();
-        recordedTranscript = document.getElementById('textboxA').value;
     } else {
-        recordedTranscript = document.getElementById('textboxA').value;
+        console.log('[Meeting] 開始錄音');
+        recordedTranscript = document.getElementById('textboxA').value || '';
         recognition.start();
     }
 }
@@ -462,6 +472,19 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 初始化語音識別
     initSpeechRecognition();
+    
+    // 綁定 recordBtn 事件
+    const recordBtn = document.getElementById('recordBtn');
+    if (recordBtn) {
+        console.log('[Meeting] 找到 recordBtn 按鈕');
+        recordBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('[Meeting] recordBtn 被點擊');
+            toggleRecording();
+        });
+    } else {
+        console.error('[Meeting] 未找到 recordBtn 按鈕');
+    }
     
     // 綁定 "+" 按鈕事件
     const addPromptBtn = document.getElementById('addPromptBtnId');
