@@ -159,12 +159,19 @@ function addPromptCard() {
     card.dataset.prompt = promptText;
     card.onclick = function() { selectPromptCard(this); };
     
+    // 創建文字容器
+    const textSpan = document.createElement('span');
+    textSpan.textContent = promptText;
+    textSpan.style.flex = '1';
+    textSpan.style.paddingRight = '25px';
+    textSpan.style.overflow = 'hidden';
+    card.appendChild(textSpan);
+    
+    // 創建關閉按鈕
     const closeBtn = document.createElement('button');
     closeBtn.className = 'prompt-card-close';
     closeBtn.textContent = '×';
     closeBtn.onclick = function(event) { deletePromptCard(event); };
-    
-    card.textContent = promptText;
     card.appendChild(closeBtn);
     
     container.appendChild(card);
