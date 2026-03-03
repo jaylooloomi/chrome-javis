@@ -1,5 +1,7 @@
 // Meeting Assistant - JavaScript Module
 
+console.log('[Meeting.js] 文件已加載');
+
 // Speech Recognition Setup
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition;
@@ -336,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSpeechRecognition();
     
     // 綁定 "+" 按鈕事件
-    const addPromptBtn = document.querySelector('.add-prompt-btn');
+    const addPromptBtn = document.getElementById('addPromptBtnId');
     if (addPromptBtn) {
         console.log('[Meeting] 找到 add-prompt-btn 按鈕');
         addPromptBtn.addEventListener('click', (e) => {
@@ -346,6 +348,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     } else {
         console.error('[Meeting] 未找到 add-prompt-btn 按鈕');
+    }
+    
+    // 綁定「生成會議記錄」按鈕
+    const generateBtn = document.getElementById('generateBtnId');
+    if (generateBtn) {
+        console.log('[Meeting] 找到 generateBtn 按鈕');
+        generateBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('[Meeting] generateBtn 被點擊');
+            generateMeetingNotes();
+        });
+    } else {
+        console.error('[Meeting] 未找到 generateBtn 按鈕');
+    }
+    
+    // 綁定「下載 .md 檔案」按鈕
+    const downloadBtn = document.getElementById('downloadBtnId');
+    if (downloadBtn) {
+        console.log('[Meeting] 找到 downloadBtn 按鈕');
+        downloadBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('[Meeting] downloadBtn 被點擊');
+            downloadMarkdown();
+        });
+    } else {
+        console.error('[Meeting] 未找到 downloadBtn 按鈕');
     }
     
     console.log('[Meeting] 頁面初始化完成');

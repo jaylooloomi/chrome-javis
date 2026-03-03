@@ -331,14 +331,14 @@
             <label class="label">輸入新的提示語</label>
             <div class="prompt-input-group">
                 <textarea id="textboxB" placeholder="例：請將會議內容整理成要點..."></textarea>
-                <button class="add-prompt-btn" onclick="addPromptCard()" title="新增提示語">+</button>
+                <button id="addPromptBtnId" class="add-prompt-btn" title="新增提示語">+</button>
             </div>
             
             <p class="info-text">💡 點擊下方小卡選擇提示語，點擊小卡右上角可刪除</p>
             <label class="label">常用提示語</label>
             <div class="prompt-cards-container" id="promptCardsContainer">
-                <div class="prompt-card active" data-prompt="幫我做會議記錄整理" onclick="selectPromptCard(this)">
-                    幫我做會議記錄整理
+                <div class="prompt-card active" data-prompt="幫我產生會議記錄,並且生成整理報告" onclick="selectPromptCard(this)">
+                    幫我產生會議記錄,並且生成整理報告
                     <button class="prompt-card-close" onclick="deletePromptCard(event)">×</button>
                 </div>
             </div>
@@ -349,10 +349,10 @@
             <h2>📝 會議記錄生成</h2>
             
             <div class="button-group">
-                <button class="success" onclick="generateMeetingNotes()" id="generateBtn">
+                <button class="success" id="generateBtnId">
                     🤖 生成會議記錄
                 </button>
-                <button class="success" onclick="downloadMarkdown()" id="downloadBtn">
+                <button class="success" id="downloadBtnId">
                     ⬇️ 下載 .md 檔案
                 </button>
             </div>
