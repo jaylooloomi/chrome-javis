@@ -261,6 +261,10 @@ async function generateMeetingNotes() {
     const textboxB = document.getElementById('textboxB');
     const textboxC = document.getElementById('textboxC');
     
+    console.log('[Meeting] generateMeetingNotes 被調用');
+    console.log('[Meeting] textboxA:', textboxA?.value);
+    console.log('[Meeting] textboxB:', textboxB?.value);
+    
     if (!textboxA.value.trim()) {
         showStatus('請先輸入或錄製會議內容', 'error');
         return;
@@ -272,7 +276,12 @@ async function generateMeetingNotes() {
     }
     
     // Disable button and show loading status
-    const generateBtn = document.getElementById('generateBtn');
+    const generateBtn = document.getElementById('generateBtnId');
+    if (!generateBtn) {
+        console.error('[Meeting] 找不到 generateBtnId 按鈕');
+        return;
+    }
+    
     const originalText = generateBtn.textContent;
     generateBtn.disabled = true;
     generateBtn.textContent = '⏳ 正在生成中...';
@@ -288,15 +297,18 @@ ${textboxA.value}
 處理指示:
 ${textboxB.value}
 
-請根據上述會議內容和指示生成結構化的會議記錄。
-`;
+請根據上述會議內容和指示生成結構化的會議記錄。`;
+        
+        console.log('[Meeting] 準備呼叫 AI，prompt 長度:', combinedPrompt.length);
         
         // Call AI model API (requires backend integration)
         const result = await callAIModel(combinedPrompt);
         
+        console.log('[Meeting] AI 返回結果，長度:', result.length);
         textboxC.value = result;
         showStatus('會議記錄生成成功！', 'success');
     } catch (error) {
+        console.error('[Meeting] 生成失敗:', error);
         showStatus(`生成失敗: ${error.message}`, 'error');
         textboxC.value = '生成失敗，請檢查配置並重試。';
     } finally {
