@@ -330,5 +330,23 @@ function showStatus(message, type) {
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('[Meeting] DOMContentLoaded 觸發');
+    
+    // 初始化語音識別
     initSpeechRecognition();
+    
+    // 綁定 "+" 按鈕事件
+    const addPromptBtn = document.querySelector('.add-prompt-btn');
+    if (addPromptBtn) {
+        console.log('[Meeting] 找到 add-prompt-btn 按鈕');
+        addPromptBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('[Meeting] add-prompt-btn 被點擊');
+            addPromptCard();
+        });
+    } else {
+        console.error('[Meeting] 未找到 add-prompt-btn 按鈕');
+    }
+    
+    console.log('[Meeting] 頁面初始化完成');
 });
