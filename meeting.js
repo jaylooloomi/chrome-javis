@@ -164,7 +164,10 @@ function addPromptCard() {
     textSpan.textContent = promptText;
     textSpan.style.flex = '1';
     textSpan.style.paddingRight = '25px';
-    textSpan.style.overflow = 'hidden';
+    textSpan.style.wordWrap = 'break-word';
+    textSpan.style.wordBreak = 'break-word';
+    textSpan.style.whiteSpace = 'normal';
+    textSpan.style.overflow = 'visible';
     card.appendChild(textSpan);
     
     // 創建關閉按鈕
