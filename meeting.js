@@ -765,6 +765,41 @@ function updateI18nTitles() {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[Meeting] DOMContentLoaded 觸發');
     
+    // 🔑 API 配置容器展開/收縮功能
+    const apiConfigCollapseBtn = document.getElementById('apiConfigCollapseBtn');
+    const apiConfigContent = document.getElementById('apiConfigContent');
+    
+    if (apiConfigCollapseBtn && apiConfigContent) {
+        console.log('[Meeting] 找到 API 配置容器的展開/收縮按鈕');
+        
+        apiConfigCollapseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('[Meeting] 用戶點擊 API 配置展開/收縮按鈕');
+            
+            // 切換展開/收縮狀態
+            apiConfigContent.classList.toggle('collapsed');
+            apiConfigCollapseBtn.classList.toggle('collapsed');
+            
+            // 記錄狀態到 localStorage
+            const isCollapsed = apiConfigContent.classList.contains('collapsed');
+            localStorage.setItem('apiConfigCollapsed', isCollapsed ? 'true' : 'false');
+            console.log('[Meeting] API 配置容器已' + (isCollapsed ? '收縮' : '展開'));
+        });
+        
+        // 從 localStorage 恢復之前的狀態
+        const wasCollapsed = localStorage.getItem('apiConfigCollapsed') === 'true';
+        if (wasCollapsed) {
+            apiConfigContent.classList.add('collapsed');
+            apiConfigCollapseBtn.classList.add('collapsed');
+            console.log('[Meeting] 恢復之前的 API 配置容器收縮狀態');
+        }
+    } else {
+        console.error('[Meeting] 未找到 API 配置容器的展開/收縮相關元素', {
+            btn: !!apiConfigCollapseBtn,
+            content: !!apiConfigContent
+        });
+    }
+    
     // 初始化語音識別
     initSpeechRecognition();
     

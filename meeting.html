@@ -38,8 +38,49 @@
             color: var(--text-main); 
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 10px;
             margin-top: 0;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .collapse-btn {
+            background: transparent;
+            border: none;
+            color: var(--accent-blue);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease, color 0.3s ease;
+            line-height: 1;
+        }
+        
+        .collapse-btn:hover {
+            color: var(--accent-cyan);
+        }
+        
+        .collapse-btn.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        .api-config-content {
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 1;
+        }
+        
+        .api-config-content.collapsed {
+            max-height: 0;
+            opacity: 0;
         }
         
         .section { 
@@ -556,8 +597,12 @@
 <body>
     <!-- Google Generative AI Configuration Container -->
     <div class="container">
-        <h1>🔑 API 配置</h1>
+        <h1>
+            <span class="header-left">🔑 API 配置</span>
+            <button class="collapse-btn" id="apiConfigCollapseBtn" title="展開/收縮">▼</button>
+        </h1>
         <!-- Google Generative AI Configuration -->
+        <div class="api-config-content" id="apiConfigContent">
         <div class="section">
             <h2 data-i18n="config.googleApiSection">🔑 Google Generative AI (Gemini)</h2>
             
@@ -615,8 +660,7 @@
                     計劃支持: Azure Speech-to-Text, OpenAI Whisper, AssemblyAI
                 </p>
             </div>
-        </div>
-    </div>
+        </div>        </div>    </div>
     
     <!-- Meeting Assistant Container -->
     <div class="container">
