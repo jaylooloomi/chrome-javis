@@ -86,14 +86,34 @@ async function handleAudioImport(event) {
     const file = event.target.files[0];
     if (!file) return;
     
-    // Check file type
-    const validTypes = ['audio/mpeg', 'audio/mp4', 'audio/mp4a-latm'];
-    if (!validTypes.includes(file.type)) {
-        showStatus('不支援的文件格式，請使用 .mp3 或 .m4a 格式', 'error');
+    // Check file type - Support multiple audio formats
+    const validTypes = [
+        'audio/mpeg', 'audio/mp3',           // MP3
+        'audio/wav', 'audio/wave',           // WAV
+        'audio/aac', 'audio/aacp',           // AAC
+        'audio/flac',                        // FLAC
+        'audio/mp4', 'audio/mp4a-latm',      // M4A
+        'audio/ogg', 'audio/vorbis'          // OGG
+    ];
+    
+    const validExtensions = ['.mp3', '.wav', '.aac', '.flac', '.m4a', '.ogg'];
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    
+    if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
+        showStatus(`不支援的文件格式，請使用以下格式之一: ${validExtensions.join(', ')}`, 'error');
+        return;
+    }
+    
+    // Validate file size (max 25MB for Gemini API)
+    const maxSize = 25 * 1024 * 1024;
+    if (file.size > maxSize) {
+        showStatus('文件過大，請選擇小於 25MB 的音檔', 'error');
+        event.target.value = '';
         return;
     }
     
     showStatus('正在處理音檔...', 'pending');
+    console.log('[Meeting] 音檔導入開始:', { name: file.name, type: file.type, size: file.size });
     
     try {
         // Read file as data URL
@@ -101,33 +121,92 @@ async function handleAudioImport(event) {
         fileReader.onload = async (e) => {
             const audioDataUrl = e.target.result;
             
-            // Here you would typically send to a backend service for transcription
-            // For now, we'll use a placeholder message
-            await processAudioTranscription(audioDataUrl, file.name);
+            // Get selected transcription language (default: Traditional Chinese)
+            const language = document.getElementById('transcriptionLanguage').value || 'zh-TW';
+            console.log('[Meeting] 轉錄語言:', language);
+            
+            // Process audio transcription with Generative AI
+            await processAudioTranscription(audioDataUrl, file, language);
         };
-        fileReader.readAsDataURL(file);
+        fileReader.readAsArrayBuffer(file);
     } catch (error) {
         showStatus(`音檔處理失敗: ${error.message}`, 'error');
+        console.error('[Meeting] 音檔處理錯誤:', error);
     }
     
     // Clear file input
     event.target.value = '';
 }
 
-// Process Audio Transcription (Placeholder for backend integration)
-async function processAudioTranscription(audioDataUrl, fileName) {
-    // This is a placeholder function
-    // In production, you would send the audio to a backend service
-    // that uses a speech-to-text API (Google Cloud Speech-to-Text, Azure, AssemblyAI, etc.)
-    
+// Process Audio Transcription with Google Generative AI
+async function processAudioTranscription(audioArrayBuffer, file, language) {
     try {
-        // Placeholder: Simulate processing
-        const currentText = document.getElementById('textboxA').value;
-        document.getElementById('textboxA').value = currentText + 
-            `\n\n[來自 ${fileName} 的轉錄]\n（需要配置後端音檔轉錄服務）`;
+        // Convert ArrayBuffer to base64
+        const bytes = new Uint8Array(audioArrayBuffer);
+        let binaryString = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+            binaryString += String.fromCharCode(bytes[i]);
+        }
+        const base64Audio = btoa(binaryString);
         
-        showStatus('音檔已導入，請配置轉錄服務以完整轉錄內容', 'pending');
+        // Determine MIME type from file extension
+        const extension = file.name.split('.').pop().toLowerCase();
+        let mimeType = 'audio/mpeg';
+        switch (extension) {
+            case 'wav':
+                mimeType = 'audio/wav';
+                break;
+            case 'aac':
+                mimeType = 'audio/aac';
+                break;
+            case 'flac':
+                mimeType = 'audio/flac';
+                break;
+            case 'ogg':
+                mimeType = 'audio/ogg';
+                break;
+            case 'm4a':
+                mimeType = 'audio/mp4';
+                break;
+        }
+        
+        console.log('[Meeting] 準備調用 Gemini API，MIME 類型:', mimeType);
+        console.log('[Meeting] 音檔大小:', audioArrayBuffer.byteLength, 'bytes');
+        
+        // Send to service worker for API processing
+        chrome.runtime.sendMessage({
+            action: 'transcribeAudio',
+            audioData: base64Audio,
+            mimeType: mimeType,
+            fileName: file.name,
+            language: language
+        }, (response) => {
+            if (chrome.runtime.lastError) {
+                console.error('[Meeting] Service Worker 錯誤:', chrome.runtime.lastError);
+                showStatus(`遠程錯誤: ${chrome.runtime.lastError.message}`, 'error');
+                return;
+            }
+            
+            if (response.success) {
+                console.log('[Meeting] 轉錄成功，文字長度:', response.transcript.length);
+                
+                // Append transcription to textboxA
+                const textboxA = document.getElementById('textboxA');
+                const timestamp = new Date().toLocaleString('zh-TW');
+                const appendText = `\n\n[音檔: ${file.name}] (${timestamp})\n${response.transcript}`;
+                textboxA.value = (textboxA.value.trim() ? textboxA.value.trim() + appendText : response.transcript);
+                
+                showStatus(`✅ 音檔已成功轉錄: ${file.name}`, 'success');
+            } else {
+                console.error('[Meeting] 轉錄失敗:', response.error);
+                showStatus(`轉錄失敗: ${response.error}`, 'error');
+            }
+        });
+        
+        showStatus('⏳ 正在使用 Google Gemini 進行轉錄...', 'pending');
+        
     } catch (error) {
+        console.error('[Meeting] 音檔轉錄錯誤:', error);
         showStatus(`轉錄失敗: ${error.message}`, 'error');
     }
 }

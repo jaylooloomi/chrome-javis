@@ -602,6 +602,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true;
         }
         
+        // ====== 音頻轉錄 API (Google Generative AI) ======
+        if (request.action === "transcribeAudio") {
+            console.log("[Gateway] 📻 處理音頻轉錄請求");
+            handleAudioTranscription(request, sendResponse);
+            return true;
+        }
+        
         console.warn("[Gateway] 未知的訊息類型:", request.action);
         sendResponse({ status: "error", text: "未知訊息類型" });
         return true;
@@ -628,6 +635,111 @@ async function handleChromeApiCall(request, sendResponse) {
         console.error(`[Gateway] API 調用失敗:`, error);
         sendResponse({ status: "error", error: error.message });
     }
+}
+
+// 處理音頻轉錄請求 (Google Generative AI)
+async function handleAudioTranscription(request, sendResponse) {
+    try {
+        console.log("[Gateway] 🎤 開始處理音頻轉錄");
+        
+        const { audioData, mimeType, fileName, language } = request;
+        const apiKey = await getGoogleApiKey();
+        
+        if (!apiKey) {
+            console.error("[Gateway] ❌ 未配置 Google API Key");
+            sendResponse({ 
+                success: false, 
+                error: "未配置 Google API Key，請在設置中添加" 
+            });
+            return;
+        }
+        
+        console.log("[Gateway] 📤 調用 Google Generative AI API");
+        console.log("[Gateway] 音檔格式:", mimeType);
+        console.log("[Gateway] 轉錄語言:", language || 'zh-TW');
+        
+        // 構建 API 請求
+        const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+        
+        const requestBody = {
+            contents: [{
+                parts: [
+                    {
+                        text: `請幫我對這段音訊製作詳細的逐字稿，並標註說話者（如果有多人）與時間點。語言使用：${
+                            language === 'zh-CN' ? '簡體中文' :
+                            language === 'en-US' ? 'English (US)' :
+                            language === 'en-GB' ? 'English (UK)' :
+                            language === 'ja-JP' ? '日本語' :
+                            language === 'ko-KR' ? '한국어' :
+                            '繁體中文'
+                        }`
+                    },
+                    {
+                        inlineData: {
+                            mimeType: mimeType,
+                            data: audioData
+                        }
+                    }
+                ]
+            }]
+        };
+        
+        const response = await fetch(`${apiUrl}?key=${apiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(
+                `Google API 錯誤 (${response.status}): ${
+                    errorData.error?.message || response.statusText
+                }`
+            );
+        }
+        
+        const result = await response.json();
+        
+        // 提取轉錄結果
+        if (result.candidates && result.candidates[0] && result.candidates[0].content) {
+            const transcript = result.candidates[0].content.parts
+                .map(part => part.text)
+                .join('\n');
+            
+            console.log("[Gateway] ✅ 轉錄成功，長度:", transcript.length);
+            sendResponse({ 
+                success: true, 
+                transcript: transcript 
+            });
+        } else {
+            throw new Error("API 返回格式不正確");
+        }
+        
+    } catch (error) {
+        console.error("[Gateway] ❌ 轉錄失敗:", error);
+        sendResponse({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+}
+
+// 獲取 Google API Key (從 Chrome storage 或 config)
+async function getGoogleApiKey() {
+    return new Promise((resolve) => {
+        chrome.storage.local.get(['googleApiKey'], (result) => {
+            if (result.googleApiKey) {
+                console.log("[Gateway] ✅ 找到 Google API Key");
+                resolve(result.googleApiKey);
+            } else {
+                console.warn("[Gateway] ⚠️ 未找到 Google API Key");
+                resolve(null);
+            }
+        });
+    });
 }
 
 // --- 階段 B & C：接收指令、思考與調度 ---
