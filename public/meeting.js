@@ -699,6 +699,12 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('[Meeting] audioImportBtn 被點擊，觸發文件選擇框');
             audioFileInput.click();
         });
+        
+        // 綁定文件輸入 change 事件（CSP 合規）
+        audioFileInput.addEventListener('change', (e) => {
+            console.log('[Meeting] audioFile change 事件觸發');
+            handleAudioImport(e);
+        });
     } else {
         console.error('[Meeting] 未找到 audioImportBtn 或 audioFile', {
             audioImportBtn: !!audioImportBtn,
