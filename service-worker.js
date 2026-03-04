@@ -806,7 +806,23 @@ async function handleGenerateMeetingNotes(request, sendResponse) {
             sendResponse({ 
                 success: true, 
                 result: generatedText
-            });\n}\n\n// 獲取 Google API Key (從 Chrome storage 或 config)
+            });
+        } else {
+            throw new Error("API 返回格式不正確");
+        }
+        
+    } catch (error) {
+        console.error("[Gateway] ❌ 生成失敗:", error);
+        sendResponse({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+    
+    console.log("[Gateway] ========== 會議記錄生成流程完成 ==========");
+}
+
+// 獲取 Google API Key (從 Chrome storage 或 config)
 async function getGoogleApiKey() {
     return new Promise((resolve) => {
         chrome.storage.local.get(['googleApiKey'], (result) => {
