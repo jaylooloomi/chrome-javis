@@ -53,22 +53,30 @@
             background: transparent;
             border: none;
             color: var(--accent-blue);
-            font-size: 24px;
+            font-size: 20px;
             cursor: pointer;
             padding: 0 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.3s ease, color 0.3s ease;
+            transition: color 0.3s ease;
             line-height: 1;
+            width: 32px;
+            height: 32px;
+        }
+        
+        .collapse-btn::before {
+            content: '▼';
+            transition: transform 0.3s ease;
         }
         
         .collapse-btn:hover {
             color: var(--accent-cyan);
         }
         
-        .collapse-btn.collapsed {
-            transform: rotate(-90deg);
+        .collapse-btn.collapsed::before {
+            content: '▶';
+            transform: scale(0.9);
         }
         
         .api-config-content {
@@ -768,12 +776,12 @@
     <div class="container">
         <h1>
             <span class="header-left">🔑 API 配置</span>
-            <button class="collapse-btn collapsed" id="apiConfigCollapseBtn" title="展開/收縮">▼</button>
+            <button class="collapse-btn collapsed" id="apiConfigCollapseBtn" title="展開/收縮"></button>
         </h1>
         <!-- Google Generative AI Configuration -->
         <div class="api-config-content collapsed" id="apiConfigContent">
         <div class="section">
-            <h2>🔑 Google Generative AI (Gemini)</h2>
+            <h2>🔑 Google Gemini</h2>
             
             <div id="googleStatus" class="api-status disconnected">
                 <span class="status-indicator"></span>
