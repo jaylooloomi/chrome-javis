@@ -609,6 +609,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return true;
         }
         
+        if (request.action === "generateMeetingNotes") {
+            console.log("[Gateway] 📝 處理會議記錄生成請求");
+            handleGenerateMeetingNotes(request, sendResponse);
+            return true;
+        }
+        
         console.warn("[Gateway] 未知的訊息類型:", request.action);
         sendResponse({ status: "error", text: "未知訊息類型" });
         return true;
@@ -725,6 +731,95 @@ async function handleAudioTranscription(request, sendResponse) {
             error: error.message 
         });
     }
+}
+
+// Handle Generate Meeting Notes with Gemini API
+async function handleGenerateMeetingNotes(request, sendResponse) {
+    console.log("[Gateway] ========== 開始生成會議記錄 ==========");
+    
+    try {
+        const { prompt, textboxA, textboxB } = request;
+        
+        console.log("[Gateway] 📊 請求參數:", {
+            promptLength: prompt?.length || 0,
+            textboxALength: textboxA?.length || 0,
+            textboxBLength: textboxB?.length || 0
+        });
+        
+        if (!prompt || !textboxA || !textboxB) {
+            throw new Error("缺少必要的提示詞或內容");
+        }
+        
+        // Get API key
+        const apiKey = await getGoogleApiKey();
+        if (!apiKey) {
+            throw new Error("未找到 Google API Key，請先配置");
+        }
+        
+        console.log("[Gateway] 🔑 API Key 已取得，長度:", apiKey.length);
+        
+        const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+        
+        console.log("[Gateway] 📤 準備發送至 Gemini API");
+        console.log("[Gateway] API URL:", apiUrl);
+        
+        const requestBody = {
+            contents: [{
+                parts: [{
+                    text: prompt
+                }]
+            }]
+        };
+        
+        console.log("[Gateway] 📋 請求體大小:", JSON.stringify(requestBody).length, "bytes");
+        
+        const response = await fetch(`${apiUrl}?key=${apiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        console.log("[Gateway] 📨 收到 API 回應，狀態碼:", response.status);
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(
+                `Google API 錯誤 (${response.status}): ${
+                    errorData.error?.message || response.statusText
+                }`
+            );
+        }
+        
+        const result = await response.json();
+        
+        // 提取生成結果
+        if (result.candidates && result.candidates[0] && result.candidates[0].content) {
+            const generatedText = result.candidates[0].content.parts
+                .map(part => part.text)
+                .join('\n');
+            
+            console.log("[Gateway] ✅ 生成成功，長度:", generatedText.length);
+            console.log("[Gateway] ✅ 內容前 100 字:", generatedText.substring(0, 100));
+            
+            sendResponse({ 
+                success: true, 
+                result: generatedText
+n            });
+        } else {
+            throw new Error("API 返回格式不正確");
+        }
+        
+    } catch (error) {
+        console.error("[Gateway] ❌ 生成失敗:", error);
+        sendResponse({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+    
+    console.log("[Gateway] ========== 會議記錄生成流程完成 ==========");
 }
 
 // 獲取 Google API Key (從 Chrome storage 或 config)

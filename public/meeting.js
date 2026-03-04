@@ -453,8 +453,8 @@ async function generateMeetingNotes() {
     const textboxC = document.getElementById('textboxC');
     
     console.log('[Meeting] generateMeetingNotes 被調用');
-    console.log('[Meeting] textboxA:', textboxA?.value);
-    console.log('[Meeting] textboxB:', textboxB?.value);
+    console.log('[Meeting] textboxA 長度:', textboxA?.value?.length);
+    console.log('[Meeting] textboxB 長度:', textboxB?.value?.length);
     
     if (!textboxA.value.trim()) {
         showStatus('請先輸入或錄製會議內容', 'error');
@@ -481,61 +481,67 @@ async function generateMeetingNotes() {
     
     try {
         // Prepare the combined prompt
-        const combinedPrompt = `
-會議內容:
-${textboxA.value}
-
-處理指示:
-${textboxB.value}
-
-請根據上述會議內容和指示生成結構化的會議記錄。`;
+        const combinedPrompt = `會議內容:\n${textboxA.value}\n\n處理指示:\n${textboxB.value}\n\n請根據上述會議內容和指示生成結構化的會議記錄。`;
         
-        console.log('[Meeting] 準備呼叫 AI，prompt 長度:', combinedPrompt.length);
+        console.log('[Meeting] 準備發送 Service Worker 請求');
+        console.log('[Meeting] 組合 Prompt 長度:', combinedPrompt.length);
+        console.log('[Meeting] textboxA 內容長度:', textboxA.value.length);
+        console.log('[Meeting] textboxB 內容長度:', textboxB.value.length);
         
-        // Call AI model API (requires backend integration)
-        const result = await callAIModel(combinedPrompt);
+        // Send to Service Worker for API processing
+        chrome.runtime.sendMessage({
+            action: 'generateMeetingNotes',
+            prompt: combinedPrompt,
+            textboxA: textboxA.value,
+            textboxB: textboxB.value
+        }, (response) => {
+            console.log('[Meeting] 收到 Service Worker 回應:', response);
+            
+            if (chrome.runtime.lastError) {
+                console.error('[Meeting] Service Worker 錯誤:', chrome.runtime.lastError);
+                showStatus(`遠程錯誤: ${chrome.runtime.lastError.message}`, 'error');
+                generateBtn.disabled = false;
+                generateBtn.textContent = originalText;
+                return;
+            }
+            
+            if (!response) {
+                console.error('[Meeting] 收到空回應');
+                showStatus('無回應，請檢查 API 配置', 'error');
+                generateBtn.disabled = false;
+                generateBtn.textContent = originalText;
+                return;
+            }
+            
+            if (response.success) {
+                console.log('[Meeting] 生成成功，內容長度:', response.result?.length || 0);
+                console.log('[Meeting] 生成內容前 100 字:', response.result?.substring(0, 100) || '');
+                
+                // Output to textboxC
+                console.log('[Meeting] 更新 textboxC...');
+                textboxC.value = response.result;
+                textboxC.scrollTop = 0;  // Scroll to top
+                
+                console.log('[Meeting] textboxC 已更新，內容長度:', textboxC.value.length);
+                showStatus('✅ 會議記錄生成成功！', 'success');
+            } else {
+                console.error('[Meeting] 生成失敗:', response.error);
+                showStatus(`生成失敗: ${response.error}`, 'error');
+                textboxC.value = '生成失敗，請檢查配置並重試。';
+            }
+            
+            generateBtn.disabled = false;
+            generateBtn.textContent = originalText;
+            console.log('[Meeting] ========== 會議記錄生成流程完成 ==========');
+        });
         
-        console.log('[Meeting] AI 返回結果，長度:', result.length);
-        textboxC.value = result;
-        showStatus('會議記錄生成成功！', 'success');
     } catch (error) {
-        console.error('[Meeting] 生成失敗:', error);
+        console.error('[Meeting] 生成異常:', error);
         showStatus(`生成失敗: ${error.message}`, 'error');
         textboxC.value = '生成失敗，請檢查配置並重試。';
-    } finally {
         generateBtn.disabled = false;
         generateBtn.textContent = originalText;
     }
-}
-
-// Call AI Model (Placeholder for backend integration)
-async function callAIModel(prompt) {
-    // This is a placeholder function
-    // In production, you would call your backend API
-    // which integrates with an AI model (GPT, Claude, etc.)
-    
-    // Example placeholder response:
-    return `# 會議記錄
-
-## 會議日期
-${new Date().toLocaleDateString('zh-TW')}
-
-## 議題摘要
-[AI 生成的摘要將顯示在此]
-
-## 主要要點
-1. [待定] - 需要配置 AI API
-2. [待定] - 連接到 OpenAI/Claude/其他服務  
-3. [待定] - 完成後端集成
-
-## 行動項目
-- [ ] [待定]
-
-## 下次會議
-[待定]
-
----
-*此記錄由 Meeting Assistant 自動生成。需要配置 AI 模型 API 以完整功能運作。*`;
 }
 
 // Download as Markdown
