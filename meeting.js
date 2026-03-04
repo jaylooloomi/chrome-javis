@@ -83,8 +83,20 @@ function toggleRecording() {
 
 // Handle Audio File Import
 async function handleAudioImport(event) {
+    console.log('[Audio Import] ========== 開始導入音檔 ==========');
+    
     const file = event.target.files[0];
-    if (!file) return;
+    if (!file) {
+        console.warn('[Audio Import] ❌ 未選擇文件');
+        return;
+    }
+    
+    console.log('[Audio Import] 📄 檔案信息:', {
+        name: file.name,
+        type: file.type,
+        size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+        lastModified: new Date(file.lastModified).toLocaleString('zh-TW')
+    });
     
     // Check file type - Support multiple audio formats
     const validTypes = [
@@ -99,55 +111,109 @@ async function handleAudioImport(event) {
     const validExtensions = ['.mp3', '.wav', '.aac', '.flac', '.m4a', '.ogg'];
     const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
     
+    console.log('[Audio Import] 🔍 驗證文件格式:', {
+        fileType: file.type,
+        fileExtension: fileExtension,
+        isValidType: validTypes.includes(file.type),
+        isValidExtension: validExtensions.includes(fileExtension)
+    });
+    
     if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
+        console.error('[Audio Import] ❌ 不支持的格式:', fileExtension);
         showStatus(`不支援的文件格式，請使用以下格式之一: ${validExtensions.join(', ')}`, 'error');
+        event.target.value = '';
         return;
     }
     
+    console.log('[Audio Import] ✅ 文件格式驗證通過');
+    
     // Validate file size (max 25MB for Gemini API)
     const maxSize = 25 * 1024 * 1024;
+    console.log('[Audio Import] 📏 檢查文件大小:', {
+        fileSize: file.size,
+        maxSize: maxSize,
+        isValid: file.size <= maxSize
+    });
+    
     if (file.size > maxSize) {
+        console.error('[Audio Import] ❌ 文件過大:', `${(file.size / 1024 / 1024).toFixed(2)} MB > ${(maxSize / 1024 / 1024).toFixed(2)} MB`);
         showStatus('文件過大，請選擇小於 25MB 的音檔', 'error');
         event.target.value = '';
         return;
     }
     
+    console.log('[Audio Import] ✅ 文件大小驗證通過');
+    
     showStatus('正在處理音檔...', 'pending');
-    console.log('[Meeting] 音檔導入開始:', { name: file.name, type: file.type, size: file.size });
+    console.log('[Audio Import] ⏳ 開始讀取文件為 ArrayBuffer...');
     
     try {
         // Read file as data URL
         const fileReader = new FileReader();
         fileReader.onload = async (e) => {
+            console.log('[Audio Import] ✅ ArrayBuffer 讀取完成:', {
+                byteLength: e.target.result.byteLength,
+                readyState: fileReader.readyState
+            });
+            
             const audioDataUrl = e.target.result;
             
             // Get selected transcription language (default: Traditional Chinese)
             const language = document.getElementById('transcriptionLanguage').value || 'zh-TW';
-            console.log('[Meeting] 轉錄語言:', language);
+            console.log('[Audio Import] 🌐 轉錄語言:', language);
             
             // Process audio transcription with Generative AI
+            console.log('[Audio Import] 📤 呼叫 processAudioTranscription()...');
             await processAudioTranscription(audioDataUrl, file, language);
         };
+        
+        fileReader.onerror = (error) => {
+            console.error('[Audio Import] ❌ FileReader 錯誤:', error);
+            showStatus(`文件讀取失敗: ${error.message}`, 'error');
+        };
+        
+        fileReader.onprogress = (event) => {
+            if (event.lengthComputable) {
+                const percentComplete = (event.loaded / event.total) * 100;
+                console.log(`[Audio Import] 📥 讀取進度: ${percentComplete.toFixed(2)}%`);
+            }
+        };
+        
         fileReader.readAsArrayBuffer(file);
     } catch (error) {
+        console.error('[Audio Import] ❌ 音檔處理異常:', error);
         showStatus(`音檔處理失敗: ${error.message}`, 'error');
-        console.error('[Meeting] 音檔處理錯誤:', error);
     }
     
     // Clear file input
     event.target.value = '';
+    console.log('[Audio Import] 🔄 清除文件輸入框');
 }
 
 // Process Audio Transcription with Google Generative AI
 async function processAudioTranscription(audioArrayBuffer, file, language) {
+    console.log('[Audio Transcription] ========== 開始處理音檔轉錄 ==========');
+    
     try {
+        console.log('[Audio Transcription] 📊 輸入參數:', {
+            arrayBufferByteLength: audioArrayBuffer.byteLength,
+            fileName: file.name,
+            language: language
+        });
+        
         // Convert ArrayBuffer to base64
+        console.log('[Audio Transcription] 🔄 正在轉換為 Base64...');
         const bytes = new Uint8Array(audioArrayBuffer);
         let binaryString = '';
         for (let i = 0; i < bytes.byteLength; i++) {
             binaryString += String.fromCharCode(bytes[i]);
         }
         const base64Audio = btoa(binaryString);
+        console.log('[Audio Transcription] ✅ Base64 轉換完成:', {
+            base64Length: base64Audio.length,
+            originalByteLength: audioArrayBuffer.byteLength,
+            compressionRatio: (base64Audio.length / audioArrayBuffer.byteLength).toFixed(2)
+        });
         
         // Determine MIME type from file extension
         const extension = file.name.split('.').pop().toLowerCase();
@@ -170,8 +236,18 @@ async function processAudioTranscription(audioArrayBuffer, file, language) {
                 break;
         }
         
-        console.log('[Meeting] 準備調用 Gemini API，MIME 類型:', mimeType);
-        console.log('[Meeting] 音檔大小:', audioArrayBuffer.byteLength, 'bytes');
+        console.log('[Audio Transcription] 🎯 檔案類型映射:', {
+            extension: extension,
+            detectedMimeType: mimeType
+        });
+        
+        console.log('[Audio Transcription] 📤 準備發送至 Service Worker:', {
+            action: 'transcribeAudio',
+            audioDataLength: base64Audio.length,
+            mimeType: mimeType,
+            fileName: file.name,
+            language: language
+        });
         
         // Send to service worker for API processing
         chrome.runtime.sendMessage({
@@ -181,32 +257,68 @@ async function processAudioTranscription(audioArrayBuffer, file, language) {
             fileName: file.name,
             language: language
         }, (response) => {
+            console.log('[Audio Transcription] 📨 收到 Service Worker 回應:', response);
+            
             if (chrome.runtime.lastError) {
-                console.error('[Meeting] Service Worker 錯誤:', chrome.runtime.lastError);
+                console.error('[Audio Transcription] ❌ Chrome 運行時錯誤:', chrome.runtime.lastError);
                 showStatus(`遠程錯誤: ${chrome.runtime.lastError.message}`, 'error');
                 return;
             }
             
+            if (!response) {
+                console.error('[Audio Transcription] ❌ 收到空回應');
+                showStatus('無回應，請檢查 API 配置', 'error');
+                return;
+            }
+            
             if (response.success) {
-                console.log('[Meeting] 轉錄成功，文字長度:', response.transcript.length);
+                console.log('[Audio Transcription] ✅ 轉錄成功:', {
+                    transcriptLength: response.transcript?.length || 0,
+                    content: response.transcript?.substring(0, 100) + '...'
+                });
                 
                 // Append transcription to textboxA
                 const textboxA = document.getElementById('textboxA');
+                if (!textboxA) {
+                    console.error('[Audio Transcription] ❌ 找不到 textboxA 元素');
+                    showStatus('畫面錯誤：找不到輸入框', 'error');
+                    return;
+                }
+                
                 const timestamp = new Date().toLocaleString('zh-TW');
                 const appendText = `\n\n[音檔: ${file.name}] (${timestamp})\n${response.transcript}`;
-                textboxA.value = (textboxA.value.trim() ? textboxA.value.trim() + appendText : response.transcript);
+                const newValue = textboxA.value.trim() ? textboxA.value.trim() + appendText : response.transcript;
                 
+                console.log('[Audio Transcription] 📝 更新 textboxA:', {
+                    previousLength: textboxA.value.length,
+                    appendLength: appendText.length,
+                    newLength: newValue.length
+                });
+                
+                textboxA.value = newValue;
+                textboxA.scrollTop = textboxA.scrollHeight;  // Scroll to bottom
+                
+                console.log('[Audio Transcription] ✅ textboxA 已成功更新');
                 showStatus(`✅ 音檔已成功轉錄: ${file.name}`, 'success');
             } else {
-                console.error('[Meeting] 轉錄失敗:', response.error);
+                console.error('[Audio Transcription] ❌ 轉錄失敗:', {
+                    error: response.error,
+                    errorMessage: response.errorMessage
+                });
                 showStatus(`轉錄失敗: ${response.error}`, 'error');
             }
+            
+            console.log('[Audio Transcription] ========== 轉錄流程完成 ==========');
         });
         
         showStatus('⏳ 正在使用 Google Gemini 進行轉錄...', 'pending');
         
     } catch (error) {
-        console.error('[Meeting] 音檔轉錄錯誤:', error);
+        console.error('[Audio Transcription] ❌ 轉錄異常:', {
+            errorName: error.name,
+            errorMessage: error.message,
+            stack: error.stack
+        });
         showStatus(`轉錄失敗: ${error.message}`, 'error');
     }
 }
