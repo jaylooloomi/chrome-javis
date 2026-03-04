@@ -3,7 +3,8 @@
     "options.title": "⚙️ OmniAssistant 設定",
     "options.tab.settings": "📋 設定選項",
     "options.tab.cache": "📊 缓存历史",
-    "options.tab.meeting": "📝 會議記錄"
+    "options.tab.meeting": "📝 會議記錄",
+    "options.tab.api": "🔑 API 配置"
   },
   "zh-CN": {
     "options.title": "⚙️ OmniAssistant 设定",

@@ -4,7 +4,52 @@ console.log('[API Config] 頁面已加載');
 
 // Load saved API key on page load
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('[API Config] DOMContentLoaded 事件觸發');
     loadSavedApiConfig();
+    
+    // 綁定按鈕事件監聽器
+    const getApiKeyBtn = document.getElementById('getApiKeyBtn');
+    const saveConfigBtn = document.getElementById('saveConfigBtn');
+    const testConnectionBtn = document.getElementById('testConnectionBtn');
+    const openConsoleBtn = document.getElementById('openConsoleBtn');
+    
+    console.log('[API Config] 按鈕元素檢查:');
+    console.log('  - getApiKeyBtn:', !!getApiKeyBtn);
+    console.log('  - saveConfigBtn:', !!saveConfigBtn);
+    console.log('  - testConnectionBtn:', !!testConnectionBtn);
+    console.log('  - openConsoleBtn:', !!openConsoleBtn);
+    
+    if (getApiKeyBtn) {
+        getApiKeyBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('[API Config] 用戶點擊獲取 API Key 按鈕');
+            openGoogleApiUrl();
+        });
+    }
+    
+    if (saveConfigBtn) {
+        saveConfigBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('[API Config] 用戶點擊保存配置按鈕');
+            saveGoogleApiConfig();
+        });
+    }
+    
+    if (testConnectionBtn) {
+        testConnectionBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('[API Config] 用戶點擊連接測試按鈕');
+            testGoogleApiConnection();
+        });
+    }
+    
+    if (openConsoleBtn) {
+        openConsoleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('[API Config] 用戶點擊打開 Google Console 按鈕');
+            openGoogleConsole();
+        });
+    }
 });
 
 // Load saved API configuration from Chrome storage

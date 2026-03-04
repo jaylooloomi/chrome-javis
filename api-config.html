@@ -241,7 +241,7 @@
                 <label for="googleApiKey">Google API Key</label>
                 <input type="password" id="googleApiKey" placeholder="輸入您的 Google Generative AI API Key">
                 <div class="help-text">
-                    🔗 <button class="link-button" onclick="openGoogleApiUrl()">點擊獲取 API Key</button>
+                    🔗 <button id="getApiKeyBtn" class="link-button">點擊獲取 API Key</button>
                     <br>
                     用於音遙轉錄和 AI 生成等功能。您的 API Key 將安全地存儲在本機，不會上傳到任何服務器。
                 </div>
@@ -260,8 +260,8 @@
             </div>
 
             <div class="button-group">
-                <button class="btn-primary" onclick="saveGoogleApiConfig()">💾 保存配置</button>
-                <button class="btn-secondary" onclick="testGoogleApiConnection()">🧪 連接測試</button>
+                <button id="saveConfigBtn" class="btn-primary">💾 保存配置</button>
+                <button id="testConnectionBtn" class="btn-secondary">🧪 連接測試</button>
             </div>
 
             <div class="warning-box">
@@ -270,7 +270,7 @@
                     <li>絕不要將您的 API Key 分享給任何人</li>
                     <li>API Key 僅存儲在您的本機，不會上傳到任何服務器</li>
                     <li>建議為日常使用設置 API 配額限制</li>
-                    <li>定期檢查您的 <a href="#" onclick="openGoogleConsole();" style="color: var(--accent-blue);">Google Cloud Console</a> 以監控使用情況</li>
+                    <li>定期檢查您的 <button id="openConsoleBtn" class="link-button" style="color: var(--accent-blue);">Google Cloud Console</button> 以監控使用情況</li>
                 </ul>
             </div>
         </div>
