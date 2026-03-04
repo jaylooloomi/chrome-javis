@@ -144,7 +144,7 @@ async function handleAudioImport(event) {
     
     console.log('[Audio Import] ✅ 文件大小驗證通過');
     
-    showStatus('正在處理音檔...', 'pending');
+    showStatus('⏳ 正在處理音檔...', 'loading');
     console.log('[Audio Import] ⏳ 開始讀取文件為 ArrayBuffer...');
     
     try {
@@ -299,19 +299,25 @@ async function processAudioTranscription(audioArrayBuffer, file, language) {
                 textboxA.scrollTop = textboxA.scrollHeight;  // Scroll to bottom
                 
                 console.log('[Audio Transcription] ✅ textboxA 已成功更新');
-                showStatus(`✅ 音檔已成功轉錄: ${file.name}`, 'success');
+                hideStatus();
+                setTimeout(() => {
+                    showStatus(`✅ 音檔已成功轉錄: ${file.name}`, 'success');
+                }, 300);
             } else {
                 console.error('[Audio Transcription] ❌ 轉錄失敗:', {
                     error: response.error,
                     errorMessage: response.errorMessage
                 });
-                showStatus(`轉錄失敗: ${response.error}`, 'error');
+                hideStatus();
+                setTimeout(() => {
+                    showStatus(`轉錄失敗: ${response.error}`, 'error');
+                }, 300);
             }
             
             console.log('[Audio Transcription] ========== 轉錄流程完成 ==========');
         });
         
-        showStatus('⏳ 正在使用 Google Gemini 進行轉錄...', 'pending');
+        showStatus('⏳ 正在使用 Google Gemini 進行轉錄...', 'loading');
         
     } catch (error) {
         console.error('[Audio Transcription] ❌ 轉錄異常:', {
@@ -476,7 +482,7 @@ async function generateMeetingNotes() {
     generateBtn.disabled = true;
     generateBtn.textContent = '⏳ 正在生成中...';
     
-    showStatus('正在使用 AI 生成會議記錄...', 'pending');
+    showStatus('⏳ 正在使用 AI 生成會議記錄...', 'loading');
     
     try {
         // Prepare the combined prompt
@@ -522,10 +528,16 @@ async function generateMeetingNotes() {
                 textboxC.scrollTop = 0;  // Scroll to top
                 
                 console.log('[Meeting] textboxC 已更新，內容長度:', textboxC.value.length);
-                showStatus('✅ 會議記錄生成成功！', 'success');
+                hideStatus();
+                setTimeout(() => {
+                    showStatus('✅ 會議記錄生成成功！', 'success');
+                }, 300);
             } else {
                 console.error('[Meeting] 生成失敗:', response.error);
-                showStatus(`生成失敗: ${response.error}`, 'error');
+                hideStatus();
+                setTimeout(() => {
+                    showStatus(`生成失敗: ${response.error}`, 'error');
+                }, 300);
                 textboxC.value = '生成失敗，請檢查配置並重試。';
             }
             
@@ -661,17 +673,92 @@ function sendToNotebookLM(title, content) {
 }
 
 // Show Status Message
-function showStatus(message, type) {
-    const statusEl = document.getElementById('statusMessage');
-    statusEl.textContent = message;
-    statusEl.className = `status ${type}`;
+function showStatus(message, type = 'info', elementId = 'statusMessage') {
+    const statusEl = document.getElementById(elementId);
+    if (!statusEl) {
+        console.error(`[Meeting] 找不到狀態元素: ${elementId}`);
+        alert(message); // Fallback to alert if element not found
+        return;
+    }
     
-    // Auto-hide success and error messages after 5 seconds
-    if (type !== 'pending') {
+    statusEl.textContent = message;
+    
+    // Handle different CSS class names for different sections
+    if (elementId === 'apiStatusMessage') {
+        // API Config section uses 'status-message' class
+        statusEl.className = `status-message ${type}`;
+        statusEl.style.display = 'block';
+    } else {
+        // Meeting section uses 'status' class
+        statusEl.className = `status ${type}`;
+    }
+    
+    console.log(`[Meeting] 狀態消息已更新 (${elementId}): ${message}，類別: ${statusEl.className}`);
+    
+    // Auto-hide after 5 seconds for success/warning/error if it's API config
+    if (elementId === 'apiStatusMessage' && (type === 'success' || type === 'warning' || type === 'error')) {
+        setTimeout(() => {
+            statusEl.className = 'status-message';
+            statusEl.style.display = 'none';
+            console.log(`[Meeting] API 狀態消息已自動隱藏`);
+        }, 5000);
+    }
+    // Auto-hide for meeting section (but not loading/pending)
+    else if (elementId === 'statusMessage' && type !== 'pending' && type !== 'loading') {
         setTimeout(() => {
             statusEl.className = 'status';
         }, 5000);
     }
+}
+
+function hideStatus() {
+    const statusEl = document.getElementById('statusMessage');
+    statusEl.className = 'status';
+    statusEl.textContent = '';
+}
+
+// Update i18n titles for disabled elements
+function updateI18nTitles() {
+    // Get current language from chrome storage or use default
+    chrome.storage.local.get(['language'], (result) => {
+        const currentLang = result.language || navigator.language || 'zh-TW';
+        
+        // Get all elements with data-i18n-title attribute
+        const elementsWithI18nTitle = document.querySelectorAll('[data-i18n-title]');
+        
+        elementsWithI18nTitle.forEach((element) => {
+            const i18nKey = element.getAttribute('data-i18n-title');
+            
+            // Try to load from i18n if available
+            if (typeof window.i18n !== 'undefined' && window.i18n.t) {
+                const translation = window.i18n.t(i18nKey, currentLang);
+                if (translation && translation !== i18nKey) {
+                    element.setAttribute('title', translation);
+                    console.log(`[i18n] 已更新 title: ${i18nKey} -> ${translation}`);
+                }
+            } else {
+                // Fallback translations if i18n not loaded
+                const fallbackTranslations = {
+                    'output.comingSoon': {
+                        'zh-TW': '🚧 功能尚未開放',
+                        'zh-CN': '🚧 功能尚未开放',
+                        'en-US': '🚧 Feature not yet available',
+                        'en-GB': '🚧 Feature not yet available',
+                        'ja-JP': '🚧 機能は事不済みです',
+                        'ko-KR': '🚧 기능이 아직 제공되지 않습니다',
+                        'fr-FR': '🚧 Fonction pas encore disponible',
+                        'de-DE': '🚧 Funktion noch nicht verfügbar'
+                    }
+                };
+                
+                if (fallbackTranslations[i18nKey] && fallbackTranslations[i18nKey][currentLang]) {
+                    const translation = fallbackTranslations[i18nKey][currentLang];
+                    element.setAttribute('title', translation);
+                    console.log(`[i18n] 已使用 fallback 更新 title: ${i18nKey} -> ${translation}`);
+                }
+            }
+        });
+    });
 }
 
 // Initialize on load
@@ -756,6 +843,53 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('[Meeting] 未找到 downloadBtn 按鈕');
     }
     
+    // 綁定 Google API 配置按鈕事件監聽器
+    const getApiKeyBtn = document.getElementById('getApiKeyBtn');
+    const saveConfigBtn = document.getElementById('saveConfigBtn');
+    const testConnectionBtn = document.getElementById('testConnectionBtn');
+    const openConsoleBtn = document.getElementById('openConsoleBtn');
+    
+    console.log('[Meeting] Google API 按鈕檢查:');
+    console.log('  - getApiKeyBtn:', !!getApiKeyBtn);
+    console.log('  - saveConfigBtn:', !!saveConfigBtn);
+    console.log('  - testConnectionBtn:', !!testConnectionBtn);
+    console.log('  - openConsoleBtn:', !!openConsoleBtn);
+    
+    if (getApiKeyBtn) {
+        getApiKeyBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('[Meeting] 用戶點擊獲取 API Key 按鈕');
+            openGoogleApiUrl();
+        });
+    }
+    
+    if (saveConfigBtn) {
+        saveConfigBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('[Meeting] 用戶點擊保存配置按鈕');
+            saveGoogleApiConfig();
+        });
+    }
+    
+    if (testConnectionBtn) {
+        testConnectionBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('[Meeting] 用戶點擊連接測試按鈕');
+            testGoogleApiConnection();
+        });
+    }
+    
+    if (openConsoleBtn) {
+        openConsoleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('[Meeting] 用戶點擊打開 Google Console 按鈕');
+            openGoogleConsole();
+        });
+    }
+    
+    // 加載保存的 API 配置
+    loadSavedApiConfig();
+    
     // 綁定「送出」按鈕
     const submitOutputBtn = document.getElementById('submitOutputBtn');
     if (submitOutputBtn) {
@@ -772,5 +906,193 @@ document.addEventListener('DOMContentLoaded', () => {
     // 為所有卡片綁定事件監聽器（包括預設卡片）
     bindPromptCardEvents();
     
+    // 初始化 i18n titles
+    updateI18nTitles();
+    
     console.log('[Meeting] 頁面初始化完成');
 });
+
+// ==================== Google API 配置函數 ====================
+
+// Load saved API configuration from Chrome storage
+function loadSavedApiConfig() {
+    console.log('[Meeting] loadSavedApiConfig 被調用');
+    
+    chrome.storage.local.get(['googleApiKey'], (result) => {
+        if (chrome.runtime.lastError) {
+            console.error('[Meeting] Chrome storage 錯誤:', chrome.runtime.lastError);
+            showStatus('無法訪問本機存儲', 'error', 'apiStatusMessage');
+            return;
+        }
+        
+        if (result.googleApiKey) {
+            const apiKeyInput = document.getElementById('googleApiKey');
+            if (apiKeyInput) {
+                apiKeyInput.value = result.googleApiKey;
+                updateGoogleStatus(true);
+                console.log('[Meeting] ✅ 已加載保存的 Google API Key');
+            }
+        } else {
+            updateGoogleStatus(false);
+            console.log('[Meeting] ⚠️ 未找到保存的 Google API Key');
+        }
+    });
+}
+
+// Update Google API status display
+function updateGoogleStatus(isConfigured) {
+    console.log('[Meeting] updateGoogleStatus 被調用，已配置:', isConfigured);
+    
+    const statusEl = document.getElementById('googleStatus');
+    const statusTextEl = document.getElementById('statusText');
+    
+    if (!statusEl || !statusTextEl) {
+        console.error('[Meeting] 找不到狀態顯示元素', {
+            statusEl: !!statusEl,
+            statusTextEl: !!statusTextEl
+        });
+        return;
+    }
+    
+    if (isConfigured) {
+        statusEl.classList.remove('disconnected');
+        statusEl.classList.add('connected');
+        statusTextEl.textContent = '✅ 已配置';
+        console.log('[Meeting] Google API 使用狀態: 已配置');
+    } else {
+        statusEl.classList.remove('connected');
+        statusEl.classList.add('disconnected');
+        statusTextEl.textContent = '❌ 未配置';
+        console.log('[Meeting] Google API 使用狀態: 未配置');
+    }
+}
+
+// Save Google API Key
+function saveGoogleApiConfig() {
+    console.log('[Meeting] saveGoogleApiConfig 被調用');
+    
+    const apiKeyInput = document.getElementById('googleApiKey');
+    if (!apiKeyInput) {
+        console.error('[Meeting] 找不到 googleApiKey 輸入框');
+        return;
+    }
+    
+    const apiKey = apiKeyInput.value.trim();
+    console.log('[Meeting] API Key 長度:', apiKey.length);
+    
+    if (!apiKey) {
+        showStatus('請輸入 Google API Key', 'error', 'apiStatusMessage');
+        console.warn('[Meeting] API Key 為空');
+        return;
+    }
+    
+    // Basic validation: Google API keys are typically 39 characters
+    if (apiKey.length < 20) {
+        showStatus('⚠️ API Key 看起來太短，請確認輸入正確', 'warning', 'apiStatusMessage');
+        console.warn('[Meeting] API Key 長度異常:', apiKey.length);
+    }
+    
+    console.log('[Meeting] 開始保存 API Key...');
+    
+    // Save to Chrome storage
+    chrome.storage.local.set({ googleApiKey: apiKey }, () => {
+        if (chrome.runtime.lastError) {
+            const errorMsg = chrome.runtime.lastError.message || '未知錯誤';
+            showStatus(`儲存失敗: ${errorMsg}`, 'error', 'apiStatusMessage');
+            console.error('[Meeting] 儲存失敗:', chrome.runtime.lastError);
+        } else {
+            updateGoogleStatus(true);
+            showStatus('✅ Google API Key 已成功保存', 'success', 'apiStatusMessage');
+            console.log('[Meeting] ✅ API Key 已正確保存');
+        }
+    });
+}
+
+// Test Google API connection
+async function testGoogleApiConnection() {
+    console.log('[Meeting] testGoogleApiConnection 被調用');
+    
+    const apiKeyInput = document.getElementById('googleApiKey');
+    if (!apiKeyInput) {
+        console.error('[Meeting] 找不到 googleApiKey 輸入框');
+        showStatus('頁面加載錯誤，請刷新重試', 'error', 'apiStatusMessage');
+        return;
+    }
+    
+    const apiKey = apiKeyInput.value.trim();
+    console.log('[Meeting] 測試 API Key，長度:', apiKey.length);
+    
+    if (!apiKey) {
+        showStatus('請先輸入並保存 Google API Key', 'error', 'apiStatusMessage');
+        console.warn('[Meeting] API Key 為空，無法測試');
+        return;
+    }
+    
+    showStatus('🔄 正在測試連接...', 'warning', 'apiStatusMessage');
+    console.log('[Meeting] 開始連接測試...');
+    
+    try {
+        // Try a simple API call to test the key
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+        
+        console.log('[Meeting] 發送測試請求到 Google API');
+        
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: '說 OK'
+                    }]
+                }]
+            })
+        });
+        
+        console.log('[Meeting] 收到響應，狀態碼:', response.status);
+        
+        if (response.ok) {
+            showStatus('✅ 連接成功！Google API Key 可正常使用', 'success', 'apiStatusMessage');
+            updateGoogleStatus(true);
+            console.log('[Meeting] ✅ API 連接測試成功');
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            const errorMsg = errorData.error?.message || response.statusText || '未知錯誤';
+            showStatus(`❌ 連接失敗 (${response.status}): ${errorMsg}`, 'error', 'apiStatusMessage');
+            console.error('[Meeting] API 連接失敗:', response.status, errorMsg);
+        }
+    } catch (error) {
+        showStatus(`❌ 測試失敗: ${error.message}`, 'error', 'apiStatusMessage');
+        console.error('[Meeting] 測試錯誤:', error);
+    }
+}
+
+// Open Google API console
+function openGoogleConsole() {
+    console.log('[Meeting] openGoogleConsole 被調用');
+    try {
+        chrome.tabs.create({ 
+            url: 'https://console.cloud.google.com/apis/dashboard' 
+        });
+    } catch (error) {
+        console.error('[Meeting] 打開 Google Console 失敗:', error);
+        showStatus(`無法打開 Google Console: ${error.message}`, 'error', 'apiStatusMessage');
+    }
+}
+
+// Open Google API Key page
+function openGoogleApiUrl() {
+    console.log('[Meeting] openGoogleApiUrl 被調用');
+    try {
+        chrome.tabs.create({ 
+            url: 'https://aistudio.google.com/app/apikey' 
+        });
+    } catch (error) {
+        console.error('[Meeting] 打開 API Key 頁面失敗:', error);
+        showStatus(`無法打開 API Key 頁面: ${error.message}`, 'error', 'apiStatusMessage');
+    }
+}
+
+console.log('[Meeting] Google API 配置函數已加載');

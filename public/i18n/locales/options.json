@@ -3,49 +3,65 @@
     "options.title": "⚙️ OmniAssistant 設定",
     "options.tab.settings": "📋 設定選項",
     "options.tab.cache": "📊 缓存历史",
-    "options.tab.meeting": "📝 會議記錄"
+    "options.tab.meeting": "📝 會議記錄",
+    "options.tab.api": "🔑 API 配置",
+    "output.comingSoon": "🚧 功能尚未開放"
   },
   "zh-CN": {
     "options.title": "⚙️ OmniAssistant 设定",
     "options.tab.settings": "📋 设定选项",
     "options.tab.cache": "📊 缓存历史",
-    "options.tab.meeting": "📝 会议记录"
+    "options.tab.meeting": "📝 会议记录",
+    "options.tab.api": "🔑 API 配置",
+    "output.comingSoon": "🚧 功能尚未开放"
   },
   "en-US": {
     "options.title": "⚙️ OmniAssistant Settings",
     "options.tab.settings": "📋 Settings Options",
     "options.tab.cache": "📊 Cache History",
-    "options.tab.meeting": "📝 Meeting Notes"
+    "options.tab.meeting": "📝 Meeting Notes",
+    "options.tab.api": "🔑 API Configuration",
+    "output.comingSoon": "🚧 Feature not yet available"
   },
   "en-GB": {
     "options.title": "⚙️ OmniAssistant Settings",
     "options.tab.settings": "📋 Settings Options",
     "options.tab.cache": "📊 Cache History",
-    "options.tab.meeting": "📝 Meeting Notes"
+    "options.tab.meeting": "📝 Meeting Notes",
+    "options.tab.api": "🔑 API Configuration",
+    "output.comingSoon": "🚧 Feature not yet available"
   },
   "ja-JP": {
     "options.title": "⚙️ OmniAssistant 設定",
     "options.tab.settings": "📋 設定オプション",
     "options.tab.cache": "📊 キャッシュ履歴",
-    "options.tab.meeting": "📝 会議記録"
+    "options.tab.meeting": "📝 会議記録",
+    "options.tab.api": "🔑 API 設定",
+    "output.comingSoon": "🚧 機能は事不済みです"
   },
   "ko-KR": {
     "options.title": "⚙️ OmniAssistant 설정",
     "options.tab.settings": "📋 설정 옵션",
     "options.tab.cache": "📊 캐시 기록",
-    "options.tab.meeting": "📝 회의 기록"
+    "options.tab.meeting": "📝 회의 기록",
+    "options.tab.api": "🔑 API 설정",
+    "output.comingSoon": "🚧 기능이 아직 제공되지 않습니다"
   },
   "fr-FR": {
     "options.title": "⚙️ OmniAssistant Paramètres",
     "options.tab.settings": "📋 Options de paramètres",
     "options.tab.cache": "📊 Historique des caches",
-    "options.tab.meeting": "📝 Notes de réunion"
+    "options.tab.meeting": "📝 Notes de réunion",
+    "options.tab.api": "🔑 Configuration API",
+    "output.comingSoon": "🚧 Fonction pas encore disponible"
   },
   "de-DE": {
     "options.title": "⚙️ OmniAssistant Einstellungen",
     "options.tab.settings": "📋 Einstellungsoptionen",
     "options.tab.cache": "📊 Cache-Verlauf",
-    "options.tab.meeting": "📝 Besprechungsnotizen"
+    "options.tab.meeting": "📝 Besprechungsnotizen",
+    "options.tab.api": "🔑 API-Konfiguration",
+    "output.comingSoon": "🚧 Funktion noch nicht verfügbar"
   },
   "es-ES": {
     "options.title": "⚙️ OmniAssistant Configuración",
