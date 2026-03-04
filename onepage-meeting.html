@@ -1661,7 +1661,7 @@
                 closeSystemDialog.addEventListener('click', (e) => {
                     e.preventDefault();
                     systemMessageDialog.classList.add('hidden');
-                    localStorage.setItem('systemMessageClosed', 'true');
+                    sessionStorage.setItem('systemMessageClosed', 'true');
                     console.log('[Meeting] 系統訊息對話框已關閉');
                 });
             }
@@ -1694,11 +1694,11 @@
                 });
             }
             
-            // 檢查用戶是否之前關閉過系統訊息對話框
-            const isClosed = localStorage.getItem('systemMessageClosed');
+            // 檢查用戶是否在本次訪問中關閉過系統訊息對話框
+            const isClosed = sessionStorage.getItem('systemMessageClosed');
             if (isClosed === 'true') {
                 systemMessageDialog.classList.add('hidden');
-                console.log('[Meeting] 系統訊息對話框已隱藏（用戶之前關閉過）');
+                console.log('[Meeting] 系統訊息對話框已隱藏（本次訪問已關閉）');
             }
             
             // 🔑 API 配置容器展開/收縮功能
