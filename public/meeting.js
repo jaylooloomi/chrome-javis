@@ -577,6 +577,23 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('[Meeting] 未找到 recordBtn 按鈕');
     }
     
+    // 綁定音檔導入按鈕事件
+    const audioImportBtn = document.getElementById('audioImportBtn');
+    const audioFileInput = document.getElementById('audioFile');
+    if (audioImportBtn && audioFileInput) {
+        console.log('[Meeting] 找到 audioImportBtn 按鈕和 audioFile 輸入框');
+        audioImportBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('[Meeting] audioImportBtn 被點擊，觸發文件選擇框');
+            audioFileInput.click();
+        });
+    } else {
+        console.error('[Meeting] 未找到 audioImportBtn 或 audioFile', {
+            audioImportBtn: !!audioImportBtn,
+            audioFileInput: !!audioFileInput
+        });
+    }
+    
     // 綁定 "+" 按鈕事件
     const addPromptBtn = document.getElementById('addPromptBtnId');
     if (addPromptBtn) {
