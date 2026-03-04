@@ -618,13 +618,156 @@
             border: 1px solid rgba(251, 146, 60, 0.3);
             display: block;
         }
+
+        /* ======== 系統訊息對話框 ======== */
+        .system-message-dialog {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 320px;
+            max-height: 480px;
+            padding: 32px 24px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .system-message-dialog.hidden {
+            display: none;
+        }
+
+        .system-message-dialog .close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: transparent;
+            border: none;
+            color: var(--text-sub);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.3s ease;
+        }
+
+        .system-message-dialog .close-btn:hover {
+            color: var(--text-main);
+        }
+
+        .system-message-dialog .icon-container {
+            width: 80px;
+            height: 80px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 2px solid rgba(56, 189, 248, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            font-size: 40px;
+        }
+
+        .system-message-dialog .title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 16px;
+            letter-spacing: 0.5px;
+        }
+
+        .system-message-dialog .description {
+            font-size: 12px;
+            color: var(--text-sub);
+            line-height: 1.6;
+            margin-bottom: 24px;
+            max-width: 280px;
+        }
+
+        .system-message-dialog .question {
+            font-size: 12px;
+            color: var(--accent-blue);
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .system-message-dialog .action-btn {
+            background: linear-gradient(135deg, #ff9500, #ff6b00);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 16px;
+            letter-spacing: 0.5px;
+        }
+
+        .system-message-dialog .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+        }
+
+        .system-message-dialog .skip-link {
+            font-size: 11px;
+            color: var(--text-sub);
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .system-message-dialog .skip-link:hover {
+            color: var(--accent-blue);
+        }
+
+        @media (max-width: 1024px) {
+            .system-message-dialog {
+                right: 10px;
+                bottom: 10px;
+                width: 280px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .system-message-dialog {
+                position: static;
+                width: 100%;
+                max-height: none;
+                margin-top: 20px;
+            }
+        }
     </style>
 </head>
 <body>
     <!-- Google Generative AI Configuration Container -->
     <div class="container">
         <h1>
-            <span class="header-left">🔑 API 配置 (獨立運行版)</span>
+            <span class="header-left">🔑 API 配置</span>
             <button class="collapse-btn collapsed" id="apiConfigCollapseBtn" title="展開/收縮">▼</button>
         </h1>
         <!-- Google Generative AI Configuration -->
@@ -772,6 +915,21 @@
             
             <div id="statusMessage" class="status"></div>
         </div>
+    </div>
+
+    <!-- 系統訊息對話框 -->
+    <div class="system-message-dialog" id="systemMessageDialog">
+        <button class="close-btn" id="closeSystemDialog" title="關閉">✕</button>
+        <div class="icon-container">💖</div>
+        <div class="title">系統訊息</div>
+        <div class="description">
+            親愛的用戶，感謝你使用 Meeting Assistant！
+            這是一個幫助你更高效地進行會議記錄的工具。
+            希望這項目能幫助到你！
+        </div>
+        <div class="question">喜歡這個工具嗎?</div>
+        <button class="action-btn" id="sponsorBtn">👉 贊助一杯咖啡 ☕</button>
+        <a class="skip-link" id="shareLink">分享給其他朋友 →</a>
     </div>
 
     <script>
@@ -1484,6 +1642,56 @@
         // Initialize on load
         document.addEventListener('DOMContentLoaded', () => {
             console.log('[Meeting] DOMContentLoaded 觸發');
+            
+            // 系統訊息對話框事件綁定
+            const systemMessageDialog = document.getElementById('systemMessageDialog');
+            const closeSystemDialog = document.getElementById('closeSystemDialog');
+            const sponsorBtn = document.getElementById('sponsorBtn');
+            const shareLink = document.getElementById('shareLink');
+            
+            if (closeSystemDialog) {
+                closeSystemDialog.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    systemMessageDialog.classList.add('hidden');
+                    localStorage.setItem('systemMessageClosed', 'true');
+                    console.log('[Meeting] 系統訊息對話框已關閉');
+                });
+            }
+            
+            if (sponsorBtn) {
+                sponsorBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.open('https://github.com/sponsors', '_blank');
+                    console.log('[Meeting] 打開贊助頁面');
+                });
+            }
+            
+            if (shareLink) {
+                shareLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const shareText = '推薦你一個超好用的會議記錄助手 Meeting Assistant！\nhttps://github.com/your-repo';
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'Meeting Assistant',
+                            text: shareText,
+                            url: window.location.href
+                        });
+                    } else {
+                        // Fallback: copy to clipboard
+                        navigator.clipboard.writeText(shareText).then(() => {
+                            showStatus('✅ 分享文本已複製到剪貼板', 'success');
+                            console.log('[Meeting] 分享文本已複製');
+                        });
+                    }
+                });
+            }
+            
+            // 檢查用戶是否之前關閉過系統訊息對話框
+            const isClosed = localStorage.getItem('systemMessageClosed');
+            if (isClosed === 'true') {
+                systemMessageDialog.classList.add('hidden');
+                console.log('[Meeting] 系統訊息對話框已隱藏（用戶之前關閉過）');
+            }
             
             // 🔑 API 配置容器展開/收縮功能
             const apiConfigCollapseBtn = document.getElementById('apiConfigCollapseBtn');
