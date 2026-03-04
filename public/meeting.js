@@ -480,6 +480,7 @@ async function generateMeetingNotes() {
     
     const originalText = generateBtn.textContent;
     generateBtn.disabled = true;
+    generateBtn.classList.add('loading');
     generateBtn.textContent = '⏳ 正在生成中...';
     
     showStatus('⏳ 正在使用 AI 生成會議記錄...', 'loading');
@@ -506,6 +507,7 @@ async function generateMeetingNotes() {
                 console.error('[Meeting] Service Worker 錯誤:', chrome.runtime.lastError);
                 showStatus(`遠程錯誤: ${chrome.runtime.lastError.message}`, 'error');
                 generateBtn.disabled = false;
+                generateBtn.classList.remove('loading');
                 generateBtn.textContent = originalText;
                 return;
             }
@@ -514,6 +516,7 @@ async function generateMeetingNotes() {
                 console.error('[Meeting] 收到空回應');
                 showStatus('無回應，請檢查 API 配置', 'error');
                 generateBtn.disabled = false;
+                generateBtn.classList.remove('loading');
                 generateBtn.textContent = originalText;
                 return;
             }
@@ -542,6 +545,7 @@ async function generateMeetingNotes() {
             }
             
             generateBtn.disabled = false;
+            generateBtn.classList.remove('loading');
             generateBtn.textContent = originalText;
             console.log('[Meeting] ========== 會議記錄生成流程完成 ==========');
         });
@@ -551,6 +555,7 @@ async function generateMeetingNotes() {
         showStatus(`生成失敗: ${error.message}`, 'error');
         textboxC.value = '生成失敗，請檢查配置並重試。';
         generateBtn.disabled = false;
+        generateBtn.classList.remove('loading');
         generateBtn.textContent = originalText;
     }
 }

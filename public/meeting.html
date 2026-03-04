@@ -173,6 +173,25 @@
             background: #dc2626;
         }
         
+        /* 加载状态 */
+        button.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        
+        button.loading::after {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-left: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+        }
+        
         textarea {
             width: 100%;
             padding: 12px;
