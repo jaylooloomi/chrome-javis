@@ -800,7 +800,13 @@ async function handleGenerateMeetingNotes(request, sendResponse) {
                 .map(part => part.text)
                 .join('\n');
             
-            console.log("[Gateway] ✅ 生成成功，長度:", generatedText.length);\n            console.log("[Gateway] ✅ 內容前 100 字:", generatedText.substring(0, 100));\n            \n            sendResponse({ \n                success: true, \n                result: generatedText\n            });\n        } else {\n            throw new Error("API 返回格式不正確");\n        }\n        \n    } catch (error) {\n        console.error("[Gateway] ❌ 生成失敗:", error);\n        sendResponse({ \n            success: false, \n            error: error.message \n        });\n    }\n    \n    console.log("[Gateway] ========== 會議記錄生成流程完成 ==========");\n}\n\n// 獲取 Google API Key (從 Chrome storage 或 config)
+            console.log("[Gateway] ✅ 生成成功，長度:", generatedText.length);
+            console.log("[Gateway] ✅ 內容前 100 字:", generatedText.substring(0, 100));
+            
+            sendResponse({ 
+                success: true, 
+                result: generatedText
+            });\n}\n\n// 獲取 Google API Key (從 Chrome storage 或 config)
 async function getGoogleApiKey() {
     return new Promise((resolve) => {
         chrome.storage.local.get(['googleApiKey'], (result) => {

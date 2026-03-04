@@ -806,7 +806,7 @@ async function handleGenerateMeetingNotes(request, sendResponse) {
             sendResponse({ 
                 success: true, 
                 result: generatedText
-n            });
+            });
         } else {
             throw new Error("API 返回格式不正確");
         }
