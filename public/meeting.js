@@ -786,12 +786,18 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('[Meeting] API 配置容器已' + (isCollapsed ? '收縮' : '展開'));
         });
         
-        // 從 localStorage 恢復之前的狀態
-        const wasCollapsed = localStorage.getItem('apiConfigCollapsed') === 'true';
-        if (wasCollapsed) {
-            apiConfigContent.classList.add('collapsed');
-            apiConfigCollapseBtn.classList.add('collapsed');
-            console.log('[Meeting] 恢復之前的 API 配置容器收縮狀態');
+        // 默認為收縮狀態
+        apiConfigContent.classList.add('collapsed');
+        apiConfigCollapseBtn.classList.add('collapsed');
+        
+        // 從 localStorage 恢復之前的狀態（如果之前是展開的話）
+        const wasExpanded = localStorage.getItem('apiConfigCollapsed') === 'false';
+        if (wasExpanded) {
+            apiConfigContent.classList.remove('collapsed');
+            apiConfigCollapseBtn.classList.remove('collapsed');
+            console.log('[Meeting] 恢復之前的 API 配置容器展開狀態');
+        } else {
+            console.log('[Meeting] 默認 API 配置容器為收縮狀態');
         }
     } else {
         console.error('[Meeting] 未找到 API 配置容器的展開/收縮相關元素', {
