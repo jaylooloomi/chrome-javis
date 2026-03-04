@@ -175,7 +175,7 @@ async function testGoogleApiConnection() {
     
     try {
         // Try a simple API call to test the key
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`;
         
         console.log('[API Config] 發送測試請求到 Google API');
         

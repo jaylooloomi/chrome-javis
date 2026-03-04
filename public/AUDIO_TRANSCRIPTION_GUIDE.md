@@ -156,14 +156,14 @@ Google Generative AI 定價模型：
 ### API 端點
 
 ```
-POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
+POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
 ```
 
 ### 支持的模型
 
 | 模型 | 速度 | 成本 | 推薦用途 |
 |------|------|------|---------|
-| gemini-1.5-flash | ⚡ 很快 | 💰 便宜 | 日常轉錄 |
+| gemini-2.5-flash | ⚡ 很快 | 💰 便宜 | 日常轉錄 |
 | gemini-1.5-pro | 🚀 快 | 💵 中等 | 複雜分析 |
 | gemini-2.0-flash | ⚡⚡ 最快 | 💰 便宜 | 最新特性 |
 

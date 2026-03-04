@@ -659,7 +659,7 @@ async function handleAudioTranscription(request, sendResponse) {
         console.log("[Gateway] 轉錄語言:", language || 'zh-TW');
         
         // 構建 API 請求
-        const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+        const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
         
         const requestBody = {
             contents: [{
