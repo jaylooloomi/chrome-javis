@@ -85,10 +85,21 @@ function toggleRecording() {
 async function handleAudioImport(event) {
     console.log('[Audio Import] ========== 開始導入音檔 ==========');
     
+    const audioImportBtn = document.getElementById('audioImportBtn');
     const file = event.target.files[0];
     if (!file) {
         console.warn('[Audio Import] ❌ 未選擇文件');
+        if (audioImportBtn) {
+            audioImportBtn.disabled = false;
+            audioImportBtn.classList.remove('loading');
+        }
         return;
+    }
+    
+    // Add loading state to button
+    if (audioImportBtn) {
+        audioImportBtn.disabled = true;
+        audioImportBtn.classList.add('loading');
     }
     
     console.log('[Audio Import] 📄 檔案信息:', {
@@ -121,6 +132,10 @@ async function handleAudioImport(event) {
     if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
         console.error('[Audio Import] ❌ 不支持的格式:', fileExtension);
         showStatus(`不支援的文件格式，請使用以下格式之一: ${validExtensions.join(', ')}`, 'error');
+        if (audioImportBtn) {
+            audioImportBtn.disabled = false;
+            audioImportBtn.classList.remove('loading');
+        }
         event.target.value = '';
         return;
     }
@@ -138,6 +153,10 @@ async function handleAudioImport(event) {
     if (file.size > maxSize) {
         console.error('[Audio Import] ❌ 文件過大:', `${(file.size / 1024 / 1024).toFixed(2)} MB > ${(maxSize / 1024 / 1024).toFixed(2)} MB`);
         showStatus('文件過大，請選擇小於 25MB 的音檔', 'error');
+        if (audioImportBtn) {
+            audioImportBtn.disabled = false;
+            audioImportBtn.classList.remove('loading');
+        }
         event.target.value = '';
         return;
     }
@@ -170,6 +189,10 @@ async function handleAudioImport(event) {
         fileReader.onerror = (error) => {
             console.error('[Audio Import] ❌ FileReader 錯誤:', error);
             showStatus(`文件讀取失敗: ${error.message}`, 'error');
+            if (audioImportBtn) {
+                audioImportBtn.disabled = false;
+                audioImportBtn.classList.remove('loading');
+            }
         };
         
         fileReader.onprogress = (event) => {
@@ -183,6 +206,10 @@ async function handleAudioImport(event) {
     } catch (error) {
         console.error('[Audio Import] ❌ 音檔處理異常:', error);
         showStatus(`音檔處理失敗: ${error.message}`, 'error');
+        if (audioImportBtn) {
+            audioImportBtn.disabled = false;
+            audioImportBtn.classList.remove('loading');
+        }
     }
     
     // Clear file input
@@ -192,6 +219,7 @@ async function handleAudioImport(event) {
 
 // Process Audio Transcription with Google Generative AI
 async function processAudioTranscription(audioArrayBuffer, file, language) {
+    const audioImportBtn = document.getElementById('audioImportBtn');
     console.log('[Audio Transcription] ========== 開始處理音檔轉錄 ==========');
     
     try {
@@ -262,12 +290,20 @@ async function processAudioTranscription(audioArrayBuffer, file, language) {
             if (chrome.runtime.lastError) {
                 console.error('[Audio Transcription] ❌ Chrome 運行時錯誤:', chrome.runtime.lastError);
                 showStatus(`遠程錯誤: ${chrome.runtime.lastError.message}`, 'error');
+                if (audioImportBtn) {
+                    audioImportBtn.disabled = false;
+                    audioImportBtn.classList.remove('loading');
+                }
                 return;
             }
             
             if (!response) {
                 console.error('[Audio Transcription] ❌ 收到空回應');
                 showStatus('無回應，請檢查 API 配置', 'error');
+                if (audioImportBtn) {
+                    audioImportBtn.disabled = false;
+                    audioImportBtn.classList.remove('loading');
+                }
                 return;
             }
             
@@ -299,6 +335,10 @@ async function processAudioTranscription(audioArrayBuffer, file, language) {
                 textboxA.scrollTop = textboxA.scrollHeight;  // Scroll to bottom
                 
                 console.log('[Audio Transcription] ✅ textboxA 已成功更新');
+                if (audioImportBtn) {
+                    audioImportBtn.disabled = false;
+                    audioImportBtn.classList.remove('loading');
+                }
                 hideStatus();
                 setTimeout(() => {
                     showStatus(`✅ 音檔已成功轉錄: ${file.name}`, 'success');
@@ -308,6 +348,10 @@ async function processAudioTranscription(audioArrayBuffer, file, language) {
                     error: response.error,
                     errorMessage: response.errorMessage
                 });
+                if (audioImportBtn) {
+                    audioImportBtn.disabled = false;
+                    audioImportBtn.classList.remove('loading');
+                }
                 hideStatus();
                 setTimeout(() => {
                     showStatus(`轉錄失敗: ${response.error}`, 'error');
@@ -325,6 +369,10 @@ async function processAudioTranscription(audioArrayBuffer, file, language) {
             errorMessage: error.message,
             stack: error.stack
         });
+        if (audioImportBtn) {
+            audioImportBtn.disabled = false;
+            audioImportBtn.classList.remove('loading');
+        }
         showStatus(`轉錄失敗: ${error.message}`, 'error');
     }
 }
