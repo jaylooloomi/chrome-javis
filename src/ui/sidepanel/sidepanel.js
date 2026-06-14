@@ -89,7 +89,11 @@ function renderFillPreview(tabId, result) {
     setFillStatus('Filling…');
     try {
       const res = await applyFillToTab(tabId, result.plan);
-      setFillStatus(`✓ Filled ${res?.applied ?? 0} field(s).${res?.failed ? ` (${res.failed} skipped)` : ''}`, 'ok');
+      if (res?.reason === 'page-changed') {
+        setFillStatus('The page changed — click "Fill this form" again.', 'err');
+      } else {
+        setFillStatus(`✓ Filled ${res?.applied ?? 0} field(s).${res?.failed ? ` (${res.failed} skipped)` : ''}`, 'ok');
+      }
     } catch (err) {
       setFillStatus(`✗ ${err.message}`, 'err');
     }

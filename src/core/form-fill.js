@@ -142,7 +142,7 @@ function setRadio(ref, value) {
   const target = normalize(value);
   const opt = ref.options.find((o) => normalize(o.label) === target || normalize(o.value) === target)
     || ref.options.find((o) => normalize(o.label).includes(target));
-  if (opt) {
+  if (opt && opt.el?.isConnected) {
     opt.el.checked = true;
     fire(opt.el, 'click');
     fire(opt.el, 'change');
@@ -161,6 +161,7 @@ export function applyFill(plan, map) {
   for (const { index, value } of plan) {
     const ref = map.get(index);
     if (!ref || (ref.el && !ref.el.isConnected)) { failed += 1; continue; }
+    if (ref.kind === 'radio' && !(ref.options || []).some((o) => o.el?.isConnected)) { failed += 1; continue; }
     let ok = true;
     switch (ref.kind) {
       case 'value': setValue(ref.el, value); break;

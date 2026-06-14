@@ -17,6 +17,7 @@ import { MSG, sendRuntime } from '../shared/messages.js';
 let lastMap = new Map();
 // The map from the most recent SERIALIZE_FORM, so APPLY_FILL can resolve fields.
 let lastFormMap = new Map();
+let lastFormUrl = null;
 
 // Host actions during replay are delegated to the service worker.
 const host = {
@@ -63,10 +64,16 @@ async function handleReplaySkill({ skill, params }) {
 async function handleSerializeForm() {
   const { fields, map } = serializeForm(document);
   lastFormMap = map;
+  lastFormUrl = window.location.href;
   return { fields, url: window.location.href };
 }
 
 async function handleApplyFill({ plan }) {
+  // Guard against SPA navigation between perceive and confirm: the map would
+  // hold stale element references for a page the user is no longer on.
+  if (lastFormUrl !== window.location.href) {
+    return { applied: 0, failed: 0, reason: 'page-changed' };
+  }
   return applyFill(plan || [], lastFormMap);
 }
 

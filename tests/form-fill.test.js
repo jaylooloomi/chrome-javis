@@ -119,6 +119,15 @@ describe('applyFill', () => {
     expect(document.querySelector('[name="bio"]').value).toBe('hello');
     expect(changes).toBe(1);
   });
+
+  it('skips a radio field whose options left the DOM', () => {
+    setForm();
+    const { map } = serializeForm(document);
+    document.querySelector('fieldset').remove(); // detach the radio group
+    const res = applyFill([{ index: 4, value: 'Female' }], map);
+    expect(res.applied).toBe(0);
+    expect(res.failed).toBe(1);
+  });
 });
 
 describe('describePlan', () => {
