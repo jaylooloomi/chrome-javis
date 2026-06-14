@@ -8,6 +8,17 @@ import { DEFAULT_ENDPOINT } from '../core/llm-client.js';
 import { encryptString, decryptString } from './crypto-utils.js';
 
 export const LLM_KEY = 'javis.llm';
+export const FILL_PROVIDER_KEY = 'javis.fillProvider';
+
+/** Form-fill model preference: 'auto' (Nano then endpoint) or 'endpoint'. */
+export async function loadFillProvider() {
+  const r = await chrome.storage.local.get(FILL_PROVIDER_KEY);
+  return r[FILL_PROVIDER_KEY] || 'auto';
+}
+
+export async function saveFillProvider(value) {
+  await chrome.storage.local.set({ [FILL_PROVIDER_KEY]: value === 'endpoint' ? 'endpoint' : 'auto' });
+}
 
 export async function loadLLMConfig() {
   const r = await chrome.storage.local.get(LLM_KEY);
