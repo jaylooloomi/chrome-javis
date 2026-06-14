@@ -1,23 +1,27 @@
 {
-  "name": "chrome-jarvis",
-  "version": "1.3.0",
-  "description": "OmniAssistant - Chrome Extension AI Agent with multi-skill support",
+  "name": "javis-self-teaching-agent",
+  "version": "2.0.0",
+  "description": "Javis — a self-teaching browser agent: learn a task once via a DOM-reading agent, freeze the successful run into a stable-selector skill, then replay it zero-LLM with layered self-heal.",
+  "type": "module",
   "private": true,
   "scripts": {
-    "generate-manifest": "node scripts/generate-manifest.js",
-    "prepare": "husky install && node scripts/generate-manifest.js",
-    "build": "node build-for-chrome.js"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "node build/esbuild.config.mjs",
+    "dev": "node build/esbuild.config.mjs --watch"
   },
   "keywords": [
     "chrome-extension",
-    "ai-assistant",
-    "gemini",
-    "ollama",
-    "skills"
+    "ai-agent",
+    "browser-automation",
+    "record-replay",
+    "page-agent",
+    "self-healing"
   ],
-  "author": "",
   "license": "MIT",
   "devDependencies": {
-    "husky": "^8.0.3"
+    "esbuild": "^0.28.1",
+    "jsdom": "^29.1.1",
+    "vitest": "^4.1.8"
   }
 }

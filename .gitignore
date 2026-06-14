@@ -15,3 +15,5 @@ Thumbs.db
 # Build output
 dist/
 build/public/
+public/
+coverage/
