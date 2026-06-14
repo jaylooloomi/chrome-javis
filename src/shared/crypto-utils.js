@@ -7,7 +7,7 @@
 // chrome.storage.sync (never leaves the device). True secret protection would
 // require a user passphrase, which is out of scope for now.
 
-const CRYPTO_KEY_NAME = 'javis.encKey';
+const CRYPTO_KEY_NAME = 'snapfill.encKey';
 
 async function getOrCreateCryptoKey() {
   const result = await chrome.storage.local.get(CRYPTO_KEY_NAME);

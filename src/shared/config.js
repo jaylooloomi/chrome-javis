@@ -7,8 +7,8 @@
 import { DEFAULT_ENDPOINT } from '../core/llm-client.js';
 import { encryptString, decryptString } from './crypto-utils.js';
 
-export const LLM_KEY = 'javis.llm';
-export const FILL_PROVIDER_KEY = 'javis.fillProvider';
+export const LLM_KEY = 'snapfill.llm';
+export const FILL_PROVIDER_KEY = 'snapfill.fillProvider';
 
 /** Form-fill model preference: 'auto' (Nano then endpoint) or 'endpoint'. */
 export async function loadFillProvider() {

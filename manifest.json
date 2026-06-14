@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Javis — Self-Teaching Browser Agent",
+  "name": "Snapfill — Private AI Form Filler & Autofill",
   "version": "2.0.0",
-  "description": "Teach Javis a task once; it freezes the run into a skill and replays it with no AI calls.",
+  "description": "Private, on-device AI form filler. Autofill any web form in one click from your saved profile — your data never leaves your browser.",
   "minimum_chrome_version": "127",
   "permissions": ["sidePanel", "storage", "tabs"],
   "host_permissions": ["http://*/*", "https://*/*"],
@@ -17,7 +17,7 @@
     "128": "images/jarvis_pixian_ai.png"
   },
   "action": {
-    "default_title": "Open Javis",
+    "default_title": "Open Snapfill",
     "default_icon": {
       "128": "images/jarvis_pixian_ai.png"
     }

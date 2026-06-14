@@ -3,7 +3,7 @@
 
 import { encryptString, decryptString } from './crypto-utils.js';
 
-export const PROFILE_KEY = 'javis.profile';
+export const PROFILE_KEY = 'snapfill.profile';
 
 export const STANDARD_FIELDS = [
   { key: 'fullName', label: 'Full name' },

@@ -1,4 +1,4 @@
-// esbuild bundler for the Javis extension.
+// esbuild bundler for the Snapfill extension.
 //
 // Produces a loadable MV3 extension in dist/:
 //   - service-worker.js, sidepanel.js, options.js  (ESM)

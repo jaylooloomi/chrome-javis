@@ -1,7 +1,7 @@
 {
-  "name": "javis-self-teaching-agent",
+  "name": "snapfill",
   "version": "2.0.0",
-  "description": "Javis — a self-teaching browser agent: learn a task once via a DOM-reading agent, freeze the successful run into a stable-selector skill, then replay it zero-LLM with layered self-heal.",
+  "description": "Snapfill — private, on-device AI form filler. Reads a page's form, maps your saved profile to its fields with Gemini Nano (or any OpenAI-compatible endpoint), and fills it in one click.",
   "type": "module",
   "private": true,
   "scripts": {

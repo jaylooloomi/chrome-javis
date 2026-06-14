@@ -1,101 +1,71 @@
-# 🦾 Javis — Self-Teaching Browser Agent
+# ⚡ Snapfill — Private AI Form Filler & Autofill
 
-**Teach Javis a task once; it watches itself succeed, freezes the run into a reusable skill, and replays it later with no AI calls.**
+**Autofill any web form in one click from your saved profile — privately, on-device. Your data never leaves your browser.**
 
-Javis is a Manifest V3 Chrome extension. You describe a task in natural language; an LLM-driven agent reads the page's DOM and performs the task. As it succeeds, each action is **frozen** into a stable, multi-fallback selector. The result is a named **skill** you can re-run on demand — and replay is **fully deterministic and zero-LLM**, so it's fast, free, and private. The model is only ever called while *learning* a new skill or *self-healing* a broken one.
+Snapfill is a Manifest V3 Chrome extension. It reads the form on the current page, uses an AI to map your saved profile to the right fields, shows you a preview, and fills it on your confirmation. The mapping can run on **Chrome's built-in Gemini Nano** (on-device, free, offline) or any OpenAI-compatible endpoint. The actual filling is plain, deterministic JavaScript — no AI at the writing step.
 
-> This is a focused rebuild of an earlier multi-feature extension. The product was deliberately narrowed to one thing done well — see [the design spec](docs/superpowers/specs/2026-06-14-javis-redefinition-design.md).
+## Why Snapfill
 
-## Why this is different
-
-Most "AI browser agents" call the model on **every** action, every run — slow and expensive. Javis calls the model **once to learn**, then compiles the run into a deterministic script:
-
-| | Typical live agent | **Javis** |
-|---|---|---|
-| Cost per replay | LLM tokens every run | **zero** |
-| Speed | model latency each step | DOM-speed |
-| Determinism | varies run to run | **stable** |
-| Privacy | page sent to model each run | only during learning |
-| Resilience | re-reasons each time | stable selectors + **self-heal** fallback |
+- **Private by default** — with on-device Nano, the form and your profile never leave your machine.
+- **One click** — no per-site setup; it matches your profile to whatever form is in front of you.
+- **You stay in control** — preview every field before it fills, passwords are never touched, and nothing is submitted automatically.
+- **Model-agnostic** — Nano-first, with fallback to any OpenAI-compatible endpoint (local Ollama or a cloud key).
 
 ## How it works
 
 ```
-Learn (once):   task ──▶ perceive DOM ──▶ LLM picks action ──▶ FREEZE (stable selector) ──▶ execute ──▶ repeat ──▶ Skill
-Replay (many):  skill ──▶ resolve selector ──▶ act ──▶ next …            (no LLM)
-Self-heal:      selector miss ──▶ perceive + LLM relocate ──▶ re-freeze ──▶ retry ──▶ persist
+read DOM  ──▶  AI maps profile → fields  ──▶  preview  ──▶  (confirm)  ──▶  JS fills the fields
+(content)      (Nano or endpoint; the only AI step)                        (deterministic, no AI)
 ```
 
-The key idea (and the hard part) is the **freeze translation**: at the moment an action succeeds, the live element is converted into a *bundle* of independent, prioritized selectors — `data-testid` › stable `id` › `name` › ARIA role+name › unique text › structural CSS › XPath. Replay tries them in order, so a skill survives DOM drift; only when **all** fail does self-heal invoke the model.
+1. **Read DOM** — `serializeForm()` collects each fillable field (label, type, required, select options).
+2. **Map (the one AI step)** — the model receives your profile + the field list and returns `{ field → value }`. Semantic matching is exactly what a small on-device model is good at.
+3. **Preview & confirm** — you see field → value before anything changes.
+4. **Fill** — plain JS sets values and fires `input`/`change` events (so React/Vue forms react). No AI here.
 
-## Architecture
-
-```
-Side Panel (UI + orchestration + LLM + skill store)
-   │  messaging
-Content Script (DOM: perceive / freeze / execute / replay)   Service Worker (tabs/navigation host)
-   │
-Core engines (pure, unit-tested):
-   selector-engine · replay-engine · recorder · skill-store · dom-serializer · learn-engine · self-heal · llm-client
-```
-
-The core engines are framework-free and DOM-pure, so they're covered by **102 jsdom unit tests** (`npm test`). The content script keeps the live `index→element` map in the page; only JSON (DOM text, frozen steps) crosses the messaging boundary.
-
-## Model configuration (model-agnostic)
-
-Javis talks to any **OpenAI-compatible** `/chat/completions` endpoint. In **Settings**, set `baseURL`, `model`, and `apiKey`:
-
-- **Ollama (default):** `http://localhost:11434/v1`, no key. Default model `minimax-m2.5:cloud` (capable; routed through Ollama's cloud, so not offline). For a truly local/private model use a pulled local model instead (e.g. `ollama pull qwen3:14b`) — needs working local inference.
-- **Any cloud key:** point `baseURL`/`apiKey` at your provider's OpenAI-compatible endpoint.
-- **page-agent demo (dev only):** `qwen3.5-plus`, no key — evaluation only, routes through third-party servers; never use for real data or a published build.
-
-## Build & load
+## Install & use
 
 ```bash
 npm install
 npm run build      # bundles the extension into dist/
 ```
 
-Then in Chrome:
-1. open `chrome://extensions/`
-2. enable **Developer mode**
-3. **Load unpacked** → select the `dist/` folder
-4. open a normal web page (http/https), click the Javis toolbar icon to open the side panel
-5. set your model endpoint in **Settings**, then teach a skill
+In Chrome: `chrome://extensions/` → **Developer mode** → **Load unpacked** → select `dist/`.
 
-`npm run dev` rebuilds on change (reload the extension in Chrome to pick up changes).
+Then:
+1. Open **Settings** (gear icon) → fill in your **Profile** (name, email, address, custom fields). It's encrypted on this device.
+2. Pick a **form-fill model** — *Auto* uses on-device Nano if available, otherwise your endpoint. (Set the endpoint under *Model*; default `minimax-m2.5:cloud` via local Ollama.)
+3. On any page with a form, click **⚡ Fill this form** in the side panel (or press **Alt+Shift+F**) → review the preview → **Confirm fill**.
+
+> On-device Nano needs Chrome with built-in AI and a one-time model download. If unavailable, *Auto* silently uses your configured endpoint.
 
 ## Develop
 
 ```bash
-npm test            # run the unit suite (vitest + jsdom)
-npm run test:watch  # watch mode
+npm test            # unit suite (vitest + jsdom)
+npm run test:watch
 npm run build       # production bundle -> dist/
 ```
 
-Project layout:
-
 ```
 src/
-  core/        selector-engine, replay-engine, recorder, skill-store,
-               dom-serializer, learn-engine, self-heal, llm-client
-  content/     content.js            (in-page DOM perceive/freeze/replay)
-  background/  service-worker.js     (thin host: side panel, tabs)
+  core/        form-fill, dom-serializer (serializeForm), nano-client,
+               llm-client, selector-engine (accessible-name util)
+  content/     content.js   (serialize form / apply fill in the page)
+  background/  service-worker.js (open side panel, Alt+Shift+F command)
   ui/
-    sidepanel/ skill library + teach + heal-aware run
-    options/   model endpoint config
-  shared/      messages, actions, config
-tests/         jsdom unit tests (one per core module)
-build/         esbuild config
-docs/          design spec
+    sidepanel/ Fill this form + preview/confirm
+    options/   profile editor, model + form-fill provider, Nano status
+  shared/      messages, config, profile, crypto-utils (encrypt at rest)
+tests/         jsdom unit tests
 ```
 
 ## Status
 
-- ✅ **Verified** (unit tests + clean build): selector engine, replay engine, recorder, skill store, DOM serializer, learn loop (scripted-LLM), self-heal, LLM client. The extension bundles into a complete, loadable `dist/`.
-- ⏳ **Needs real-browser verification**: end-to-end learn/replay against live sites with a real model (Ollama or a cloud key), side-panel/content runtime behavior.
-- 🔭 **Planned (next):** parameter capture UI, scheduled skill runs, i18n wiring (assets retained in `i18n/`), API-key encryption at rest (`crypto-utils.js`), Web Store listing.
+- ✅ Unit-tested + clean build: form serialization, profile→field mapping/validation/apply, Nano provider (with endpoint fallback), profile store, model client.
+- ⏳ Needs a real-Chrome pass: end-to-end fill on live sites with a real model.
+- 🔭 Possible next: site-specific field memory, multi-profile, more locales.
 
 ## License
 
-MIT (includes portions inspired by the MIT-licensed [alibaba/page-agent](https://github.com/alibaba/page-agent): the text-indexed-DOM perception approach). See [LICENSE](LICENSE).
+MIT. Includes an accessible-name/DOM utility inspired by the MIT-licensed [alibaba/page-agent](https://github.com/alibaba/page-agent). See [LICENSE](LICENSE).
