@@ -10,7 +10,7 @@ import { serializeInteractive } from '../core/dom-serializer.js';
 import { SkillRecorder } from '../core/recorder.js';
 import { replayStep, replaySkill } from '../core/replay-engine.js';
 import { computeSelectorBundle } from '../core/selector-engine.js';
-import { MSG } from '../shared/messages.js';
+import { MSG, sendRuntime } from '../shared/messages.js';
 
 // The map from the most recent PERCEIVE, so EXECUTE_FREEZE can resolve an index.
 let lastMap = new Map();
@@ -18,9 +18,9 @@ let lastMap = new Map();
 // Host actions during replay are delegated to the service worker.
 const host = {
   navigate: (url) => { window.location.assign(url); },
-  openTab: (url) => chrome.runtime.sendMessage({ type: MSG.HOST_ACTION, action: 'openTab', url }),
-  closeTab: () => chrome.runtime.sendMessage({ type: MSG.HOST_ACTION, action: 'closeTab' }),
-  switchTab: (value) => chrome.runtime.sendMessage({ type: MSG.HOST_ACTION, action: 'switchTab', value }),
+  openTab: (url) => sendRuntime({ type: MSG.HOST_ACTION, action: 'openTab', url }),
+  closeTab: () => sendRuntime({ type: MSG.HOST_ACTION, action: 'closeTab' }),
+  switchTab: (value) => sendRuntime({ type: MSG.HOST_ACTION, action: 'switchTab', value }),
 };
 
 const recordFor = {
@@ -39,6 +39,7 @@ async function handlePerceive() {
 async function handleExecuteFreeze({ action, index, value }) {
   const el = lastMap.get(index);
   if (!el) return { ok: false, error: `no element at index ${index}` };
+  if (!el.isConnected) return { ok: false, error: `element at index ${index} left the DOM since perceive` };
   const recorder = new SkillRecorder();
   const make = recordFor[action];
   if (!make) return { ok: false, error: `unsupported action ${action}` };
@@ -71,6 +72,7 @@ async function handleExecuteStep({ step, params }) {
 async function handleFreezeIndex({ index }) {
   const el = lastMap.get(index);
   if (!el) return { ok: false, error: `no element at index ${index}` };
+  if (!el.isConnected) return { ok: false, error: `element at index ${index} left the DOM since perceive` };
   try {
     return { ok: true, bundle: computeSelectorBundle(el) };
   } catch (err) {

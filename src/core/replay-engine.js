@@ -146,6 +146,10 @@ export async function waitForCondition(wait, ctx) {
     return; // a load wait that overruns is non-fatal
   }
 
+  if ((wait.type === WAIT_TYPES.ELEMENT || wait.type === WAIT_TYPES.GONE) && !wait.selector) {
+    throw new ReplayError(`wait '${wait.type}' requires a selector bundle`, 'invalid-wait');
+  }
+
   while (c.now() < deadline) {
     const found = c.resolve(wait.selector, c.root);
     if (wait.type === WAIT_TYPES.ELEMENT && found) return;
@@ -170,6 +174,9 @@ export async function replayStep(step, ctx, stepIndex = 0) {
   let candidateUsed = null;
 
   if (DOM_ACTIONS.has(action)) {
+    if (!step.selector || !Array.isArray(step.selector.candidates)) {
+      throw new ReplayError(`step ${stepIndex} (${action}) is missing a selector bundle`, 'malformed-step', stepIndex);
+    }
     const res = c.resolve(step.selector, c.root);
     if (!res) {
       throw new ReplayError(`could not resolve element for step ${stepIndex} (${action})`, 'selector-not-found', stepIndex);

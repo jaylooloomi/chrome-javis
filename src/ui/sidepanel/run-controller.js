@@ -32,10 +32,14 @@ async function relocate(step, tabId, llmConfig) {
 export async function runSkillHealing(skill, params, tabId, llmConfig, { onStep } = {}) {
   const steps = skill.steps || [];
   const updatedSteps = steps.map((s) => ({ ...s }));
-  let healed = false;
+  const healedIndices = new Set();
 
   for (let i = 0; i < steps.length; i += 1) {
     let step = steps[i];
+    if (!step || !step.action) {
+      return { ok: false, failedStep: i, reason: 'malformed-step', healed: healedIndices.size > 0 };
+    }
+
     let res = await sendToTab(tabId, { type: MSG.EXECUTE_STEP, step, params });
 
     if (res && !res.ok && res.reason === 'selector-not-found' && DOM_ACTIONS.has(step.action)) {
@@ -45,16 +49,18 @@ export async function runSkillHealing(skill, params, tabId, llmConfig, { onStep 
         res = await sendToTab(tabId, { type: MSG.EXECUTE_STEP, step, params });
         if (res && res.ok) {
           updatedSteps[i] = step;
-          healed = true;
+          healedIndices.add(i);
         }
       }
     }
 
     if (!res || !res.ok) {
-      return { ok: false, failedStep: i, reason: res?.reason || 'error', healed };
+      return { ok: false, failedStep: i, reason: res?.reason || 'error', healed: healedIndices.size > 0 };
     }
-    if (onStep) onStep({ i, healedHere: updatedSteps[i] !== steps[i] });
+    if (onStep) onStep({ i, healedHere: healedIndices.has(i) });
   }
+
+  const healed = healedIndices.size > 0;
 
   return { ok: true, healed, updatedSteps: healed ? updatedSteps : undefined };
 }

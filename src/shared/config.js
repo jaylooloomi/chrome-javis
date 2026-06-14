@@ -1,16 +1,24 @@
 // LLM endpoint configuration, persisted in chrome.storage.local.
 //
-// NOTE (P8): the apiKey is stored in local storage as-is for now. Encrypting it
-// at rest with crypto-utils is a planned hardening step before Web Store
-// release. It is kept in `local` (never `sync`) so it does not leave the device.
+// The apiKey is encrypted at rest (see crypto-utils.js for the honest caveat)
+// and stored under `apiKeyEnc`; it is never written to chrome.storage.sync, so
+// it does not leave the device.
 
 import { DEFAULT_ENDPOINT } from '../core/llm-client.js';
+import { encryptString, decryptString } from './crypto-utils.js';
 
 export const LLM_KEY = 'javis.llm';
 
 export async function loadLLMConfig() {
   const r = await chrome.storage.local.get(LLM_KEY);
-  return { ...DEFAULT_ENDPOINT, ...(r[LLM_KEY] || {}) };
+  const stored = r[LLM_KEY] || {};
+  // Back-compat: an older build may have stored a plaintext apiKey.
+  const apiKey = stored.apiKeyEnc ? await decryptString(stored.apiKeyEnc) : (stored.apiKey || '');
+  return {
+    baseURL: stored.baseURL || DEFAULT_ENDPOINT.baseURL,
+    model: stored.model || DEFAULT_ENDPOINT.model,
+    apiKey,
+  };
 }
 
 export async function saveLLMConfig(config) {
@@ -19,6 +27,12 @@ export async function saveLLMConfig(config) {
     model: String(config.model || '').trim(),
     apiKey: String(config.apiKey || ''),
   };
-  await chrome.storage.local.set({ [LLM_KEY]: clean });
+  await chrome.storage.local.set({
+    [LLM_KEY]: {
+      baseURL: clean.baseURL,
+      model: clean.model,
+      apiKeyEnc: await encryptString(clean.apiKey),
+    },
+  });
   return clean;
 }

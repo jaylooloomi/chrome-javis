@@ -4,8 +4,11 @@
   "version": "2.0.0",
   "description": "Teach Javis a task once; it freezes the run into a skill and replays it with no AI calls.",
   "minimum_chrome_version": "127",
-  "permissions": ["sidePanel", "storage", "tabs", "scripting", "activeTab"],
+  "permissions": ["sidePanel", "storage", "tabs"],
   "host_permissions": ["http://*/*", "https://*/*"],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
   "background": {
     "service_worker": "service-worker.js",
     "type": "module"
