@@ -9,6 +9,7 @@
 import { serializeInteractive } from '../core/dom-serializer.js';
 import { SkillRecorder } from '../core/recorder.js';
 import { replayStep, replaySkill } from '../core/replay-engine.js';
+import { computeSelectorBundle } from '../core/selector-engine.js';
 import { MSG } from '../shared/messages.js';
 
 // The map from the most recent PERCEIVE, so EXECUTE_FREEZE can resolve an index.
@@ -54,6 +55,29 @@ async function handleReplaySkill({ skill, params }) {
   return replaySkill(skill, { root: document, host, params });
 }
 
+// Execute a single (possibly healed) step — used by the side panel's
+// heal-aware run loop.
+async function handleExecuteStep({ step, params }) {
+  try {
+    const r = await replayStep(step, { root: document, host, params });
+    return { ok: true, candidateUsed: r.candidateUsed };
+  } catch (err) {
+    return { ok: false, error: err.message, reason: err.reason || 'error' };
+  }
+}
+
+// Compute a fresh SelectorBundle for an index from the last PERCEIVE, without
+// executing anything — used during self-heal relocation.
+async function handleFreezeIndex({ index }) {
+  const el = lastMap.get(index);
+  if (!el) return { ok: false, error: `no element at index ${index}` };
+  try {
+    return { ok: true, bundle: computeSelectorBundle(el) };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!message || typeof message.type !== 'string' || !message.type.startsWith('javis.')) return undefined;
 
@@ -63,6 +87,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         case MSG.PING: return sendResponse({ ok: true });
         case MSG.PERCEIVE: return sendResponse(await handlePerceive());
         case MSG.EXECUTE_FREEZE: return sendResponse(await handleExecuteFreeze(message));
+        case MSG.EXECUTE_STEP: return sendResponse(await handleExecuteStep(message));
+        case MSG.FREEZE_INDEX: return sendResponse(await handleFreezeIndex(message));
         case MSG.REPLAY_SKILL: return sendResponse(await handleReplaySkill(message));
         default: return sendResponse({ ok: false, error: `unknown message ${message.type}` });
       }

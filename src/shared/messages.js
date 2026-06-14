@@ -6,6 +6,8 @@ export const MSG = Object.freeze({
   // side panel -> content (in the active tab)
   PERCEIVE: 'javis.perceive', // -> { text, count, url }
   EXECUTE_FREEZE: 'javis.executeFreeze', // { action, index, value } -> { ok, step | error }
+  EXECUTE_STEP: 'javis.executeStep', // { step, params } -> { ok | error, reason }
+  FREEZE_INDEX: 'javis.freezeIndex', // { index } -> { ok, bundle | error }  (no execute)
   REPLAY_SKILL: 'javis.replaySkill', // { skill, params } -> ReplayResult
   PING: 'javis.ping', // -> { ok: true }
 

@@ -5,6 +5,7 @@ import { SkillStore, createChromeAdapter } from '../../core/skill-store.js';
 import { loadLLMConfig } from '../../shared/config.js';
 import { MSG, sendToTab } from '../../shared/messages.js';
 import { learnViaTab } from './learn-controller.js';
+import { runSkillHealing } from './run-controller.js';
 
 const store = new SkillStore(createChromeAdapter());
 
@@ -103,12 +104,17 @@ async function runSkill(skill) {
 
   setStatus(`Running "${skill.name}"…`);
   try {
-    const result = await sendToTab(tab.id, { type: MSG.REPLAY_SKILL, skill, params });
-    if (result?.ok) {
-      await store.recordRun(skill.id, { healed: false });
-      setStatus(`✓ Ran "${skill.name}" (${result.completed} steps).`, 'ok');
+    const llmConfig = await loadLLMConfig();
+    const result = await runSkillHealing(skill, params, tab.id, llmConfig);
+    if (result.ok) {
+      if (result.healed && result.updatedSteps) {
+        // Persist the re-frozen selectors so the next run is deterministic again.
+        await store.update(skill.id, { steps: result.updatedSteps });
+      }
+      await store.recordRun(skill.id, { healed: result.healed });
+      setStatus(`✓ Ran "${skill.name}".${result.healed ? ' (self-healed a step)' : ''}`, 'ok');
     } else {
-      setStatus(`✗ Failed at step ${result?.failedStep} (${result?.reason}).`, 'err');
+      setStatus(`✗ Failed at step ${result.failedStep} (${result.reason}). You may need to re-teach it.`, 'err');
     }
   } catch (err) {
     setStatus(`✗ ${err.message}`, 'err');
