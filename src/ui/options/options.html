@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Javis — Settings</title>
+  <style>
+    :root { --bg:#0f172a; --panel:#1e293b; --border:rgba(255,255,255,.08); --text:#f1f5f9; --dim:#94a3b8; --accent:#0ea5e9; --ok:#4ade80; --danger:#f87171; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:'Inter','Microsoft JhengHei',system-ui,sans-serif; }
+    main { max-width:560px; margin:0 auto; padding:28px 20px; }
+    h1 { font-size:20px; display:flex; gap:8px; align-items:center; }
+    p.lead { color:var(--dim); font-size:13px; line-height:1.5; }
+    .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px; margin-top:16px; }
+    label { display:block; font-size:12px; color:var(--dim); margin:12px 0 4px; }
+    input { width:100%; background:#0b1220; border:1px solid var(--border); color:var(--text); border-radius:8px; padding:9px 11px; font:inherit; }
+    input:focus { outline:none; border-color:var(--accent); }
+    .presets { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+    .presets button { background:#0b1220; border:1px solid var(--border); color:var(--accent); border-radius:999px; padding:5px 12px; font-size:12px; cursor:pointer; }
+    .presets button:hover { border-color:var(--accent); }
+    .actions { display:flex; gap:10px; margin-top:18px; align-items:center; }
+    .actions .save { background:var(--accent); color:#001018; border:none; border-radius:8px; padding:9px 18px; font-weight:600; cursor:pointer; }
+    .actions .test { background:#0b1220; border:1px solid var(--border); color:var(--text); border-radius:8px; padding:9px 16px; cursor:pointer; }
+    .msg { font-size:13px; margin-left:auto; }
+    .msg.ok { color:var(--ok); } .msg.err { color:var(--danger); }
+    .hint { font-size:12px; color:var(--dim); margin-top:10px; line-height:1.5; }
+    code { background:#0b1220; padding:1px 6px; border-radius:5px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>🦾 Javis Settings</h1>
+    <p class="lead">Javis is model-agnostic. Point it at any OpenAI-compatible endpoint — local Ollama (free, private) or a cloud key. Replaying learned skills uses no model at all; the model is only called while learning or self-healing.</p>
+
+    <div class="card">
+      <div class="presets">
+        <button data-preset="ollama">Local Ollama</button>
+        <button data-preset="demo">page-agent demo (dev only)</button>
+      </div>
+
+      <label for="baseURL">Endpoint base URL</label>
+      <input id="baseURL" type="text" placeholder="http://localhost:11434/v1" />
+
+      <label for="model">Model</label>
+      <input id="model" type="text" placeholder="qwen3:14b" />
+
+      <label for="apiKey">API key (leave blank for local Ollama)</label>
+      <input id="apiKey" type="password" placeholder="sk-…" />
+
+      <div class="actions">
+        <button id="save" class="save">Save</button>
+        <button id="test" class="test">Test connection</button>
+        <span id="msg" class="msg"></span>
+      </div>
+
+      <p class="hint">The page-agent demo endpoint (<code>qwen3.5-plus</code>, no key) is for evaluation only and routes through third-party servers — do not use it for real data or a published product.</p>
+    </div>
+  </main>
+  <script type="module" src="options.js"></script>
+</body>
+</html>

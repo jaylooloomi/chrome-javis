@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Javis</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🦾</span>
+      <span class="title">Javis</span>
+    </div>
+    <button id="settingsBtn" class="icon-btn" title="Settings">⚙️</button>
+  </header>
+
+  <section class="teach">
+    <label class="field-label" for="taskInput">Teach a new skill</label>
+    <textarea id="taskInput" rows="2" placeholder="e.g. Search the site for &quot;wireless headphones&quot;"></textarea>
+    <div class="row">
+      <input id="skillName" type="text" placeholder="Skill name (optional)" />
+      <button id="learnBtn" class="primary">Learn ▶</button>
+    </div>
+    <p id="status" class="status" role="status"></p>
+  </section>
+
+  <section class="library">
+    <div class="library-head">
+      <h2>Skills</h2>
+      <div class="library-actions">
+        <button id="importBtn" class="link-btn" title="Import skills">Import</button>
+        <button id="exportAllBtn" class="link-btn" title="Export all skills">Export all</button>
+        <input id="importFile" type="file" accept="application/json" hidden />
+      </div>
+    </div>
+    <ul id="skillList" class="skill-list"></ul>
+    <p id="emptyHint" class="empty-hint" hidden>No skills yet. Teach one above.</p>
+  </section>
+
+  <script type="module" src="sidepanel.js"></script>
+</body>
+</html>
