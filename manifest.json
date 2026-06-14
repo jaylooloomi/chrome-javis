@@ -14,12 +14,12 @@
     "type": "module"
   },
   "icons": {
-    "128": "images/jarvis_pixian_ai.png"
+    "128": "images/snapfill-128.png"
   },
   "action": {
     "default_title": "Open Snapfill",
     "default_icon": {
-      "128": "images/jarvis_pixian_ai.png"
+      "128": "images/snapfill-128.png"
     }
   },
   "side_panel": {
@@ -29,7 +29,7 @@
   "commands": {
     "fill-form": {
       "suggested_key": { "default": "Alt+Shift+F" },
-      "description": "Fill the current form with Javis"
+      "description": "Fill the current form with Snapfill"
     }
   },
   "content_scripts": [
