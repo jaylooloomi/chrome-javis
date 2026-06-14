@@ -45,7 +45,7 @@ The core engines are framework-free and DOM-pure, so they're covered by **102 js
 
 Javis talks to any **OpenAI-compatible** `/chat/completions` endpoint. In **Settings**, set `baseURL`, `model`, and `apiKey`:
 
-- **Local Ollama (recommended, free, private):** `http://localhost:11434/v1`, model e.g. `qwen3:14b`, no key. Run `ollama serve` and `ollama pull qwen3:14b`.
+- **Ollama (default):** `http://localhost:11434/v1`, no key. Default model `minimax-m2.5:cloud` (capable; routed through Ollama's cloud, so not offline). For a truly local/private model use a pulled local model instead (e.g. `ollama pull qwen3:14b`) — needs working local inference.
 - **Any cloud key:** point `baseURL`/`apiKey` at your provider's OpenAI-compatible endpoint.
 - **page-agent demo (dev only):** `qwen3.5-plus`, no key — evaluation only, routes through third-party servers; never use for real data or a published build.
 

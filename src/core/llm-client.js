@@ -11,7 +11,7 @@
 
 export const DEFAULT_ENDPOINT = Object.freeze({
   baseURL: 'http://localhost:11434/v1',
-  model: 'qwen3:14b',
+  model: 'minimax-m2.5:cloud',
   apiKey: '',
 });
 

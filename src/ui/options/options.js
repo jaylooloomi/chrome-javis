@@ -8,7 +8,7 @@ const fields = { baseURL: $('baseURL'), model: $('model'), apiKey: $('apiKey') }
 const msg = $('msg');
 
 const PRESETS = {
-  ollama: { baseURL: 'http://localhost:11434/v1', model: 'qwen3:14b', apiKey: '' },
+  ollama: { baseURL: 'http://localhost:11434/v1', model: 'minimax-m2.5:cloud', apiKey: '' },
   demo: { baseURL: 'https://page-ag-testing-ohftxirgbn.cn-shanghai.fcapp.run/v1', model: 'qwen3.5-plus', apiKey: 'NA' },
 };
 
