@@ -10,6 +10,20 @@ chrome.runtime.onInstalled.addListener(() => {
   }
 });
 
+// Keyboard shortcut (Alt+Shift+F): open the side panel and flag a pending fill,
+// which the side panel picks up on load and runs.
+chrome.commands?.onCommand.addListener(async (command) => {
+  if (command !== 'fill-form') return;
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab) return;
+    await chrome.storage.local.set({ 'javis.pendingFill': true });
+    if (chrome.sidePanel?.open) await chrome.sidePanel.open({ tabId: tab.id });
+  } catch (err) {
+    console.debug('[Javis] fill-form command failed:', err);
+  }
+});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type !== MSG.HOST_ACTION) return undefined;
 

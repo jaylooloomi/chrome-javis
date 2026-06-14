@@ -6,14 +6,17 @@
 // Network (LLM) and the skill store live in the side panel / service worker,
 // not here, to avoid page CSP/CORS constraints.
 
-import { serializeInteractive } from '../core/dom-serializer.js';
+import { serializeInteractive, serializeForm } from '../core/dom-serializer.js';
 import { SkillRecorder } from '../core/recorder.js';
 import { replayStep, replaySkill } from '../core/replay-engine.js';
 import { computeSelectorBundle } from '../core/selector-engine.js';
+import { applyFill } from '../core/form-fill.js';
 import { MSG, sendRuntime } from '../shared/messages.js';
 
 // The map from the most recent PERCEIVE, so EXECUTE_FREEZE can resolve an index.
 let lastMap = new Map();
+// The map from the most recent SERIALIZE_FORM, so APPLY_FILL can resolve fields.
+let lastFormMap = new Map();
 
 // Host actions during replay are delegated to the service worker.
 const host = {
@@ -56,6 +59,17 @@ async function handleReplaySkill({ skill, params }) {
   return replaySkill(skill, { root: document, host, params });
 }
 
+// Form-fill: perceive the form (keep the map here), and apply a plan later.
+async function handleSerializeForm() {
+  const { fields, map } = serializeForm(document);
+  lastFormMap = map;
+  return { fields, url: window.location.href };
+}
+
+async function handleApplyFill({ plan }) {
+  return applyFill(plan || [], lastFormMap);
+}
+
 // Execute a single (possibly healed) step — used by the side panel's
 // heal-aware run loop.
 async function handleExecuteStep({ step, params }) {
@@ -92,6 +106,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         case MSG.EXECUTE_STEP: return sendResponse(await handleExecuteStep(message));
         case MSG.FREEZE_INDEX: return sendResponse(await handleFreezeIndex(message));
         case MSG.REPLAY_SKILL: return sendResponse(await handleReplaySkill(message));
+        case MSG.SERIALIZE_FORM: return sendResponse(await handleSerializeForm());
+        case MSG.APPLY_FILL: return sendResponse(await handleApplyFill(message));
         default: return sendResponse({ ok: false, error: `unknown message ${message.type}` });
       }
     } catch (err) {

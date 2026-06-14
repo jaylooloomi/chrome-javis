@@ -115,3 +115,15 @@ button.primary:disabled { opacity: 0.5; cursor: default; }
 .skill-actions .del { color: var(--danger); }
 
 .empty-hint { color: var(--text-dim); font-size: 13px; text-align: center; padding: 16px 0; }
+
+/* Form-fill */
+.fill { border-bottom: 1px solid var(--border); }
+button.wide { width: 100%; }
+.preview { margin-top: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+.preview-list { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.preview-list li { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+.preview-list .pk { color: var(--text-dim); flex: 0 0 45%; word-break: break-word; }
+.preview-list .pv { color: var(--text); flex: 1; text-align: right; word-break: break-word; }
+.preview-actions { display: flex; gap: 8px; }
+.preview-actions button { flex: 1; padding: 7px 10px; border-radius: 7px; font-size: 13px; cursor: pointer; }
+.preview-actions .ghost { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }

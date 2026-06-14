@@ -6,6 +6,7 @@ import { loadLLMConfig } from '../../shared/config.js';
 import { MSG, sendToTab } from '../../shared/messages.js';
 import { learnViaTab } from './learn-controller.js';
 import { runSkillHealing } from './run-controller.js';
+import { planFillForTab, applyFillToTab } from './fill-controller.js';
 
 const store = new SkillStore(createChromeAdapter());
 
@@ -21,7 +22,87 @@ const els = {
   importBtn: $('importBtn'),
   importFile: $('importFile'),
   exportAll: $('exportAllBtn'),
+  fillBtn: $('fillBtn'),
+  fillPreview: $('fillPreview'),
+  fillStatus: $('fillStatus'),
 };
+
+function setFillStatus(text, kind = '') {
+  els.fillStatus.textContent = text;
+  els.fillStatus.className = `status ${kind}`;
+}
+
+const FILL_REASONS = {
+  'no-content': 'Open a normal web page (http/https) first.',
+  'no-fields': 'No fillable form found on this page.',
+  'no-profile': 'Add your details in Settings → Profile first.',
+  'llm-failed': 'The model could not be reached.',
+  'nothing-matched': 'No profile data matched this form.',
+};
+
+async function onFillForm() {
+  const tab = await getActiveTab();
+  if (!tab) return setFillStatus('No active tab.', 'err');
+  els.fillPreview.hidden = true;
+  els.fillPreview.replaceChildren();
+  els.fillBtn.disabled = true;
+  setFillStatus('Reading the form…');
+  try {
+    const result = await planFillForTab(tab.id);
+    if (!result.ok) {
+      setFillStatus(FILL_REASONS[result.reason] || result.error || result.reason, 'err');
+      return;
+    }
+    renderFillPreview(tab.id, result);
+    setFillStatus(`Proposed ${result.preview.length} field(s) via ${result.usingNano ? 'on-device Nano' : 'your endpoint'}. Review and confirm.`);
+  } catch (err) {
+    setFillStatus(`✗ ${err.message}`, 'err');
+  } finally {
+    els.fillBtn.disabled = false;
+  }
+}
+
+function renderFillPreview(tabId, result) {
+  const list = document.createElement('ul');
+  list.className = 'preview-list';
+  for (const row of result.preview) {
+    const li = document.createElement('li');
+    const k = document.createElement('span');
+    k.className = 'pk';
+    k.textContent = row.label;
+    const v = document.createElement('span');
+    v.className = 'pv';
+    v.textContent = typeof row.value === 'boolean' ? (row.value ? '✓ checked' : '✗ unchecked') : row.value;
+    li.append(k, v);
+    list.append(li);
+  }
+  const actions = document.createElement('div');
+  actions.className = 'preview-actions';
+  const confirm = document.createElement('button');
+  confirm.className = 'primary';
+  confirm.textContent = 'Confirm fill';
+  const cancel = document.createElement('button');
+  cancel.className = 'ghost';
+  cancel.textContent = 'Cancel';
+  confirm.addEventListener('click', async () => {
+    confirm.disabled = true;
+    setFillStatus('Filling…');
+    try {
+      const res = await applyFillToTab(tabId, result.plan);
+      setFillStatus(`✓ Filled ${res?.applied ?? 0} field(s).${res?.failed ? ` (${res.failed} skipped)` : ''}`, 'ok');
+    } catch (err) {
+      setFillStatus(`✗ ${err.message}`, 'err');
+    }
+    els.fillPreview.hidden = true;
+  });
+  cancel.addEventListener('click', () => {
+    els.fillPreview.hidden = true;
+    setFillStatus('Cancelled.');
+  });
+  actions.append(confirm, cancel);
+  els.fillPreview.replaceChildren(list, actions);
+  els.fillPreview.hidden = false;
+}
 
 function setStatus(text, kind = '') {
   els.status.textContent = text;
@@ -185,6 +266,7 @@ async function onImport(file) {
   }
 }
 
+els.fillBtn.addEventListener('click', onFillForm);
 els.learn.addEventListener('click', onLearn);
 els.settings.addEventListener('click', () => chrome.runtime.openOptionsPage());
 els.exportAll.addEventListener('click', async () => download('javis-skills.json', await store.exportAll()));
@@ -196,3 +278,12 @@ els.importFile.addEventListener('change', (e) => {
 });
 
 render();
+
+// If opened via the Alt+Shift+F shortcut, run the fill immediately.
+(async () => {
+  const { 'javis.pendingFill': pending } = await chrome.storage.local.get('javis.pendingFill');
+  if (pending) {
+    await chrome.storage.local.remove('javis.pendingFill');
+    onFillForm();
+  }
+})();

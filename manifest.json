@@ -26,6 +26,12 @@
     "default_path": "sidepanel.html"
   },
   "options_page": "options.html",
+  "commands": {
+    "fill-form": {
+      "suggested_key": { "default": "Alt+Shift+F" },
+      "description": "Fill the current form with Javis"
+    }
+  },
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],

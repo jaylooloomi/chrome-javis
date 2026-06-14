@@ -9,6 +9,8 @@ export const MSG = Object.freeze({
   EXECUTE_STEP: 'javis.executeStep', // { step, params } -> { ok | error, reason }
   FREEZE_INDEX: 'javis.freezeIndex', // { index } -> { ok, bundle | error }  (no execute)
   REPLAY_SKILL: 'javis.replaySkill', // { skill, params } -> ReplayResult
+  SERIALIZE_FORM: 'javis.serializeForm', // -> { fields }  (map kept in content)
+  APPLY_FILL: 'javis.applyFill', // { plan } -> { applied, failed }
   PING: 'javis.ping', // -> { ok: true }
 
   // content -> service worker (host actions)
